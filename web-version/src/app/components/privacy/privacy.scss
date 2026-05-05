@@ -1,0 +1,422 @@
+/* ============================================================
+   PRIVACY PAGE STYLES
+   ============================================================ */
+
+/* ── Hero ─────────────────────────────────────────────────── */
+.priv-hero {
+  position: relative;
+  padding: 130px 0 80px;
+  text-align: center;
+  overflow: hidden;
+  background: transparent !important;
+}
+
+.priv-content {
+  background: transparent !important;
+}
+
+.priv-hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+
+  &--1 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.12), transparent 70%);
+    top: -150px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.priv-hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
+  background-size: 56px 56px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+}
+
+.priv-hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.priv-shield-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+
+  i {
+    font-size: 1.8rem;
+    color: var(--gold);
+  }
+}
+
+.priv-hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 900;
+  color: var(--text-main);
+  margin: 1rem 0 1.25rem;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.priv-hero-highlight {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.priv-hero-desc {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  max-width: 560px;
+  margin: 0 auto 1.5rem;
+}
+
+.priv-last-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.83rem;
+  color: var(--text-light);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+
+  i {
+    color: var(--gold);
+    font-size: 0.8rem;
+  }
+}
+
+/* ── Content Layout ──────────────────────────────────────── */
+.priv-content {
+  padding: 80px 0 100px;
+}
+
+.priv-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 3rem;
+  align-items: start;
+
+  @media (max-width: 991px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── TOC (Sidebar) ────────────────────────────────────────── */
+.priv-toc {
+  position: sticky;
+  top: 100px;
+
+  @media (max-width: 991px) {
+    display: none;
+  }
+}
+
+.priv-toc-inner {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.priv-toc-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    color: var(--gold);
+  }
+}
+
+.priv-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.priv-toc-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  transition: var(--transition);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--gold);
+    background: var(--badge-bg);
+  }
+}
+
+.priv-toc-num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  opacity: 0.7;
+  min-width: 22px;
+}
+
+/* ── Main Sections ────────────────────────────────────────── */
+.priv-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.priv-section {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 2rem 2.25rem;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: rgba(212, 175, 55, 0.25);
+  }
+}
+
+.priv-section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.priv-section-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1rem;
+    color: var(--color, var(--gold));
+  }
+}
+
+.priv-section-num {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  opacity: 0.7;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.priv-section-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.priv-section-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Items Grid ───────────────────────────────────────────── */
+.priv-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.priv-item {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 1rem;
+  transition: var(--transition);
+
+  &:hover {
+    border-color: rgba(212, 175, 55, 0.3);
+    transform: translateY(-2px);
+  }
+}
+
+.priv-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 0.9rem;
+    color: var(--color, var(--gold));
+  }
+}
+
+.priv-item-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 0.25rem;
+}
+
+.priv-item-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── List ─────────────────────────────────────────────────── */
+.priv-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+}
+
+.priv-list-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+/* ── Contact Cards ────────────────────────────────────────── */
+.priv-contact-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.priv-contact-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+  transition: var(--transition);
+
+  &:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+  }
+}
+
+.priv-contact-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+
+  i {
+    color: var(--gold);
+    font-size: 1rem;
+  }
+}
+
+.priv-contact-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-light);
+  margin-bottom: 0.35rem;
+}
+
+.priv-contact-val {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--gold);
+  }
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .priv-hero {
+    padding: 100px 0 60px;
+  }
+
+  .priv-section {
+    padding: 1.5rem;
+  }
+
+  .priv-items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .priv-contact-cards {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,40 @@
+export interface PackageItem {
+  nameKey: string;
+  nameKeyEn?: string;
+  price: string;
+  duration: string;
+  durationKey: string;
+  descKey: string;
+  featured: boolean;
+  badge?: string;
+  features: string[];
+  adBudget?: string;
+  managementFee?: string;
+  category:
+    | 'local'
+    | 'international'
+    | 'management'
+    | 'design'
+    | 'classA'
+    | 'classB'
+    | 'website'
+    | 'tiktok'
+    | 'tiktokViews'
+    | 'google'
+    | 'snapchat'
+    | 'youtube'
+    | 'telegram'
+    | 'pageFoundation'
+    | 'pageCreation'
+    | 'startup'
+    | 'igLikes'
+    | 'igFollowers'
+    | 'igComments'
+    | 'igViews'
+    | 'tgMembers'
+    | 'tgVerify'
+    | 'tgPostViews'
+    | 'tgStoryViews'
+    | 'tgReactions'
+    | 'tgVotes';
+}

@@ -1,0 +1,782 @@
+<!-- ============================================================
+     SOCIAL PAGE — Social Media Management Service
+     إدارة سوشيال ميديا — صفحة كاملة مع باقات وفاتورة طباعة
+     ============================================================ -->
+
+<div class="mt-5" [attr.dir]="isArabic ? 'rtl' : 'ltr'">
+  <!-- ══ Page Hero ══ -->
+  <section class="page-hero">
+    <div class="page-hero-bg-orb page-hero-bg-orb--1"></div>
+    <div class="page-hero-bg-orb page-hero-bg-orb--2"></div>
+    <div class="hero-grid-overlay"></div>
+    <div class="container">
+      <div class="page-hero-content text-center reveal">
+        <div class="section-badge">
+          <i class="fas fa-share-nodes"></i>
+          {{ 'SOCIAL_PAGE.BADGE' | translate }}
+        </div>
+        <h1 class="page-hero-title">{{ 'SOCIAL_PAGE.TITLE' | translate }}</h1>
+        <p class="page-hero-desc">{{ 'SOCIAL_PAGE.DESC' | translate }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Social Packages Grid (8 items) ══ -->
+
+  <section class="social-packages-section section-padding">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-badge">
+          <i class="fas fa-layer-group"></i>
+          {{ 'SOCIAL_PAGE.PACKAGES_BADGE' | translate }}
+        </div>
+        <h2 class="section-title">{{ 'SOCIAL_PAGE.PACKAGES_TITLE' | translate }}</h2>
+        <hr class="gold-divider mx-auto" />
+        <p class="section-desc">{{ 'SOCIAL_PAGE.PACKAGES_DESC' | translate }}</p>
+      </div>
+
+      <!-- Selected Counter -->
+      <div class="selected-counter reveal" *ngIf="selectedPackages.length > 0">
+        <i class="fas fa-shopping-cart gold-text"></i>
+        <span
+          >{{ isArabic ? 'تم اختيار' : 'Selected' }} {{ selectedPackages.length }}
+          {{ isArabic ? 'باقة' : 'package(s)' }}</span
+        >
+        <button class="clear-selection-btn" (click)="clearSelection()">
+          <i class="fas fa-times"></i>
+          {{ isArabic ? 'مسح الكل' : 'Clear All' }}
+        </button>
+      </div>
+
+      <div class="row g-4 mt-3">
+        <div
+          class="col-md-6 col-xl-4 col-xxl-3 reveal"
+          *ngFor="let pkg of socialPackages; let i = index"
+          [style.transition-delay]="i * 0.08 + 's'"
+        >
+          <div
+            class="social-pkg-card etbaly-card h-100"
+            [class.social-pkg-card--selected]="isSelected(pkg.id)"
+            (click)="togglePackage(pkg)"
+          >
+            <!-- Selected Badge -->
+            <div class="sp-selected-badge" *ngIf="isSelected(pkg.id)">
+              <i class="fas fa-check"></i>
+              {{ isArabic ? 'مختار' : 'Selected' }}
+            </div>
+
+            <!-- Image -->
+            <div class="sp-img-wrap">
+              <img
+                [src]="pkg.image"
+                [alt]="isArabic ? pkg.nameAr : pkg.nameEn"
+                class="sp-img"
+                loading="lazy"
+                onerror="this.src = 'https://placehold.co/400x220/1e1b30/d4af37?text=Social'"
+              />
+              <div class="sp-img-overlay">
+                <i class="fas fa-plus-circle"></i>
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div class="sp-body">
+              <h3 class="sp-title">{{ isArabic ? pkg.nameAr : pkg.nameEn }}</h3>
+              <p class="sp-desc">{{ isArabic ? pkg.descAr : pkg.descEn }}</p>
+
+              <!-- Features -->
+              <ul class="sp-features">
+                <li *ngFor="let f of pkg.features">
+                  <i class="fas fa-check-circle gold-text"></i>
+                  {{ isArabic ? f.ar : f.en }}
+                </li>
+              </ul>
+
+              <!-- Price -->
+              <div class="sp-price-row">
+                <div class="sp-price">
+                  <span class="sp-price-amount">{{ pkg.price | number }}</span>
+                  <span class="sp-price-currency"> {{ isArabic ? 'ج.م' : 'EGP' }}</span>
+                  <span class="sp-price-per">{{ isArabic ? '/ شهر' : '/ month' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="sp-footer">
+              <button
+                class="sp-select-btn"
+                [class.sp-select-btn--selected]="isSelected(pkg.id)"
+                (click)="togglePackage(pkg); $event.stopPropagation()"
+              >
+                <i class="fas" [ngClass]="isSelected(pkg.id) ? 'fa-check' : 'fa-plus'"></i>
+                {{
+                  isSelected(pkg.id)
+                    ? isArabic
+                      ? 'تم الإضافة ✓'
+                      : 'Added ✓'
+                    : isArabic
+                      ? 'أضف للطلب'
+                      : 'Add to Order'
+                }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Order Form (shown after selecting at least 1 package) ══ -->
+  <section
+    class="order-form-section section-padding"
+    id="order-form"
+    *ngIf="selectedPackages.length > 0"
+  >
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-badge">
+          <i class="fas fa-clipboard-list"></i>
+          {{ isArabic ? 'بيانات الطلب' : 'Order Details' }}
+        </div>
+        <h2 class="section-title">{{ isArabic ? 'أكمل بياناتك' : 'Complete Your Details' }}</h2>
+        <hr class="gold-divider mx-auto" />
+      </div>
+
+      <div class="order-form-card etbaly-card reveal">
+        <div class="row g-4">
+          <!-- Col 1: Contact Info -->
+          <div class="col-lg-6">
+            <h4 class="form-section-title">
+              <i class="fas fa-user gold-text"></i>
+              {{ isArabic ? 'البيانات الشخصية' : 'Personal Info' }}
+            </h4>
+
+            <!-- Full Name -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'الاسم الكامل' : 'Full Name' }}
+                <span class="required-star">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.fullName"
+                [placeholder]="isArabic ? 'أدخل اسمك الكامل' : 'Enter your full name'"
+              />
+            </div>
+
+            <!-- Mobile -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'رقم الموبايل' : 'Mobile Number' }}
+                <span class="required-star">*</span>
+              </label>
+              <input
+                type="tel"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.mobile"
+                [placeholder]="isArabic ? '01xxxxxxxxx' : '01xxxxxxxxx'"
+              />
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fab fa-whatsapp" style="color: #25d366"></i>
+                {{ isArabic ? 'رقم الواتساب' : 'WhatsApp Number' }}
+                <span class="required-star">*</span>
+              </label>
+              <div class="input-with-check">
+                <input
+                  type="tel"
+                  class="form-control etbaly-input"
+                  [(ngModel)]="orderForm.whatsapp"
+                  [placeholder]="isArabic ? '01xxxxxxxxx' : '01xxxxxxxxx'"
+                />
+                <label class="same-as-mobile">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="sameAsMobile"
+                    (change)="onSameAsMobileChange()"
+                  />
+                  <span>{{ isArabic ? 'نفس رقم الموبايل' : 'Same as mobile' }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'البريد الإلكتروني' : 'Email Address' }}
+                <span class="required-star">*</span>
+              </label>
+              <input
+                type="email"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.email"
+                [placeholder]="isArabic ? 'example@email.com' : 'example@email.com'"
+              />
+            </div>
+
+            <!-- Company (optional) -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'اسم شركتك' : 'Company Name' }}
+                <span class="optional-tag">{{ isArabic ? 'اختياري' : 'Optional' }}</span>
+              </label>
+              <input
+                type="text"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.company"
+                [placeholder]="
+                  isArabic ? 'اسم شركتك أو نشاطك التجاري' : 'Your company or business name'
+                "
+              />
+            </div>
+          </div>
+
+          <!-- Col 2: Service Details -->
+          <div class="col-lg-6">
+            <h4 class="form-section-title">
+              <i class="fas fa-cog gold-text"></i>
+              {{ isArabic ? 'تفاصيل الخدمة' : 'Service Details' }}
+            </h4>
+
+            <!-- Service Type Display -->
+            <div class="form-group">
+              <label class="form-label">{{ isArabic ? 'الخدمة' : 'Service' }}</label>
+              <div class="service-tag">
+                <i class="fas fa-share-nodes gold-text"></i>
+                {{ isArabic ? 'إدارة سوشيال ميديا' : 'Social Media Management' }}
+              </div>
+            </div>
+
+            <!-- Target Platforms -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'المنصات المستهدفة' : 'Target Platforms' }}
+                <span class="optional-tag">{{ isArabic ? 'متعدد' : 'Multiple' }}</span>
+              </label>
+              <div class="platforms-grid">
+                <button
+                  *ngFor="let p of platforms"
+                  class="platform-btn"
+                  [class.platform-btn--active]="isPlatformSelected(p.id)"
+                  (click)="togglePlatform(p.id)"
+                >
+                  <i class="fab" [ngClass]="p.icon"></i>
+                  {{ isArabic ? p.nameAr : p.nameEn }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Service Description -->
+            <div class="form-group">
+              <label class="form-label">
+                {{
+                  isArabic
+                    ? 'اكتب خدمتك — إدارة سوشيال ميديا'
+                    : 'Describe Your Request — Social Media Management'
+                }}
+              </label>
+              <textarea
+                class="form-control etbaly-input etbaly-textarea"
+                [(ngModel)]="orderForm.description"
+                rows="4"
+                [placeholder]="
+                  isArabic
+                    ? 'اكتب تفاصيل طلبك مثلاً: إدارة صفحة فيسبوك + انستجرام + تيك توك...'
+                    : 'E.g.: Manage Facebook + Instagram + TikTok page...'
+                "
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Order Summary ══ -->
+        <div class="order-summary reveal mt-4">
+          <h4 class="form-section-title">
+            <i class="fas fa-receipt gold-text"></i>
+            {{ isArabic ? 'ملخص الطلب' : 'Order Summary' }}
+          </h4>
+
+          <div class="summary-table">
+            <!-- Package rows -->
+            <div class="summary-row" *ngFor="let pkg of selectedPackages">
+              <span class="summary-item">
+                <i class="fas fa-box-open" style="font-size: 0.75rem; opacity: 0.7"></i>
+                {{ isArabic ? pkg.nameAr : pkg.nameEn }}
+              </span>
+              <span class="summary-amount gold-text"
+                >{{ pkg.price | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</span
+              >
+            </div>
+
+            <div class="summary-divider"></div>
+            <div class="summary-row summary-row--total">
+              <span>{{ isArabic ? 'الإجمالي الكلي' : 'Grand Total' }}</span>
+              <span class="summary-total gold-text"
+                >{{ grandTotal() | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</span
+              >
+            </div>
+
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button
+              class="btn btn-gold-main rounded-pill px-5 py-3"
+              (click)="submitOrder()"
+              [disabled]="!isFormValid()"
+            >
+              <i class="fas fa-file-invoice"></i>
+              {{ isArabic ? 'معاينة الفاتورة والدفع' : 'Preview Invoice & Pay' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Invoice Print Area (hidden) ══ -->
+  <div class="invoice-print-area" id="invoice-area">
+    <div class="invoice-header">
+      <div class="invoice-logo">
+        <i class="fas fa-share-nodes"></i>
+        <span>{{ isArabic ? 'إدارة سوشيال ميديا' : 'Social Media Management' }}</span>
+      </div>
+      <div class="invoice-meta">
+        <strong>{{ isArabic ? 'فاتورة' : 'Invoice' }} #{{ invoiceNumber }}</strong>
+        <span>{{ invoiceDate }}</span>
+      </div>
+    </div>
+
+    <div class="invoice-client">
+      <h4>{{ isArabic ? 'بيانات العميل' : 'Client Info' }}</h4>
+      <div class="invoice-client-grid">
+        <div>
+          <span>{{ isArabic ? 'الاسم' : 'Name' }}:</span> {{ orderForm.fullName || '—' }}
+        </div>
+        <div>
+          <span>{{ isArabic ? 'موبايل' : 'Mobile' }}:</span> {{ orderForm.mobile || '—' }}
+        </div>
+        <div>
+          <span>{{ isArabic ? 'واتساب' : 'WhatsApp' }}:</span> {{ orderForm.whatsapp || '—' }}
+        </div>
+        <div>
+          <span>{{ isArabic ? 'إيميل' : 'Email' }}:</span> {{ orderForm.email || '—' }}
+        </div>
+        <div *ngIf="orderForm.company">
+          <span>{{ isArabic ? 'شركة' : 'Company' }}:</span> {{ orderForm.company }}
+        </div>
+      </div>
+    </div>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>{{ isArabic ? 'الباقة' : 'Package' }}</th>
+          <th>{{ isArabic ? 'السعر' : 'Price' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let pkg of selectedPackages">
+          <td>{{ isArabic ? pkg.nameAr : pkg.nameEn }}</td>
+          <td>{{ pkg.price | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>
+            <strong>{{ isArabic ? 'الإجمالي الكلي' : 'Grand Total' }}</strong>
+          </td>
+          <td>
+            <strong class="invoice-total"
+              >{{ grandTotal() | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</strong
+            >
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="invoice-footer">
+      {{
+        isArabic
+          ? 'شكراً لثقتك — إدارة سوشيال ميديا'
+          : 'Thank you for your trust — Social Media Management'
+      }}
+    </div>
+  </div>
+
+  <!-- ══ Invoice Modal ══ -->
+  <div
+    class="invoice-modal-overlay"
+    [class.invoice-modal-overlay--open]="showInvoiceModal"
+    (click)="closeInvoiceModal($event)"
+  >
+    <div class="invoice-modal">
+      <button class="inv-close-btn" (click)="showInvoiceModal = false; bodyUnlock()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="inv-header">
+        <div class="inv-logo-wrap">
+          <div class="inv-logo-icon">
+            <svg
+              viewBox="0 0 36 36"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="inv-logo-svg"
+            >
+              <circle cx="18" cy="18" r="12" fill="#0a0800" opacity="0.08" />
+              <circle cx="18" cy="18" r="10" fill="none" stroke="#d4af37" stroke-width="2" />
+              <circle cx="18" cy="10" r="3" fill="#d4af37" />
+              <circle cx="26" cy="22" r="3" fill="#d4af37" />
+              <circle cx="10" cy="22" r="3" fill="#d4af37" />
+              <line x1="18" y1="13" x2="24" y2="20" stroke="#d4af37" stroke-width="1.5" />
+              <line x1="18" y1="13" x2="12" y2="20" stroke="#d4af37" stroke-width="1.5" />
+            </svg>
+          </div>
+          <div>
+            <div class="inv-brand">
+              {{ isArabic ? 'إدارة سوشيال ميديا' : 'Social Media Management' }}
+            </div>
+            <div class="inv-brand-sub">
+              {{ isArabic ? 'خدمات التواصل الاجتماعي' : 'Social Services' }}
+            </div>
+          </div>
+        </div>
+        <div class="inv-meta">
+          <div class="inv-num"># {{ invoiceNumber }}</div>
+          <div class="inv-date">{{ invoiceDate }}</div>
+          <div class="inv-status">
+            <span class="inv-status-dot"></span>
+            {{ isArabic ? 'في انتظار الدفع' : 'Pending Payment' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-gold-bar"></div>
+
+      <div class="inv-client-section">
+        <div class="inv-section-label">
+          <i class="fas fa-user-circle"></i>
+          {{ isArabic ? 'بيانات العميل' : 'Client Details' }}
+        </div>
+        <div class="inv-client-grid">
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'الاسم' : 'Name' }}</span>
+            <span class="inv-client-val">{{ orderForm.fullName || '—' }}</span>
+          </div>
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'موبايل' : 'Mobile' }}</span>
+            <span class="inv-client-val">{{ orderForm.mobile || '—' }}</span>
+          </div>
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'واتساب' : 'WhatsApp' }}</span>
+            <span class="inv-client-val">{{ orderForm.whatsapp || '—' }}</span>
+          </div>
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'إيميل' : 'Email' }}</span>
+            <span class="inv-client-val">{{ orderForm.email || '—' }}</span>
+          </div>
+          <div class="inv-client-item" *ngIf="orderForm.company">
+            <span class="inv-client-key">{{ isArabic ? 'شركة' : 'Company' }}</span>
+            <span class="inv-client-val">{{ orderForm.company }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-section-label" style="margin-bottom: 0.75rem">
+        <i class="fas fa-list-check"></i>
+        {{ isArabic ? 'تفاصيل الطلب' : 'Order Details' }}
+      </div>
+      <div class="inv-table-wrap">
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>{{ isArabic ? 'الباقة' : 'Package' }}</th>
+              <th>{{ isArabic ? 'الوصف' : 'Description' }}</th>
+              <th>{{ isArabic ? 'السعر' : 'Price' }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pkg of selectedPackages">
+              <td>
+                <span class="inv-svc-name">{{ isArabic ? pkg.nameAr : pkg.nameEn }}</span>
+              </td>
+              <td>
+                <span style="font-size: 0.8rem; color: var(--text-muted)">
+                  {{ isArabic ? pkg.descAr : pkg.descEn }}
+                </span>
+              </td>
+              <td class="inv-row-total">
+                {{ pkg.price | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">{{ isArabic ? 'الإجمالي الكلي' : 'Grand Total' }}</td>
+              <td class="inv-grand-total">
+                {{ grandTotal() | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="inv-pay-note">
+        <div class="inv-pay-note-icon"><i class="fas fa-shield-halved"></i></div>
+        <div>
+          <div class="inv-pay-note-title">
+            {{ isArabic ? 'برجاء إتمام عملية الدفع' : 'Complete your payment' }}
+          </div>
+          <div class="inv-pay-note-sub">
+            {{
+              isArabic
+                ? 'لن يبدأ تنفيذ الطلب قبل تأكيد الدفع'
+                : 'Order will not start before payment confirmation'
+            }}
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-actions">
+        <button class="inv-btn-pay" (click)="navigateToPayments()">
+          <i class="fas fa-credit-card"></i>
+          {{ isArabic ? 'تأكيد وانتقل للدفع' : 'Confirm & Pay Now' }}
+          <span class="inv-btn-arrow">
+            <i class="fas fa-arrow-left" *ngIf="isArabic"></i>
+            <i class="fas fa-arrow-right" *ngIf="!isArabic"></i>
+          </span>
+        </button>
+        <div class="inv-secondary-actions">
+          <button class="inv-btn-print" (click)="printInvoiceFromModal()">
+            <i class="fas fa-print"></i>
+            {{ isArabic ? 'طباعة' : 'Print' }}
+          </button>
+          <button class="inv-btn-download" (click)="downloadInvoiceAsPdf()">
+            <i class="fas fa-image"></i>
+            {{ isArabic ? 'تحميل صورة' : 'Download IMG' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="inv-footer">
+        <i class="fas fa-heart" style="color: var(--gold); font-size: 0.7rem"></i>
+        {{
+          isArabic
+            ? 'شكراً لثقتك — إدارة سوشيال ميديا'
+            : 'Thank you for your trust — Social Media Management'
+        }}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Payment Modal ══ -->
+  <div
+    class="pay-modal-overlay"
+    [class.pay-modal-overlay--open]="showPaymentModal"
+    (click)="closePaymentModal($event)"
+  >
+    <div class="pay-modal">
+      <button class="inv-close-btn" (click)="showPaymentModal = false; bodyUnlock()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="pay-modal-header">
+        <div class="pay-lock-icon"><i class="fas fa-lock"></i></div>
+        <div>
+          <h3 class="pay-modal-title">{{ isArabic ? 'طرق الدفع' : 'Payment Methods' }}</h3>
+          <p class="pay-modal-sub">
+            {{ isArabic ? 'اختر طريقة الدفع المناسبة لك' : 'Choose your preferred payment method' }}
+          </p>
+        </div>
+        <div class="pay-modal-amount">
+          <div class="pay-modal-amount-label">
+            {{ isArabic ? 'المبلغ الإجمالي' : 'Total Amount' }}
+          </div>
+          <div class="pay-modal-amount-val">
+            {{ grandTotal() | number }} <span>{{ isArabic ? 'ج.م' : 'EGP' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-methods-list">
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('instapay')"
+          [class.pay-method-card--active]="selectedPayMethod === 'instapay'"
+        >
+          <div class="pay-method-icon pay-method-icon--instapay"><i class="fas fa-bolt"></i></div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">{{ isArabic ? 'انستاباي' : 'InstaPay' }}</div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'تحويل فوري عبر تطبيق البنك' : 'Instant transfer via banking app' }}
+            </div>
+          </div>
+          <div class="pay-method-badge">{{ isArabic ? 'فوري' : 'Instant' }}</div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('vodafone')"
+          [class.pay-method-card--active]="selectedPayMethod === 'vodafone'"
+        >
+          <div class="pay-method-icon pay-method-icon--vodafone">
+            <i class="fas fa-mobile-screen"></i>
+          </div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">{{ isArabic ? 'فودافون كاش' : 'Vodafone Cash' }}</div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'تحويل عبر محفظة فودافون كاش' : 'Transfer via Vodafone Cash wallet' }}
+            </div>
+          </div>
+          <div class="pay-method-badge pay-method-badge--red">{{ isArabic ? 'سريع' : 'Fast' }}</div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('bank')"
+          [class.pay-method-card--active]="selectedPayMethod === 'bank'"
+        >
+          <div class="pay-method-icon pay-method-icon--bank">
+            <i class="fas fa-building-columns"></i>
+          </div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">{{ isArabic ? 'تحويل بنكي' : 'Bank Transfer' }}</div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'تحويل من أي بنك مصري' : 'Transfer from any Egyptian bank' }}
+            </div>
+          </div>
+          <div class="pay-method-badge pay-method-badge--blue">
+            {{ isArabic ? 'آمن' : 'Secure' }}
+          </div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('cash')"
+          [class.pay-method-card--active]="selectedPayMethod === 'cash'"
+        >
+          <div class="pay-method-icon pay-method-icon--cash">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">
+              {{ isArabic ? 'دفع عند التسليم' : 'Cash on Delivery' }}
+            </div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'ادفع عند بدء الخدمة' : 'Pay when service starts' }}
+            </div>
+          </div>
+          <div class="pay-method-badge pay-method-badge--green">
+            {{ isArabic ? 'مرن' : 'Flexible' }}
+          </div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+      </div>
+
+      <div class="pay-method-detail-box" *ngIf="selectedPayMethod">
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'instapay'">
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'رقم الهاتف' : 'Phone Number' }}</span>
+            <strong>01X-XXX-XXXX</strong>
+          </div>
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'الاسم' : 'Name' }}</span>
+            <strong>{{ isArabic ? 'إدارة سوشيال ميديا' : 'Social Media Management' }}</strong>
+          </div>
+        </div>
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'vodafone'">
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'رقم المحفظة' : 'Wallet Number' }}</span>
+            <strong>010X-XXX-XXXX</strong>
+          </div>
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'اسم المستلم' : 'Recipient' }}</span>
+            <strong>{{ isArabic ? 'إدارة سوشيال ميديا' : 'Social Media Management' }}</strong>
+          </div>
+        </div>
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'bank'">
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'رقم الحساب' : 'Account Number' }}</span>
+            <strong>XXXX-XXXX-XXXX-XXXX</strong>
+          </div>
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'البنك' : 'Bank' }}</span>
+            <strong>{{ isArabic ? 'بنك مصر / CIB' : 'Banque Misr / CIB' }}</strong>
+          </div>
+        </div>
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'cash'">
+          <div class="pay-detail-note">
+            <i class="fas fa-circle-info"></i>
+            {{
+              isArabic
+                ? 'سيتم التواصل معك لتحديد موعد بدء الخدمة والدفع'
+                : 'We will contact you to arrange service start and payment'
+            }}
+          </div>
+        </div>
+        <div class="pay-copy-note">
+          <i class="fas fa-copy gold-text" style="font-size: 0.75rem"></i>
+          {{
+            isArabic
+              ? 'انسخ البيانات وأرسل الإيصال على الواتساب'
+              : 'Copy details and send receipt on WhatsApp'
+          }}
+        </div>
+      </div>
+
+      <div class="pay-cta-row">
+        <button
+          class="pay-confirm-btn"
+          (click)="confirmAndSubmit()"
+          [disabled]="!selectedPayMethod"
+        >
+          <i class="fas fa-paper-plane"></i>
+          {{ isArabic ? 'تأكيد الطلب والإرسال' : 'Confirm & Submit Order' }}
+        </button>
+        <button class="pay-back-btn" (click)="showPaymentModal = false; showInvoiceModal = true">
+          <i class="fas fa-arrow-right" *ngIf="isArabic"></i>
+          <i class="fas fa-arrow-left" *ngIf="!isArabic"></i>
+          {{ isArabic ? 'رجوع للفاتورة' : 'Back to Invoice' }}
+        </button>
+      </div>
+
+      <div class="pay-secure-note">
+        <i class="fas fa-shield-halved"></i>
+        {{
+          isArabic
+            ? 'جميع بياناتك محمية ومشفرة بالكامل'
+            : 'All your data is fully protected and encrypted'
+        }}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CTA Banner ══ -->
+  <section class="cta-section section-padding">
+    <div class="container">
+      <div class="cta-inner reveal">
+        <div class="cta-bg-orb"></div>
+        <div class="row align-items-center g-4">
+          <div class="col-lg-8">
+            <h2 class="cta-title">{{ 'CTA.TITLE' | translate }}</h2>
+            <p class="cta-desc">{{ 'CTA.DESC' | translate }}</p>
+          </div>
+          <div class="col-lg-4 text-lg-end">
+            <a routerLink="/contact" class="btn btn-gold rounded-pill px-5 py-3 fs-6">
+              {{ 'CTA.BTN' | translate }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

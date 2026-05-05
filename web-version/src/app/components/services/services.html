@@ -1,0 +1,422 @@
+<!-- ============================================================
+     SERVICES PAGE — Etbaly Marketing Agency
+     ============================================================ -->
+
+<!-- Page Hero -->
+<div class="mt-5">
+  <section class="page-hero">
+    <div class="page-hero-bg-orb page-hero-bg-orb--1"></div>
+    <div class="page-hero-bg-orb page-hero-bg-orb--2"></div>
+    <div class="hero-grid-overlay"></div>
+    <div class="container">
+      <div class="page-hero-content text-center reveal">
+        <div class="section-badge">{{ 'SERVICES_PAGE.BADGE' | translate }}</div>
+        <h1 class="page-hero-title">{{ 'SERVICES_PAGE.TITLE' | translate }}</h1>
+        <p class="page-hero-desc">{{ 'SERVICES_PAGE.DESC' | translate }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Grid -->
+  <section class="services-full-section section-padding">
+    <div class="container">
+      <div class="row g-4">
+        <div
+          class="col-md-6 col-xl-4 reveal"
+          *ngFor="let service of services; let i = index"
+          [style.transition-delay]="i * 0.08 + 's'"
+        >
+          <!-- ══ Card is now clickable (pointer) ══ -->
+          <div
+            class="service-full-card etbaly-card h-100"
+            style="cursor: pointer"
+            (click)="goToDetails(service.slug)"
+          >
+            <div class="service-full-top">
+              <div class="service-full-icon" [style.background]="service.gradientBg">
+                <i class="fas" [ngClass]="service.icon"></i>
+              </div>
+              <div class="service-full-num">{{ service.num }}</div>
+            </div>
+            <div class="service-full-body">
+              <h3 class="service-full-title">{{ service.titleKey | translate }}</h3>
+              <p class="service-full-desc">{{ service.descKey | translate }}</p>
+              <ul class="service-features-list">
+                <li *ngFor="let feat of service.features">
+                  <i class="fas fa-check-circle gold-text"></i>
+                  <span>{{ feat | translate }}</span>
+                </li>
+              </ul>
+            </div>
+            <div class="service-full-footer">
+              <!-- Details button → navigates to /services/:slug -->
+              <a
+                class="service-full-cta"
+                [routerLink]="['/services', service.slug]"
+                (click)="$event.stopPropagation()"
+              >
+                {{ 'SERVICES_PAGE.VIEW_DETAILS' | translate }}
+                <i class="fas" [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Us Section -->
+  <section class="why-us-section section-padding">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-badge">{{ 'SERVICES_PAGE.WHY_BADGE' | translate }}</div>
+        <h2 class="section-title">{{ 'SERVICES_PAGE.WHY_TITLE' | translate }}</h2>
+        <hr class="gold-divider mx-auto" />
+        <p class="section-desc">{{ 'SERVICES_PAGE.WHY_DESC' | translate }}</p>
+      </div>
+
+      <div class="why-us-grid mt-5">
+        <div
+          class="why-us-card reveal"
+          *ngFor="let item of whyUs; let i = index"
+          [style.transition-delay]="i * 0.1 + 's'"
+        >
+          <div class="why-us-icon">
+            <i class="fas" [ngClass]="item.icon"></i>
+          </div>
+          <h4>{{ item.titleKey | translate }}</h4>
+          <p>{{ item.descKey | translate }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       Packages Section — Grouped Tabs
+       ══════════════════════════════════════════════ -->
+  <section class="packages-section section-padding" id="packages">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-badge">{{ 'SERVICES_PAGE.PKG_BADGE' | translate }}</div>
+        <h2 class="section-title">{{ 'SERVICES_PAGE.PKG_TITLE' | translate }}</h2>
+        <hr class="gold-divider mx-auto" />
+        <!-- Authentic note -->
+        <div class="pkg-authentic-note">
+          <i class="fas fa-shield-alt"></i>
+          <span>{{ 'SERVICES_PAGE.PKG_AUTHENTIC_NOTE' | translate }}</span>
+        </div>
+      </div>
+
+      <!-- ── Grouped Package Tabs ── -->
+      <div class="pkg-tabs-wrapper reveal mt-4">
+        <div class="pkg-tab-group" *ngFor="let group of packageTabGroups">
+          <!-- Group Label -->
+          <div class="pkg-group-label">
+            <i class="fas" [ngClass]="group.icon"></i>
+            <span>{{ group.groupKey | translate }}</span>
+          </div>
+
+          <!-- Tabs in this group -->
+          <div class="pkg-tabs">
+            @for (tab of group.tabs; track tab.key) {
+              <button
+                class="pkg-tab-btn"
+                [class.pkg-tab-btn--active]="activePackageTab === tab.key"
+                (click)="setActiveTab(tab.key)"
+              >
+                <i class="fas" [ngClass]="tab.icon"></i>
+                <span>{{ tab.labelKey | translate }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Tab Indicator -->
+      <div class="pkg-active-indicator reveal">
+        @for (group of packageTabGroups; track group) {
+          @for (tab of group.tabs; track tab.key) {
+            @if (activePackageTab === tab.key) {
+              <span class="pkg-active-label">
+                <i class="fas" [ngClass]="tab.icon"></i>
+                {{ tab.labelKey | translate }}
+              </span>
+            }
+          }
+        }
+      </div>
+
+      <!-- Package Cards -->
+      <div class="row g-4 mt-2 justify-content-center">
+        <div
+          class="col-md-6 col-lg-4 reveal"
+          *ngFor="let pkg of activePackages; let i = index"
+          [style.transition-delay]="i * 0.08 + 's'"
+        >
+          <div
+            class="package-card etbaly-card h-100 p-4"
+            [class.package-card--featured]="pkg.featured"
+          >
+            <!-- Featured Badge -->
+            <div class="package-badge" *ngIf="pkg.badge">
+              {{ pkg.badge | translate }}
+            </div>
+
+            <!-- Package Name -->
+            <div class="package-name">{{ pkg.nameKey | translate }}</div>
+
+            <!-- Price -->
+            <div class="package-price">
+              <span class="package-amount">{{ pkg.price }}</span>
+              <span class="package-currency"> {{ 'PACKAGES.EGP' | translate }}</span>
+            </div>
+
+            <!-- Duration -->
+            <div class="package-duration" *ngIf="pkg.duration">
+              <i class="fas fa-calendar-alt"></i>
+              {{ pkg.duration }} {{ pkg.durationKey | translate }}
+            </div>
+
+            <!-- Description -->
+            <p class="package-desc">{{ pkg.descKey | translate }}</p>
+
+            <!-- Budget Breakdown -->
+            <div class="package-budget" *ngIf="pkg.adBudget">
+              <div class="package-budget__row">
+                <span><i class="fas fa-chart-bar"></i> {{ 'PACKAGES.AD_BUDGET' | translate }}</span>
+                <strong>{{ pkg.adBudget }} {{ 'PACKAGES.EGP' | translate }}</strong>
+              </div>
+              <div class="package-budget__row">
+                <span><i class="fas fa-cog"></i> {{ 'PACKAGES.MGMT_FEE' | translate }}</span>
+                <strong>{{ pkg.managementFee }} {{ 'PACKAGES.EGP' | translate }}</strong>
+              </div>
+            </div>
+
+            <!-- Features -->
+            <ul class="package-features">
+              <li *ngFor="let f of pkg.features">
+                <i class="fas fa-check gold-text"></i>
+                <span>{{ f | translate }}</span>
+              </li>
+            </ul>
+
+            <!-- CTA -->
+            <button
+              (click)="openPackagePopup(pkg)"
+              [class]="
+                pkg.featured
+                  ? 'btn btn-gold rounded-pill w-100 py-3 mt-auto'
+                  : 'btn btn-outline-gold rounded-pill w-100 py-3 mt-auto'
+              "
+            >
+              {{ 'SERVICES_PAGE.START_NOW' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ads goals note -->
+      <div class="pkg-goals-note reveal mt-4 text-center">
+        <i class="fas fa-bullseye gold-text"></i>
+        {{ 'PACKAGES.GOALS_NOTE' | translate }}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       Social Boost Section — Instagram & Telegram
+       ══════════════════════════════════════════════ -->
+  <section class="packages-section social-boost-section section-padding" id="social-boost">
+    <div class="container">
+      <!-- Section Header -->
+      <div class="section-header text-center reveal">
+        <div class="section-badge">{{ 'SERVICES_PAGE.BOOST_BADGE' | translate }}</div>
+        <h2 class="section-title">{{ 'SERVICES_PAGE.BOOST_TITLE' | translate }}</h2>
+        <hr class="gold-divider mx-auto" />
+        <p class="section-desc">{{ 'SERVICES_PAGE.BOOST_DESC' | translate }}</p>
+      </div>
+
+      <!-- ── Guidelines Note ── -->
+      <div class="boost-guidelines-card reveal mt-4">
+        <div class="boost-guidelines-icon">
+          <i class="fas fa-shield-alt gold-text"></i>
+        </div>
+        <div class="boost-guidelines-body">
+          <h5 class="boost-guidelines-title">{{ 'SERVICES_PAGE.BOOST_NOTE_TITLE' | translate }}</h5>
+          <p class="boost-guidelines-text">{{ 'SERVICES_PAGE.BOOST_NOTE_TEXT' | translate }}</p>
+          <div class="boost-guidelines-features">
+            <span
+              ><i class="fas fa-check gold-text"></i>
+              {{ 'SERVICES_PAGE.BOOST_NOTE_F1' | translate }}</span
+            >
+            <span
+              ><i class="fas fa-check gold-text"></i>
+              {{ 'SERVICES_PAGE.BOOST_NOTE_F2' | translate }}</span
+            >
+            <span
+              ><i class="fas fa-check gold-text"></i>
+              {{ 'SERVICES_PAGE.BOOST_NOTE_F3' | translate }}</span
+            >
+            <span
+              ><i class="fas fa-check gold-text"></i>
+              {{ 'SERVICES_PAGE.BOOST_NOTE_F4' | translate }}</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Social Boost Tabs ── -->
+      <div class="pkg-tabs-wrapper reveal mt-4">
+        <div class="pkg-tab-group" *ngFor="let group of socialBoostTabGroups">
+          <div class="pkg-group-label">
+            <i class="fas" [ngClass]="group.icon"></i>
+            <span>{{ group.groupKey | translate }}</span>
+          </div>
+          <div class="pkg-tabs">
+            @for (tab of group.tabs; track tab.key) {
+              <button
+                class="pkg-tab-btn"
+                [class.pkg-tab-btn--active]="activeBoostTab === tab.key"
+                (click)="setActiveBoostTab(tab.key)"
+              >
+                <i class="fas" [ngClass]="tab.icon"></i>
+                <span>{{ tab.labelKey | translate }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Tab Indicator -->
+      <div class="pkg-active-indicator reveal">
+        @for (group of socialBoostTabGroups; track group) {
+          @for (tab of group.tabs; track tab.key) {
+            @if (activeBoostTab === tab.key) {
+              <span class="pkg-active-label">
+                <i class="fas" [ngClass]="tab.icon"></i>
+                {{ tab.labelKey | translate }}
+              </span>
+            }
+          }
+        }
+      </div>
+
+      <!-- Package Cards -->
+      <div class="row g-4 mt-2 justify-content-center">
+        <div
+          class="col-md-6 col-lg-4 reveal"
+          *ngFor="let pkg of activeBoostPackages; let i = index"
+          [style.transition-delay]="i * 0.08 + 's'"
+        >
+          <div
+            class="package-card etbaly-card h-100 p-4"
+            [class.package-card--featured]="pkg.featured"
+          >
+            <div class="package-badge" *ngIf="pkg.badge">
+              {{ pkg.badge | translate }}
+            </div>
+            <div class="package-name">{{ pkg.nameKey | translate }}</div>
+            <div class="package-price">
+              <span class="package-amount">{{ pkg.price }}</span>
+              <span class="package-currency"> {{ 'PACKAGES.EGP' | translate }}</span>
+            </div>
+            <div class="package-duration" *ngIf="pkg.duration">
+              <i class="fas fa-calendar-alt"></i>
+              {{ pkg.duration }} {{ pkg.durationKey | translate }}
+            </div>
+            <p class="package-desc">{{ pkg.descKey | translate }}</p>
+            <ul class="package-features">
+              <li *ngFor="let f of pkg.features">
+                <i class="fas fa-check gold-text"></i>
+                <span>{{ f | translate }}</span>
+              </li>
+            </ul>
+            <button
+              (click)="openPackagePopup(pkg)"
+              [class]="
+                pkg.featured
+                  ? 'btn btn-gold rounded-pill w-100 py-3 mt-auto'
+                  : 'btn btn-outline-gold rounded-pill w-100 py-3 mt-auto'
+              "
+            >
+              {{ 'SERVICES_PAGE.START_NOW' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Geo note -->
+      <div class="pkg-goals-note reveal mt-4 text-center">
+        <i class="fas fa-globe-africa gold-text"></i>
+        {{ 'PACKAGES.GEO_NOTE' | translate }}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════
+       Pay CTA Section — Premium Design
+       ══════════════════════════════════════════════ -->
+  <section class="pay-cta-section reveal">
+    <div class="container">
+      <div class="pay-cta-wrapper">
+        <div class="pay-cta-orb pay-cta-orb--1"></div>
+        <div class="pay-cta-orb pay-cta-orb--2"></div>
+        <div class="pay-cta-grid"></div>
+
+        <div class="pay-cta-body">
+          <div class="pay-cta-icon-wrap">
+            <div class="pay-cta-icon">
+              <i class="fas fa-credit-card"></i>
+            </div>
+          </div>
+          <div class="pay-cta-text">
+            <h3 class="pay-cta-title">{{ 'SERVICES_PAGE.PAY_NOTE' | translate }}</h3>
+            <p class="pay-cta-sub">{{ 'SERVICES_PAGE.PAY_NOTE_SUB' | translate }}</p>
+          </div>
+          <div class="pay-cta-badges">
+            <span class="pay-cta-badge">
+              <i class="fas fa-lock"></i>
+              {{ 'SERVICES_PAGE.PAY_SECURE' | translate }}
+            </span>
+            <span class="pay-cta-badge">
+              <i class="fas fa-bolt"></i>
+              {{ 'SERVICES_PAGE.PAY_FAST' | translate }}
+            </span>
+            <span class="pay-cta-badge">
+              <i class="fas fa-headset"></i>
+              {{ 'SERVICES_PAGE.PAY_SUPPORT' | translate }}
+            </span>
+          </div>
+          <a routerLink="/payments" class="pay-cta-btn">
+            <span class="pay-cta-btn-inner">
+              <i class="fas fa-credit-card"></i>
+              <span>{{ 'SERVICES_PAGE.PAY_NOW' | translate }}</span>
+              <i class="fas" [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"></i>
+            </span>
+            <div class="pay-cta-btn-shine"></div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-section section-padding">
+    <div class="container">
+      <div class="cta-inner reveal">
+        <div class="cta-bg-orb"></div>
+        <div class="row align-items-center g-4">
+          <div class="col-lg-8">
+            <h2 class="cta-title">{{ 'CTA.TITLE' | translate }}</h2>
+            <p class="cta-desc">{{ 'CTA.DESC' | translate }}</p>
+          </div>
+          <div class="col-lg-4 text-lg-end">
+            <a routerLink="/contact" class="btn btn-gold rounded-pill px-5 py-3 fs-6">
+              {{ 'CTA.BTN' | translate }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

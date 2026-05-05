@@ -1,0 +1,1125 @@
+<!-- ============================================================
+     HOME PAGE — Etbaly Marketing Agency (Ultra Pro)
+     ============================================================ -->
+
+<!-- ======================== HERO ======================== -->
+<section class="hero-section" id="heroSection">
+  <!-- ══ Animated Wave Background Canvas ══ -->
+  <canvas class="hero-wave-canvas" id="heroWaveCanvas" aria-hidden="true"></canvas>
+
+  <!-- Cursor Glow Follower (magnetic field) -->
+  <div class="hero-cursor-glow" id="heroCursorGlow">
+    <div class="hero-cursor-core"></div>
+  </div>
+
+  <!-- Interactive Particle Mesh Canvas -->
+  <canvas class="hero-particle-canvas" id="heroParticleCanvas" aria-hidden="true"></canvas>
+
+  <!-- Deep glow layers (now hidden via CSS) -->
+  <div class="hero-glow-layer hero-glow-layer--1"></div>
+  <div class="hero-glow-layer hero-glow-layer--2"></div>
+  <div class="hero-glow-layer hero-glow-layer--3"></div>
+  <div class="hero-glow-layer hero-glow-layer--4"></div>
+
+  <!-- Grid Overlay -->
+  <div class="hero-grid-overlay"></div>
+
+  <!-- Beam lines -->
+  <div class="hero-beams" aria-hidden="true">
+    <div class="hero-beam"></div>
+    <div class="hero-beam"></div>
+    <div class="hero-beam"></div>
+    <div class="hero-beam"></div>
+    <div class="hero-beam"></div>
+    <div class="hero-beam"></div>
+  </div>
+
+  <!-- Floating sparks (CSS-only) -->
+  <div class="hero-sparks" aria-hidden="true">
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+    <div class="hero-spark"></div>
+  </div>
+
+  <!-- Interactive canvas (mouse trail + touch) -->
+  <canvas class="hero-trail-canvas" id="heroTrailCanvas" aria-hidden="true"></canvas>
+
+  <div class="container hero-container">
+    <div class="row align-items-center g-5">
+      <!-- Left Content -->
+      <div class="col-lg-6 hero-content">
+        <div class="section-badge animate-fade-up hero-badge-wrap">
+          <span class="badge-dot"></span>
+          {{ 'HERO.BADGE' | translate }}
+        </div>
+
+        <h1 class="hero-title animate-fade-up" style="animation-delay: 0.1s">
+          {{ 'HERO.TITLE_1' | translate }}
+          <span class="hero-title-highlight" id="heroHighlight">{{
+            'HERO.TITLE_2' | translate
+          }}</span>
+          <br />
+          <span class="hero-title-line3">
+            {{ 'HERO.TITLE_3A' | translate }}
+            <span class="word-anim word-anim--najah">{{
+              'HERO.TITLE_3_NAJAH' | translate
+            }}</span> </span
+          ><span class="hero-title-line4">
+            {{ 'HERO.TITLE_4A' | translate }}
+            <span
+              class="word-anim word-anim--waqe"
+              [attr.data-text]="'HERO.TITLE_4_WAQE' | translate"
+              >{{ 'HERO.TITLE_4_WAQE' | translate }}</span
+            >
+          </span>
+        </h1>
+
+        <p class="hero-desc animate-fade-up" style="animation-delay: 0.2s">
+          {{ 'HERO.DESC' | translate }}
+        </p>
+
+        <div class="hero-actions animate-fade-up" style="animation-delay: 0.3s">
+          <a
+            routerLink="/contact"
+            class="btn btn-gold rounded-pill px-5 py-3 fs-6 hero-btn-magnetic"
+            id="heroBtnPrimary"
+          >
+            {{ 'HERO.CTA_PRIMARY' | translate }}
+            <i class="fas ms-2" [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"></i>
+            <span class="btn-ripple"></span>
+          </a>
+          <a
+            routerLink="/portfolio"
+            class="btn btn-outline-gold rounded-pill px-5 py-3 fs-6 hero-btn-magnetic"
+            id="heroBtnSecondary"
+          >
+            {{ 'HERO.CTA_SECONDARY' | translate }}
+            <span class="btn-ripple"></span>
+          </a>
+        </div>
+
+        <!-- Stats — Animated Counters -->
+        <div class="hero-stats animate-fade-up" style="animation-delay: 0.4s" #heroStats>
+          <div class="hero-stat">
+            <span class="hero-stat-num">
+              <span class="counter-val" data-target="400000" data-suffix="+">0</span>
+            </span>
+            <span class="hero-stat-label">{{ 'HERO.STAT_1_LABEL' | translate }}</span>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <span class="hero-stat-num">
+              <span class="counter-val" data-target="5000" data-suffix="+">0</span>
+            </span>
+            <span class="hero-stat-label">{{ 'HERO.STAT_2_LABEL' | translate }}</span>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <span class="hero-stat-num">
+              <span class="counter-val" data-target="12" data-suffix="+">0</span>
+            </span>
+            <span class="hero-stat-label">{{ 'HERO.STAT_3_LABEL' | translate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Visual — 3D Gold Logo -->
+      <div class="col-lg-6 hero-visual-wrapper animate-scale-in" style="animation-delay: 0.2s">
+        <div class="hero-logo-3d-wrapper" id="heroLogoWrapper">
+          <!-- New 3D Logo Scene -->
+          <div class="logo3d-scene" id="logo3dScene">
+            <!-- Floating gold particles (CSS only) -->
+            <span class="logo3d-spark logo3d-spark--1" aria-hidden="true"></span>
+            <span class="logo3d-spark logo3d-spark--2" aria-hidden="true"></span>
+            <span class="logo3d-spark logo3d-spark--3" aria-hidden="true"></span>
+            <span class="logo3d-spark logo3d-spark--4" aria-hidden="true"></span>
+            <span class="logo3d-spark logo3d-spark--5" aria-hidden="true"></span>
+            <span class="logo3d-spark logo3d-spark--6" aria-hidden="true"></span>
+
+            <!-- Ambient glow behind logo -->
+            <div class="logo3d-aura" aria-hidden="true"></div>
+
+            <!-- Logo wrap (tilt target) -->
+            <div class="logo3d-wrap" id="logo3dWrap">
+              <img
+                [src]="isArabic ? 'logo_3d.png' : 'logo_3d_en.png'"
+                alt="Etbaly Digital Marketing Logo"
+                class="logo3d-img"
+                id="logo3dImg"
+                draggable="false"
+                loading="eager"
+                fetchpriority="high"
+              />
+              <!-- Hover shimmer sweep -->
+              <div class="logo3d-shimmer" id="logo3dShimmer" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <!-- Floating stats cards -->
+          <div class="float-card float-card--analytics">
+            <div class="fc-icon-wrap fc-icon-wrap--chart">
+              <svg
+                class="fc-icon-svg fc-chart-svg"
+                viewBox="0 0 36 28"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <!-- bars -->
+                <rect class="fc-bar fc-bar--1" x="1" y="18" width="6" height="9" rx="1.5" />
+                <rect class="fc-bar fc-bar--2" x="10" y="10" width="6" height="17" rx="1.5" />
+                <rect class="fc-bar fc-bar--3" x="19" y="5" width="6" height="22" rx="1.5" />
+                <rect class="fc-bar fc-bar--4" x="28" y="1" width="6" height="26" rx="1.5" />
+                <!-- trend line -->
+                <polyline
+                  class="fc-trend-line"
+                  points="4,20 13,12 22,7 31,3"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  fill="none"
+                />
+                <!-- arrow head -->
+                <polygon class="fc-arrow" points="31,0 36,3 31,6" />
+              </svg>
+              <span class="fc-icon-pulse fc-icon-pulse--chart"></span>
+            </div>
+            <div>
+              <div class="float-card-num">+187%</div>
+              <div class="float-card-label">
+                {{ isArabic ? 'نمو الزيارات' : 'Traffic Growth' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="float-card float-card--social">
+            <div class="fc-icon-wrap fc-icon-wrap--heart">
+              <svg
+                class="fc-icon-svg fc-heart-svg"
+                viewBox="0 0 32 30"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  class="fc-heart-path"
+                  d="M16 27 C16 27 2 18 2 9 C2 4.5 5.5 1 10 1 C12.8 1 15.2 2.4 16 4 C16.8 2.4 19.2 1 22 1 C26.5 1 30 4.5 30 9 C30 18 16 27 16 27Z"
+                />
+              </svg>
+              <!-- particles bursting from heart -->
+              <span class="fc-heart-particle fc-heart-particle--1"></span>
+              <span class="fc-heart-particle fc-heart-particle--2"></span>
+              <span class="fc-heart-particle fc-heart-particle--3"></span>
+              <span class="fc-heart-particle fc-heart-particle--4"></span>
+              <span class="fc-heart-particle fc-heart-particle--5"></span>
+              <span class="fc-heart-particle fc-heart-particle--6"></span>
+            </div>
+            <div>
+              <div class="float-card-num">150.4K</div>
+              <div class="float-card-label">{{ isArabic ? 'متابع جديد' : 'New Followers' }}</div>
+            </div>
+          </div>
+
+          <div class="float-card float-card--award">
+            <div class="fc-icon-wrap fc-icon-wrap--star">
+              <svg
+                class="fc-icon-svg fc-star-svg"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  class="fc-star-path"
+                  d="M16 2 L19.5 12 L30 12 L21.5 18.5 L24.5 29 L16 23 L7.5 29 L10.5 18.5 L2 12 L12.5 12 Z"
+                />
+              </svg>
+              <!-- rotating ring around star -->
+              <span class="fc-star-ring"></span>
+              <!-- sparkle dots -->
+              <span class="fc-sparkle fc-sparkle--1"></span>
+              <span class="fc-sparkle fc-sparkle--2"></span>
+              <span class="fc-sparkle fc-sparkle--3"></span>
+              <span class="fc-sparkle fc-sparkle--4"></span>
+            </div>
+            <div>
+              <div class="float-card-num">5★</div>
+              <div class="float-card-label">{{ isArabic ? 'تقييم العملاء' : 'Client Rating' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decorative rings -->
+        <div class="hero-ring hero-ring--outer"></div>
+        <div class="hero-ring hero-ring--inner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="hero-scroll-indicator" aria-hidden="true">
+    <div class="hero-scroll-mouse">
+      <div class="hero-scroll-dot"></div>
+    </div>
+    <span class="hero-scroll-label">{{ isArabic ? 'اسكرول' : 'Scroll' }}</span>
+  </div>
+</section>
+
+<!-- ======================== IMAGE STRIP ======================== -->
+<section class="clients-strip-section">
+  <!-- Header -->
+  <div class="strip-header text-center">
+    <div class="strip-header-line"></div>
+    <span class="strip-title-label">
+      {{ isArabic ? 'نبذة عنّا' : 'About Us' }}
+    </span>
+    <div class="strip-header-line"></div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="strip-progress-wrap">
+    <div class="strip-progress-bar" id="stripProgressBar"></div>
+  </div>
+
+  <!-- Fade edges -->
+  <div class="strip-fade-left" aria-hidden="true"></div>
+  <div class="strip-fade-right" aria-hidden="true"></div>
+
+  <!-- Viewport -->
+  <div
+    class="clients-strip-viewport"
+    id="clientsStripWrap"
+    role="region"
+    [attr.aria-label]="isArabic ? 'معرض الصور' : 'Image gallery'"
+  >
+    <div class="clients-strip-track" id="clientsStripTrack">
+      <ng-container *ngFor="let img of stripImagesLoop; let i = index">
+        <div class="strip-img-item" [attr.data-index]="i">
+          <div class="strip-img-frame">
+            <img
+              [src]="img"
+              draggable="false"
+              loading="lazy"
+              [attr.alt]="isArabic ? 'صورة ' + (i + 1) : 'Image ' + (i + 1)"
+            />
+            <div class="strip-img-overlay" aria-hidden="true">
+              <div class="strip-img-shine"></div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Drag hint (fades out after first drag) -->
+  <div class="strip-drag-hint" id="stripDragHint" aria-hidden="true">
+    <i class="fas fa-hand-pointer"></i>
+    <span>{{ isArabic ? 'اسحب للتصفح' : 'Drag to browse' }}</span>
+  </div>
+</section>
+
+<!-------- feature-showcase --------->
+<section class="feature-showcase section-padding" #featureSection>
+  <!-- Ambient background particles -->
+  <div class="fs-ambient" aria-hidden="true">
+    <span class="fs-orb fs-orb--1"></span>
+    <span class="fs-orb fs-orb--2"></span>
+    <span class="fs-orb fs-orb--3"></span>
+  </div>
+
+  <!-- Gold line top -->
+  <div class="fs-top-line" aria-hidden="true"></div>
+
+  <div class="container">
+    <div class="feature-wrapper reveal">
+      <div class="row g-0 align-items-center">
+        <!-- =================== IMAGE SIDE =================== -->
+        <div class="col-lg-6 feature-image-col">
+          <div class="feature-image-area">
+            <!-- Floating achievement chips -->
+            <div class="fs-chip fs-chip--top" [class.fs-chip--rtl]="isArabic">
+              <span class="fs-chip-icon"><i class="fas fa-mobile-alt"></i></span>
+              <span class="fs-chip-text">{{ 'FEATURE.CHIP_MOBILE' | translate }}</span>
+            </div>
+
+            <div class="fs-chip fs-chip--bottom" [class.fs-chip--rtl]="isArabic">
+              <span class="fs-chip-icon"><i class="fas fa-bolt"></i></span>
+              <span class="fs-chip-text">{{ 'FEATURE.CHIP_SPEED' | translate }}</span>
+            </div>
+
+            <!-- Main image container with removed bg -->
+            <div class="feature-image-wrapper">
+              <!-- Decorative rings behind image -->
+              <div class="fs-ring fs-ring--1" aria-hidden="true"></div>
+              <div class="fs-ring fs-ring--2" aria-hidden="true"></div>
+              <div class="fs-ring fs-ring--3" aria-hidden="true"></div>
+
+              <!-- Glow blob behind image -->
+              <div class="fs-img-glow" aria-hidden="true"></div>
+
+              <!-- The image itself (PNG with transparent bg) -->
+              <img
+                [src]="featureImage"
+                [alt]="'FEATURE.IMG_ALT' | translate"
+                class="feature-main-img"
+                draggable="false"
+                loading="lazy"
+              />
+
+              <!-- Floating dots decoration -->
+              <div class="fs-dots" aria-hidden="true">
+                <span></span><span></span><span></span> <span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+
+            <!-- Device compatibility row -->
+            <div class="fs-devices" [class.fs-devices--rtl]="isArabic">
+              <div class="fs-device-item">
+                <i class="fas fa-desktop"></i>
+                <span>{{ 'FEATURE.DEV_DESKTOP' | translate }}</span>
+              </div>
+              <div class="fs-device-sep"></div>
+              <div class="fs-device-item">
+                <i class="fas fa-tablet-alt"></i>
+                <span>{{ 'FEATURE.DEV_TABLET' | translate }}</span>
+              </div>
+              <div class="fs-device-sep"></div>
+              <div class="fs-device-item">
+                <i class="fas fa-mobile-alt"></i>
+                <span>{{ 'FEATURE.DEV_MOBILE' | translate }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =================== TEXT SIDE =================== -->
+        <div class="col-lg-6 feature-content-col">
+          <div class="feature-content">
+            <!-- Badge -->
+            <div class="section-badge feature-badge reveal">
+              {{ 'FEATURE.BADGE' | translate }}
+            </div>
+
+            <!-- Title -->
+            <h2 class="feature-title reveal" style="animation-delay: 0.1s">
+              <span class="fs-title-plain">{{ 'FEATURE.TITLE_LINE1' | translate }}</span>
+              <span class="fs-title-gold">{{ 'FEATURE.TITLE_LINE2' | translate }}</span>
+              <span class="fs-title-plain">{{ 'FEATURE.TITLE_LINE3' | translate }}</span>
+            </h2>
+
+            <!-- Desc -->
+            <p class="feature-desc reveal" style="animation-delay: 0.15s">
+              {{ 'FEATURE.DESC' | translate }}
+            </p>
+
+            <!-- Feature bullets -->
+            <ul class="fs-bullets reveal" style="animation-delay: 0.2s">
+              <li class="fs-bullet">
+                <span class="fs-bullet-icon"><i class="fas fa-check"></i></span>
+                <span>{{ 'FEATURE.BULLET_1' | translate }}</span>
+              </li>
+              <li class="fs-bullet">
+                <span class="fs-bullet-icon"><i class="fas fa-check"></i></span>
+                <span>{{ 'FEATURE.BULLET_2' | translate }}</span>
+              </li>
+              <li class="fs-bullet">
+                <span class="fs-bullet-icon"><i class="fas fa-check"></i></span>
+                <span>{{ 'FEATURE.BULLET_3' | translate }}</span>
+              </li>
+            </ul>
+
+            <!-- Mini stats row -->
+            <div class="fs-stats reveal" style="animation-delay: 0.25s">
+              <div class="fs-stat">
+                <span class="fs-stat-num">100%</span>
+                <span class="fs-stat-lbl">{{ 'FEATURE.STAT_1' | translate }}</span>
+              </div>
+              <div class="fs-stat-line"></div>
+              <div class="fs-stat">
+                <span class="fs-stat-num">&lt;1s</span>
+                <span class="fs-stat-lbl">{{ 'FEATURE.STAT_2' | translate }}</span>
+              </div>
+              <div class="fs-stat-line"></div>
+              <div class="fs-stat">
+                <span class="fs-stat-num">A+</span>
+                <span class="fs-stat-lbl">{{ 'FEATURE.STAT_3' | translate }}</span>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="fs-cta-wrap reveal" style="animation-delay: 0.3s">
+              <a routerLink="/contact" class="btn btn-gold fs-cta-btn">
+                {{ 'FEATURE.CTA' | translate }}
+                <i class="fas ms-2" [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"></i>
+                <span class="btn-ripple"></span>
+              </a>
+              <a routerLink="/portfolio" class="fs-cta-link">
+                {{ 'FEATURE.CTA_SECONDARY' | translate }}
+                <i class="fas fa-external-link-alt ms-1"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /row -->
+    </div>
+    <!-- /feature-wrapper -->
+  </div>
+  <!-- /container -->
+</section>
+
+<!-- ======================== SERVICES ======================== -->
+<section class="services-section section-padding" id="services">
+  <div class="container">
+    <div class="section-header text-center reveal">
+      <div class="section-badge">{{ 'SERVICES.BADGE' | translate }}</div>
+      <h2 class="section-title">{{ 'SERVICES.TITLE' | translate }}</h2>
+      <hr class="gold-divider mx-auto" />
+      <p class="section-desc">{{ 'SERVICES.DESC' | translate }}</p>
+    </div>
+
+    <div class="row g-4 mt-2">
+      <div
+        class="col-md-6 col-lg-4 reveal"
+        *ngFor="let service of services; let i = index"
+        [style.transition-delay]="i * 0.1 + 's'"
+      >
+        <div class="service-card etbaly-card h-100 p-4">
+          <div class="service-icon">
+            <i class="fas" [ngClass]="service.icon"></i>
+          </div>
+          <h3 class="service-title">{{ service.titleKey | translate }}</h3>
+          <p class="service-desc">{{ service.descKey | translate }}</p>
+          <a [routerLink]="['/services', service.slug]" class="service-link">
+            {{ isArabic ? 'اعرف أكثر' : 'Learn more' }}
+            <i class="fas" [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== PROCESS ======================== -->
+<section class="process-section section-padding">
+  <div class="container">
+    <div class="section-header text-center reveal">
+      <div class="section-badge">{{ 'PROCESS.BADGE' | translate }}</div>
+      <h2 class="section-title">{{ 'PROCESS.TITLE' | translate }}</h2>
+      <hr class="gold-divider mx-auto" />
+      <p class="section-desc">{{ 'PROCESS.DESC' | translate }}</p>
+    </div>
+
+    <div class="process-timeline mt-5">
+      <div
+        class="process-step reveal"
+        *ngFor="let step of processSteps; let i = index"
+        [style.transition-delay]="i * 0.15 + 's'"
+      >
+        <div class="process-step-num">{{ step.numKey | translate }}</div>
+        <div class="process-step-content">
+          <h4>{{ step.titleKey | translate }}</h4>
+          <p>{{ step.descKey | translate }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== PORTFOLIO ======================== -->
+<section class="portfolio-section section-padding" id="portfolio">
+  <div class="container">
+    <div class="section-header text-center reveal">
+      <div class="section-badge">{{ 'PORTFOLIO.BADGE' | translate }}</div>
+      <h2 class="section-title">{{ 'PORTFOLIO.TITLE' | translate }}</h2>
+      <hr class="gold-divider mx-auto" />
+      <p class="section-desc">{{ 'PORTFOLIO.DESC' | translate }}</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="home-port-tabs text-center mt-4 reveal">
+      <button
+        class="home-tab-btn"
+        [class.active]="activeTab === 'photos'"
+        (click)="switchTab('photos')"
+      >
+        <i class="fas fa-images me-2"></i>{{ isArabic ? 'صور المشاريع' : 'Photos' }}
+      </button>
+      <button
+        class="home-tab-btn"
+        [class.active]="activeTab === 'reels'"
+        (click)="switchTab('reels')"
+      >
+        <i class="fas fa-film me-2"></i>{{ isArabic ? 'ريلز' : 'Reels' }}
+      </button>
+    </div>
+
+    <!-- Photos Tab -->
+    <ng-container *ngIf="activeTab === 'photos'">
+      <div class="portfolio-grid mt-4">
+        <div
+          class="portfolio-item reveal"
+          *ngFor="let item of visiblePhotos; let i = index"
+          [style.transition-delay]="i * 0.08 + 's'"
+        >
+          <div class="portfolio-card">
+            <div class="portfolio-card-img" [style.background]="item.gradient">
+              <img
+                *ngIf="item.thumbnail"
+                [src]="item.thumbnail"
+                draggable="false"
+                loading="lazy"
+                class="portfolio-card-photo"
+              />
+
+              <div class="portfolio-card-overlay">
+                <button class="portfolio-view-btn" (click)="openImagePopup(item, i)">
+                  <i class="fas fa-images me-2"></i>
+                  {{ isArabic ? 'عرض الصور' : 'View Photos' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="portfolio-card-body">
+              <!-- ✅ التاج من التخصص -->
+              <span class="portfolio-tag">
+                {{ isArabic ? getTagFromMedia(item).ar : getTagFromMedia(item).en }}
+              </span>
+
+              <!-- ✅ اسم المشروع -->
+              <h4>
+                {{ getProjectTitle(item, i) }}
+              </h4>
+
+              <!-- ✅ وصف ديناميك -->
+              <p>
+                {{ getProjectDescription(item, null, i) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Reels Tab -->
+    <ng-container *ngIf="activeTab === 'reels'">
+      <div class="portfolio-grid mt-4">
+        <div
+          class="portfolio-item reveal"
+          *ngFor="let reel of visibleReels; let i = index"
+          [style.transition-delay]="i * 0.08 + 's'"
+        >
+          <div class="portfolio-card reel-card-home">
+            <div class="portfolio-card-img">
+              <!-- Animated Reel Logo Background -->
+              <div class="reel-logo-bg" [class.day-mode]="isDayMode">
+                <div class="reel-sky-layer reel-sky-layer--back"></div>
+                <div class="reel-sky-layer reel-sky-layer--mid"></div>
+                <div class="reel-sky-layer reel-sky-layer--front"></div>
+                <div class="reel-stars" aria-hidden="true">
+                  <span
+                    *ngFor="let s of logoStars"
+                    class="reel-star"
+                    [style.left]="s.x + '%'"
+                    [style.top]="s.y + '%'"
+                    [style.width]="s.size + 'px'"
+                    [style.height]="s.size + 'px'"
+                    [style.animation-delay]="s.delay + 's'"
+                  ></span>
+                </div>
+                <div class="reel-orb"></div>
+                <div class="reel-particles" aria-hidden="true">
+                  <span
+                    class="reel-particle"
+                    *ngFor="let p of logoParticles"
+                    [style.left]="p.x + '%'"
+                    [style.animation-duration]="p.dur + 's'"
+                    [style.animation-delay]="p.delay + 's'"
+                    [style.width]="p.size + 'px'"
+                    [style.height]="p.size + 'px'"
+                  ></span>
+                </div>
+                <div class="reel-ground-glow"></div>
+                <div class="reel-logo-wrap">
+                  <img
+                    [src]="isArabic ? 'logo_3d.png' : 'logo_3d_en.png'"
+                    alt="Etbaly Logo"
+                    class="reel-logo-img"
+                    draggable="false"
+                  />
+                  <div class="reel-logo-shimmer"></div>
+                </div>
+              </div>
+
+              <!-- Play overlay -->
+              <div class="reel-play-overlay-home" (click)="openReelPopup(reel, i)">
+                <div class="reel-play-btn-home">
+                  <i class="fas fa-play"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="portfolio-card-body">
+              <!-- ✅ التاج من التخصص -->
+              <span class="portfolio-tag">
+                {{ isArabic ? getTagFromMedia(reel).ar : getTagFromMedia(reel).en }}
+              </span>
+
+              <!-- ✅ اسم -->
+              <h4>
+                {{ getProjectTitle(reel, i) }}
+              </h4>
+
+              <!-- ✅ وصف -->
+              <p>
+                {{ getProjectDescription(reel, null, i) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="home-port-actions text-center mt-4">
+      <button class="port-more-btn" *ngIf="hasMorePhotos" (click)="showMorePhotos()">
+        <i class="fas fa-plus-circle me-2"></i>
+        {{ isArabic ? 'عرض المزيد' : 'View More' }}
+      </button>
+    </div>
+
+    <!-- IMAGE POPUP -->
+    <div class="popup-backdrop" *ngIf="popupOpen" (click)="onPopupBgClick($event, 'image')">
+      <div class="image-popup">
+        <div class="popup-header">
+          <!-- ✅ title ديناميك -->
+          <span class="popup-title">
+            {{ getProjectTitle(currentImageItem, currentProjectIndex) }}
+          </span>
+
+          <!-- ✅ يظهر بس لو أكتر من صورة -->
+          <span class="popup-counter" *ngIf="popupImages.length > 1">
+            {{ popupCurrentIndex + 1 }} / {{ popupImages.length }}
+          </span>
+
+          <button class="popup-close" (click)="closeImagePopup()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="popup-img-wrap">
+          <img [src]="popupImages[popupCurrentIndex]" class="popup-main-img" />
+        </div>
+
+        <!-- ✅ arrows بشرط -->
+        <button
+          *ngIf="popupImages.length > 1"
+          class="popup-nav popup-nav--prev"
+          (click)="prevImage()"
+        >
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <button
+          *ngIf="popupImages.length > 1"
+          class="popup-nav popup-nav--next"
+          (click)="nextImage()"
+        >
+          <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <!-- ✅ thumbnails بشرط -->
+        <div class="popup-thumbs" *ngIf="popupImages.length > 1">
+          <img
+            *ngFor="let img of popupImages; let i = index"
+            [src]="img"
+            class="popup-thumb"
+            [class.active]="i === popupCurrentIndex"
+            (click)="popupCurrentIndex = i"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- REEL POPUP -->
+    <div
+      class="popup-backdrop reel-backdrop"
+      *ngIf="reelPopupOpen"
+      (click)="onPopupBgClick($event, 'reel')"
+    >
+      <div class="reel-popup">
+        <div class="popup-header">
+          <span class="popup-title">
+            {{ getProjectTitle(currentImageItem, currentProjectIndex) }}
+          </span>
+
+          <button class="popup-close" (click)="closeReelPopup()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="reel-video-wrap">
+          <video
+            *ngIf="reelPopupUrl"
+            [src]="reelPopupUrl"
+            controls
+            autoplay
+            playsinline
+            class="reel-video"
+          ></video>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== TESTIMONIALS ======================== -->
+    <section class="testimonials-section section-padding">
+      <div class="container">
+        <div class="section-header text-center reveal">
+          <div class="section-badge">{{ 'TESTIMONIALS.BADGE' | translate }}</div>
+          <h2 class="section-title">{{ 'TESTIMONIALS.TITLE' | translate }}</h2>
+          <hr class="gold-divider mx-auto" />
+          <p class="section-desc">{{ 'TESTIMONIALS.DESC' | translate }}</p>
+        </div>
+
+        <!-- Cards Grid -->
+        <div
+          class="tst-grid"
+          [class.tst-exit]="testimonialsExiting"
+          [class.tst-enter]="testimonialsEntering"
+        >
+          <div class="tst-card" *ngFor="let t of testimonials; let i = index" [style.--i]="i">
+            <!-- Quote icon -->
+            <div class="tst-quote-icon">
+              <i class="fas fa-quote-right"></i>
+            </div>
+
+            <!-- Stars -->
+            <div class="tst-stars">
+              <i
+                class="fas fa-star"
+                *ngFor="let s of [1, 2, 3, 4, 5]"
+                [class.active]="s <= t.stars"
+              ></i>
+            </div>
+
+            <!-- Text -->
+            <p class="tst-text">"{{ isArabic ? t.textAr : t.textEn }}"</p>
+
+            <!-- Author -->
+            <div class="tst-author">
+              <div class="tst-avatar">
+                {{ (isArabic ? t.nameAr : t.nameEn).charAt(0) }}
+              </div>
+              <div class="tst-author-info">
+                <div class="tst-name">{{ isArabic ? t.nameAr : t.nameEn }}</div>
+                <div class="tst-role">{{ isArabic ? t.roleAr : t.roleEn }}</div>
+              </div>
+            </div>
+
+            <!-- Bottom shine line -->
+            <div class="tst-card-line"></div>
+          </div>
+        </div>
+
+        <!-- Pagination dots -->
+        <div class="tst-dots">
+          <button
+            class="tst-dot"
+            *ngFor="let p of [].constructor(testimonialsPageCount); let i = index"
+            [class.active]="i === testimonialsCurrentPage"
+            (click)="goToTestimonialsPage(i + 1)"
+            [attr.aria-label]="'Page ' + (i + 1)"
+          ></button>
+        </div>
+
+        <!-- Progress bar — re-create on page change to restart animation -->
+        <div class="tst-progress-wrap">
+          <ng-container *ngFor="let p of [].constructor(testimonialsPageCount); let i = index">
+            <div *ngIf="i === testimonialsCurrentPage" class="tst-progress-bar running"></div>
+          </ng-container>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================== NEWSLETTER ======================== -->
+    <section class="newsletter-section section-padding">
+      <div class="container">
+        <div class="newsletter-inner reveal">
+          <!-- Decorative orbs -->
+          <div class="nl-orb nl-orb--1" aria-hidden="true"></div>
+          <div class="nl-orb nl-orb--2" aria-hidden="true"></div>
+          <div class="nl-orb nl-orb--grid" aria-hidden="true"></div>
+
+          <div class="row align-items-center g-4">
+            <!-- Left: copy -->
+            <div class="col-lg-6 nl-copy">
+              <div class="section-badge nl-badge">
+                <span class="badge-dot"></span>
+                {{ 'NEWSLETTER.BADGE' | translate }}
+              </div>
+              <h2 class="nl-title">
+                {{ 'NEWSLETTER.TITLE_1' | translate }}
+                <span class="nl-title-accent">{{ 'NEWSLETTER.TITLE_2' | translate }}</span>
+              </h2>
+              <p class="nl-desc">{{ 'NEWSLETTER.DESC' | translate }}</p>
+
+              <!-- Perks list -->
+              <ul class="nl-perks">
+                <li class="nl-perk">
+                  <span class="nl-perk-icon"><i class="fas fa-bolt"></i></span>
+                  {{ 'NEWSLETTER.PERK_1' | translate }}
+                </li>
+                <li class="nl-perk">
+                  <span class="nl-perk-icon"><i class="fas fa-tag"></i></span>
+                  {{ 'NEWSLETTER.PERK_2' | translate }}
+                </li>
+                <li class="nl-perk">
+                  <span class="nl-perk-icon"><i class="fas fa-shield-alt"></i></span>
+                  {{ 'NEWSLETTER.PERK_3' | translate }}
+                </li>
+              </ul>
+            </div>
+
+            <!-- Right: form -->
+            <div class="col-lg-6">
+              <div class="nl-form-card">
+                <!-- Success state -->
+                <div class="nl-success" *ngIf="nlSuccess">
+                  <div class="nl-success-icon"><i class="fas fa-check-circle"></i></div>
+                  <h3 class="nl-success-title">{{ 'NEWSLETTER.SUCCESS_TITLE' | translate }}</h3>
+                  <p class="nl-success-desc">{{ 'NEWSLETTER.SUCCESS_DESC' | translate }}</p>
+                </div>
+
+                <!-- Cooldown state -->
+                <div
+                  class="nl-duplicate"
+                  *ngIf="nlCooldownActive && !nlRateLimited && !nlSuccess && !nlDuplicate"
+                >
+                  <div class="nl-duplicate-icon">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <h3 class="nl-duplicate-title">
+                    {{ isArabic ? 'يرجى الانتظار ⏳' : 'Please Wait ⏳' }}
+                  </h3>
+                  <p class="nl-duplicate-desc">
+                    {{
+                      isArabic
+                        ? 'يمكنك الاشتراك مرة أخرى بعد: ' + nlCooldownRemaining
+                        : 'You can subscribe again in: ' + nlCooldownRemaining
+                    }}
+                  </p>
+                </div>
+
+                <!-- Rate limited state -->
+                <div class="nl-duplicate" *ngIf="nlRateLimited">
+                  <div class="nl-duplicate-icon">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <h3 class="nl-duplicate-title">
+                    {{ isArabic ? 'الرجاء الانتظار ⏳' : 'Please Wait ⏳' }}
+                  </h3>
+                  <p class="nl-duplicate-desc">{{ nlRateLimitMsg }}</p>
+                  <button class="nl-duplicate-reset" (click)="resetNewsletter()">
+                    {{ isArabic ? 'حسناً' : 'OK' }}
+                  </button>
+                </div>
+
+                <!-- Duplicate email state -->
+                <div class="nl-duplicate" *ngIf="nlDuplicate && !nlRateLimited">
+                  <div class="nl-duplicate-icon">
+                    <i class="fas fa-envelope-open-text"></i>
+                  </div>
+                  <h3 class="nl-duplicate-title">
+                    {{ isArabic ? 'أنت مشترك بالفعل! 🎉' : 'Already Subscribed! 🎉' }}
+                  </h3>
+                  <p class="nl-duplicate-desc">
+                    {{
+                      isArabic
+                        ? 'هذا البريد الإلكتروني مسجّل مسبقاً في قائمتنا. نحن سعداء بوجودك معنا!'
+                        : 'This email is already in our list. Great to have you with us!'
+                    }}
+                  </p>
+                  <button class="nl-duplicate-reset" (click)="resetNewsletter()">
+                    {{ isArabic ? 'استخدام بريد آخر' : 'Use another email' }}
+                  </button>
+                </div>
+
+                <!-- Form state -->
+                <div
+                  class="nl-form-wrap"
+                  *ngIf="!nlSuccess && !nlDuplicate && !nlRateLimited && !nlCooldownActive"
+                >
+                  <p class="nl-form-label">{{ 'NEWSLETTER.FORM_LABEL' | translate }}</p>
+
+                  <div class="nl-input-row" [class.nl-input-row--error]="nlError">
+                    <div class="nl-input-icon"><i class="fas fa-envelope"></i></div>
+                    <input
+                      type="email"
+                      class="nl-input"
+                      [(ngModel)]="nlEmail"
+                      [placeholder]="'NEWSLETTER.PLACEHOLDER' | translate"
+                      (keydown.enter)="subscribeNewsletter()"
+                      [disabled]="nlLoading"
+                    />
+                    <button
+                      class="nl-submit-btn"
+                      (click)="subscribeNewsletter()"
+                      [disabled]="nlLoading"
+                    >
+                      <span *ngIf="!nlLoading">
+                        {{ 'NEWSLETTER.BTN' | translate }}
+                        <i
+                          class="fas"
+                          [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"
+                          style="margin-inline-start: 6px"
+                        ></i>
+                      </span>
+                      <span *ngIf="nlLoading" class="nl-spinner"></span>
+                    </button>
+                  </div>
+
+                  <p class="nl-error-msg" *ngIf="nlError">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    {{ nlErrorMsg }}
+                  </p>
+
+                  <!-- ── Email Domain Suggestion Card ── -->
+                  <div class="nl-email-suggest" *ngIf="nlEmailDomainBlocked">
+                    <div class="nl-email-suggest__head">
+                      <i class="fas fa-lightbulb"></i>
+                      <span>{{
+                        isArabic ? 'جرّب أحد هذه البرامج:' : 'Try one of these instead:'
+                      }}</span>
+                    </div>
+                    <div class="nl-email-suggest__providers">
+                      <a
+                        href="https://mail.google.com"
+                        target="_blank"
+                        rel="noopener"
+                        class="nl-email-suggest__btn nl-email-suggest__btn--gmail"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                        >
+                          <path
+                            d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6zm-2 0l-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z"
+                            fill="#EA4335"
+                          />
+                        </svg>
+                        Gmail
+                      </a>
+                      <a
+                        href="https://outlook.live.com"
+                        target="_blank"
+                        rel="noopener"
+                        class="nl-email-suggest__btn nl-email-suggest__btn--outlook"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                        >
+                          <rect x="2" y="4" width="20" height="16" rx="2" fill="#0078D4" />
+                          <path
+                            d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+                            fill="white"
+                          />
+                        </svg>
+                        Outlook
+                      </a>
+                      <a
+                        href="https://mail.yahoo.com"
+                        target="_blank"
+                        rel="noopener"
+                        class="nl-email-suggest__btn nl-email-suggest__btn--yahoo"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                        >
+                          <path d="M12 14.5L7 5h3l2 4.5L14 5h3l-5 9.5V19h-2v-4.5z" fill="#6001D2" />
+                        </svg>
+                        Yahoo
+                      </a>
+                      <a
+                        href="https://proton.me/mail"
+                        target="_blank"
+                        rel="noopener"
+                        class="nl-email-suggest__btn nl-email-suggest__btn--proton"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                        >
+                          <path
+                            d="M4 4h8c3.3 0 6 2.7 6 6s-2.7 6-6 6H8v4H4V4zm4 8h4c1.1 0 2-.9 2-2s-.9-2-2-2H8v4z"
+                            fill="#6D4AFF"
+                          />
+                        </svg>
+                        Proton
+                      </a>
+                    </div>
+                  </div>
+
+                  <p class="nl-privacy">
+                    <i class="fas fa-lock me-1"></i>
+                    {{ 'NEWSLETTER.PRIVACY' | translate }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================== CTA BANNER ======================== -->
+    <section class="cta-section section-padding">
+      <div class="container">
+        <div class="cta-inner reveal">
+          <div class="cta-bg-orb"></div>
+          <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+              <h2 class="cta-title">{{ 'CTA.TITLE' | translate }}</h2>
+              <p class="cta-desc">{{ 'CTA.DESC' | translate }}</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+              <a routerLink="/contact" class="btn btn-gold rounded-pill px-5 py-3 fs-6">
+                {{ 'CTA.BTN' | translate }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

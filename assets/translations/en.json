@@ -1,0 +1,75 @@
+{
+  "shared": {
+    "get_started": "Get Started",
+    "learn_more": "Learn more",
+    "coming_soon": "Coming soon"
+  },
+  "navigation": {
+    "home": "Home",
+    "services": "Services",
+    "portfolio": "Portfolio",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "home": {
+    "title": "Welcome to Etbaly",
+    "subtitle": "Transform your digital presence with innovative solutions",
+    "hero_title": "Digital Excellence\nMade Simple",
+    "hero_subtitle": "We create stunning digital experiences that elevate your brand and engage your audience.",
+    "get_started": "Get Started",
+    "explore_services": "Explore Services"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Comprehensive digital solutions tailored to your needs",
+    "design": "Design",
+    "design_subtitle": "Creative design solutions that captivate",
+    "social": "Social Media",
+    "social_subtitle": "Strategic social media management",
+    "ads": "Advertising",
+    "ads_subtitle": "Targeted advertising campaigns",
+    "web": "Web Development",
+    "web_subtitle": "Custom web applications",
+    "boost": "Business Boost",
+    "boost_subtitle": "Grow your business online",
+    "video": "Video Production",
+    "video_subtitle": "Professional video content",
+    "seo": "SEO Optimization",
+    "seo_subtitle": "Improve your search ranking",
+    "moderator": "Content Moderation",
+    "moderator_subtitle": "Safe online communities",
+    "brand_plan": "Brand Strategy",
+    "brand_plan_subtitle": "Strategic brand development"
+  },
+  "portfolio": {
+    "title": "Our Portfolio",
+    "subtitle": "Showcasing our best work and success stories",
+    "photo_gallery": "Photo Gallery",
+    "video_reel": "Video Reel",
+    "view_project": "View Project"
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Meet the team behind your digital success",
+    "our_story": "Our Story",
+    "our_mission": "Our Mission",
+    "our_vision": "Our Vision",
+    "team": "Our Team"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch and let's create something amazing together",
+    "send_message": "Send Message",
+    "email": "Email",
+    "message": "Message",
+    "name": "Name",
+    "subject": "Subject"
+  },
+  "auth": {
+    "log_in": "Log in",
+    "sign_up": "Sign Up",
+    "create_account": "Create Account",
+    "forgot_password": "Forgot Password",
+    "remember_me": "Remember me"
+  }
+}

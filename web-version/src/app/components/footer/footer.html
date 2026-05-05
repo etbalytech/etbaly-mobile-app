@@ -1,0 +1,186 @@
+<footer class="footer-section">
+  <div class="container">
+    <!-- Top Row -->
+    <div class="row g-5 footer-top">
+      <!-- Brand Column -->
+      <div class="col-lg-4 col-md-6">
+        <a routerLink="/" class="footer-brand">
+          <img
+            src="logo.png"
+            lazy="loading"
+            alt="{{ 'NAV.Brand' | translate }}"
+            class="footer-logo"
+          />
+          <span class="brand-text">
+            {{ 'NAV.Brand' | translate }}
+          </span>
+        </a>
+        <p class="footer-tagline">{{ 'FOOTER.TAGLINE' | translate }}</p>
+
+        <div class="footer-socials">
+          <a
+            [href]="environment.facebookLink"
+            target="_blank"
+            class="footer-social-btn"
+            aria-label="Facebook"
+          >
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <a
+            [href]="environment.instagramLink"
+            target="_blank"
+            class="footer-social-btn"
+            aria-label="Instagram"
+          >
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a
+            [href]="environment.WhatsappContact"
+            class="footer-social-btn"
+            aria-label="WhatsApp"
+            target="_blank"
+          >
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <a
+            [href]="environment.youtubeLink"
+            class="footer-social-btn"
+            aria-label="YouTube"
+            target="_blank"
+          >
+            <i class="fab fa-youtube"></i>
+          </a>
+          <a
+            [href]="'mailto:' + environment.email"
+            target="_blank"
+            class="footer-social-btn"
+            aria-label="Email"
+          >
+            <i class="far fa-envelope"></i>
+          </a>
+          <a
+            [href]="environment.tiktokLink"
+            target="_blank"
+            class="footer-social-btn"
+            aria-label="TikTok"
+          >
+            <i class="fab fa-tiktok"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="col-lg-2 col-md-6 col-6">
+        <h5 class="footer-col-title">{{ 'FOOTER.LINKS_TITLE' | translate }}</h5>
+        <ul class="footer-links">
+          <li>
+            <a routerLink="/" (click)="scrollTop()">{{ 'NAV.HOME' | translate }}</a>
+          </li>
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">{{ 'NAV.SERVICES' | translate }}</a>
+          </li>
+          <li>
+            <a routerLink="/portfolio" (click)="scrollTop()">{{ 'NAV.PORTFOLIO' | translate }}</a>
+          </li>
+          <li>
+            <a routerLink="/about" (click)="scrollTop()">{{ 'NAV.ABOUT' | translate }}</a>
+          </li>
+          <li>
+            <a routerLink="/contact" (click)="scrollTop()">{{ 'NAV.CONTACT' | translate }}</a>
+          </li>
+          <li>
+            <a routerLink="/payments" (click)="scrollTop()">{{ 'NAV.PAYMENTS' | translate }}</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Services -->
+      <div class="col-lg-3 col-md-6 col-6">
+        <h5 class="footer-col-title">{{ 'FOOTER.SERVICES_TITLE' | translate }}</h5>
+        <ul class="footer-links">
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">{{
+              'SERVICES.S1_TITLE' | translate
+            }}</a>
+          </li>
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">{{
+              'SERVICES.S2_TITLE' | translate
+            }}</a>
+          </li>
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">{{
+              'SERVICES.S3_TITLE' | translate
+            }}</a>
+          </li>
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">{{
+              'SERVICES.S4_TITLE' | translate
+            }}</a>
+          </li>
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">{{
+              'SERVICES.S10_TITLE' | translate
+            }}</a>
+          </li>
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">
+              {{ 'SERVICES.S11_TITLE' | translate }}
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">
+              {{ 'SERVICES.S12_TITLE' | translate }}
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">
+              {{ 'SERVICES.S13_TITLE' | translate }}
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/services" (click)="scrollTop()">
+              {{ 'SERVICES.S14_TITLE' | translate }}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="col-lg-3 col-md-6">
+        <h5 class="footer-col-title">{{ 'FOOTER.CONTACT_TITLE' | translate }}</h5>
+        <ul class="footer-contact-list">
+          <li>
+            <i class="fas fa-envelope"></i>
+            <span>{{ environment.email }}</span>
+          </li>
+          <li>
+            <i class="fab fa-whatsapp"></i>
+            <span> {{ environment.WhatsappNumber }} </span>
+          </li>
+          <li>
+            <i class="fas fa-phone"></i>
+            <span>{{ environment.WhatsappNumber }}</span>
+          </li>
+          <li>
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ isArabic ? 'الإسكندرية، مصر' : 'Alexandria, Egypt' }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="footer-bottom">
+      <p class="footer-copy">
+        &copy; {{ currentYear }} {{ 'NAV.Brand' | translate }}. {{ 'FOOTER.RIGHTS' | translate }}
+      </p>
+      <div class="footer-legal">
+        <a routerLink="/privacy" (click)="scrollTop()">{{ 'FOOTER.PRIVACY' | translate }}</a>
+      </div>
+    </div>
+  </div>
+</footer>

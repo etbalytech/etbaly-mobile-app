@@ -1,0 +1,1782 @@
+<!-- ============================================================
+     DESIGN PAGE — Professional Designs Service
+     تصميمات احترافية — صفحة كاملة مع سلة خدمات وفاتورة طباعة
+     ============================================================ -->
+
+<div class="mt-5" [attr.dir]="isArabic ? 'rtl' : 'ltr'">
+  <!-- ══ Page Hero ══ -->
+  <section class="page-hero">
+    <div class="page-hero-bg-orb page-hero-bg-orb--1"></div>
+    <div class="page-hero-bg-orb page-hero-bg-orb--2"></div>
+    <div class="hero-grid-overlay"></div>
+    <div class="container">
+      <div class="page-hero-content text-center reveal">
+        <div class="section-badge">
+          <i class="fas fa-paint-brush"></i>
+          {{ 'DESIGN_PAGE.BADGE' | translate }}
+        </div>
+        <h1 class="page-hero-title">{{ 'DESIGN_PAGE.TITLE' | translate }}</h1>
+        <p class="page-hero-desc">{{ 'DESIGN_PAGE.DESC' | translate }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Edit Policy Image ══ -->
+  <section class="edit-policy-section section-padding">
+    <div class="container">
+      <div class="edit-policy-card reveal">
+        <div class="edit-policy-icon">
+          <i class="fas fa-file-contract"></i>
+        </div>
+        <div class="edit-policy-body">
+          <h3 class="edit-policy-title">{{ 'DESIGN_PAGE.EDIT_POLICY_TITLE' | translate }}</h3>
+          <p class="edit-policy-desc">{{ 'DESIGN_PAGE.EDIT_POLICY_DESC' | translate }}</p>
+        </div>
+        <div class="edit-policy-img-wrap">
+          <img
+            src="assets/images/edit-policy.png"
+            alt="{{ 'DESIGN_PAGE.EDIT_POLICY_TITLE' | translate }}"
+            class="edit-policy-img"
+            loading="lazy"
+            onerror="
+              this.style.display = 'none';
+              this.nextElementSibling.style.display = 'flex';
+            "
+          />
+          <div class="edit-policy-img-placeholder" style="display: none">
+            <i class="fas fa-image"></i>
+            <span>{{ isArabic ? 'صورة سياسة التعديل' : 'Edit Policy Image' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Design Services Grid (5 items with qty + price) ══ -->
+  <section class="design-services-section section-padding">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-badge">
+          <i class="fas fa-layer-group"></i>
+          {{ 'DESIGN_PAGE.SERVICES_BADGE' | translate }}
+        </div>
+        <h2 class="section-title">{{ 'DESIGN_PAGE.SERVICES_TITLE' | translate }}</h2>
+        <hr class="gold-divider mx-auto" />
+        <p class="section-desc">{{ 'DESIGN_PAGE.SERVICES_DESC' | translate }}</p>
+      </div>
+
+      <!-- Selected Counter -->
+      <div class="selected-counter reveal" *ngIf="selectedServices.length > 0">
+        <i class="fas fa-shopping-cart gold-text"></i>
+        <span
+          >{{ isArabic ? 'تم اختيار' : 'Selected' }} {{ selectedServices.length }}
+          {{ isArabic ? 'خدمة' : 'service(s)' }}</span
+        >
+        <button class="clear-selection-btn" (click)="clearSelection()">
+          <i class="fas fa-times"></i>
+          {{ isArabic ? 'مسح الكل' : 'Clear All' }}
+        </button>
+      </div>
+
+      <div class="row g-4 mt-3">
+        <div
+          class="col-md-6 col-xl-4 reveal"
+          *ngFor="let svc of designServices; let i = index"
+          [style.transition-delay]="i * 0.08 + 's'"
+        >
+          <div
+            class="design-service-card etbaly-card h-100"
+            [class.design-service-card--selected]="isSelected(svc.id)"
+            (click)="toggleService(svc)"
+          >
+            <!-- Selected Badge -->
+            <div class="ds-selected-badge" *ngIf="isSelected(svc.id)">
+              <i class="fas fa-check"></i>
+              {{ isArabic ? 'مختار' : 'Selected' }}
+            </div>
+
+            <!-- Image -->
+            <div class="ds-img-wrap">
+              <img
+                [src]="svc.image"
+                [alt]="isArabic ? svc.nameAr : svc.nameEn"
+                class="ds-img"
+                loading="lazy"
+                onerror="this.src = 'https://placehold.co/400x220/1e1b30/d4af37?text=Design'"
+              />
+              <div class="ds-img-overlay">
+                <i class="fas fa-plus-circle"></i>
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div class="ds-body">
+              <h3 class="ds-title">{{ isArabic ? svc.nameAr : svc.nameEn }}</h3>
+              <p class="ds-desc">{{ isArabic ? svc.descAr : svc.descEn }}</p>
+
+              <!-- Price -->
+              <div class="ds-price-row">
+                <div class="ds-price">
+                  <span class="ds-price-amount">{{ svc.price }}</span>
+                  <span class="ds-price-currency"> {{ isArabic ? 'ج.م' : 'EGP' }}</span>
+                  <span class="ds-price-per">{{ isArabic ? '/ قطعة' : '/ piece' }}</span>
+                </div>
+              </div>
+
+              <!-- Qty Control -->
+              <div class="ds-qty-section" (click)="$event.stopPropagation()">
+                <label class="ds-qty-label">{{ isArabic ? 'الكمية' : 'Quantity' }}</label>
+                <div class="ds-qty-controls">
+                  <button
+                    class="ds-qty-btn"
+                    (click)="decreaseQty(svc)"
+                    [disabled]="getQty(svc.id) <= 1"
+                  >
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input
+                    class="ds-qty-input"
+                    type="number"
+                    min="1"
+                    [value]="getQty(svc.id)"
+                    (change)="setQty(svc, $event)"
+                    (click)="$event.stopPropagation()"
+                  />
+                  <button class="ds-qty-btn" (click)="increaseQty(svc)">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+                <small class="ds-qty-note">
+                  {{ isArabic ? 'الحد الأدنى قطعة واحدة' : 'Min. 1 piece' }}
+                </small>
+              </div>
+
+              <!-- Subtotal -->
+              <div class="ds-subtotal" *ngIf="isSelected(svc.id)">
+                <i class="fas fa-calculator gold-text"></i>
+                {{ isArabic ? 'الإجمالي:' : 'Subtotal:' }}
+                <strong class="gold-text"
+                  >{{ getSubtotal(svc) | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</strong
+                >
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="ds-footer">
+              <button
+                class="ds-select-btn"
+                [class.ds-select-btn--selected]="isSelected(svc.id)"
+                (click)="toggleService(svc); $event.stopPropagation()"
+              >
+                <i class="fas" [ngClass]="isSelected(svc.id) ? 'fa-check' : 'fa-plus'"></i>
+                {{
+                  isSelected(svc.id)
+                    ? isArabic
+                      ? 'تم الإضافة ✓'
+                      : 'Added ✓'
+                    : isArabic
+                      ? 'أضف للطلب'
+                      : 'Add to Order'
+                }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Order Form (shown after selecting at least 1 service) ══ -->
+  <section
+    class="order-form-section section-padding"
+    id="order-form"
+    *ngIf="selectedServices.length > 0"
+  >
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-badge">
+          <i class="fas fa-clipboard-list"></i>
+          {{ isArabic ? 'بيانات الطلب' : 'Order Details' }}
+        </div>
+        <h2 class="section-title">{{ isArabic ? 'أكمل بياناتك' : 'Complete Your Details' }}</h2>
+        <hr class="gold-divider mx-auto" />
+      </div>
+
+      <div class="order-form-card etbaly-card reveal">
+        <div class="row g-4">
+          <!-- Col 1: Contact Info -->
+          <div class="col-lg-6">
+            <h4 class="form-section-title">
+              <i class="fas fa-user gold-text"></i>
+              {{ isArabic ? 'البيانات الشخصية' : 'Personal Info' }}
+            </h4>
+
+            <!-- Full Name -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'الاسم الكامل' : 'Full Name' }}
+                <span class="required-star">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.fullName"
+                [placeholder]="isArabic ? 'أدخل اسمك الكامل' : 'Enter your full name'"
+              />
+            </div>
+
+            <!-- Mobile -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'رقم الموبايل' : 'Mobile Number' }}
+                <span class="required-star">*</span>
+              </label>
+              <input
+                type="tel"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.mobile"
+                [placeholder]="isArabic ? '01xxxxxxxxx' : '01xxxxxxxxx'"
+              />
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fab fa-whatsapp" style="color: #25d366"></i>
+                {{ isArabic ? 'رقم الواتساب' : 'WhatsApp Number' }}
+                <span class="required-star">*</span>
+              </label>
+              <div class="input-with-check">
+                <input
+                  type="tel"
+                  class="form-control etbaly-input"
+                  [(ngModel)]="orderForm.whatsapp"
+                  [placeholder]="isArabic ? '01xxxxxxxxx' : '01xxxxxxxxx'"
+                />
+                <label class="same-as-mobile">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="sameAsMobile"
+                    (change)="onSameAsMobileChange()"
+                  />
+                  <span>{{ isArabic ? 'نفس رقم الموبايل' : 'Same as mobile' }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'البريد الإلكتروني' : 'Email Address' }}
+                <span class="required-star">*</span>
+              </label>
+              <input
+                type="email"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.email"
+                [placeholder]="isArabic ? 'example@email.com' : 'example@email.com'"
+              />
+            </div>
+
+            <!-- Company (optional) -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'اسم شركتك' : 'Company Name' }}
+                <span class="optional-tag">{{ isArabic ? 'اختياري' : 'Optional' }}</span>
+              </label>
+              <input
+                type="text"
+                class="form-control etbaly-input"
+                [(ngModel)]="orderForm.company"
+                [placeholder]="
+                  isArabic ? 'اسم شركتك أو نشاطك التجاري' : 'Your company or business name'
+                "
+              />
+            </div>
+          </div>
+
+          <!-- Col 2: Service Details -->
+          <div class="col-lg-6">
+            <h4 class="form-section-title">
+              <i class="fas fa-cog gold-text"></i>
+              {{ isArabic ? 'تفاصيل الخدمة' : 'Service Details' }}
+            </h4>
+
+            <!-- Service Type Display -->
+            <div class="form-group">
+              <label class="form-label">{{ isArabic ? 'الخدمة' : 'Service' }}</label>
+              <div class="service-tag">
+                <i class="fas fa-paint-brush gold-text"></i>
+                {{ isArabic ? 'تصميمات احترافية' : 'Professional Designs' }}
+              </div>
+            </div>
+
+            <!-- Target Platforms -->
+            <div class="form-group">
+              <label class="form-label">
+                {{ isArabic ? 'المنصات المستهدفة' : 'Target Platforms' }}
+                <span class="optional-tag">{{ isArabic ? 'متعدد' : 'Multiple' }}</span>
+              </label>
+              <div class="platforms-grid">
+                <button
+                  *ngFor="let p of platforms"
+                  class="platform-btn"
+                  [class.platform-btn--active]="isPlatformSelected(p.id)"
+                  (click)="togglePlatform(p.id)"
+                >
+                  <i class="fab" [ngClass]="p.icon"></i>
+                  {{ isArabic ? p.nameAr : p.nameEn }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Service Description -->
+            <div class="form-group">
+              <label class="form-label">
+                {{
+                  isArabic
+                    ? 'اكتب خدمتك — تصميمات احترافية'
+                    : 'Describe Your Request — Professional Designs'
+                }}
+              </label>
+              <textarea
+                class="form-control etbaly-input etbaly-textarea"
+                [(ngModel)]="orderForm.description"
+                rows="4"
+                [placeholder]="
+                  isArabic
+                    ? 'اكتب تفاصيل طلبك مثلاً: تصميم لوجو + غلاف + بروفايل لشركة...'
+                    : 'E.g.: Design logo + cover + profile for company...'
+                "
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Order Summary ══ -->
+        <div class="order-summary reveal mt-4">
+          <h4 class="form-section-title">
+            <i class="fas fa-receipt gold-text"></i>
+            {{ isArabic ? 'ملخص الطلب' : 'Order Summary' }}
+          </h4>
+
+          <div class="summary-table">
+            <!-- Services rows -->
+            <div class="summary-row" *ngFor="let svc of selectedServices">
+              <span class="summary-item">
+                {{ isArabic ? svc.nameAr : svc.nameEn }}
+                × {{ getQty(svc.id) }}
+              </span>
+              <span class="summary-amount gold-text"
+                >{{ getSubtotal(svc) | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</span
+              >
+            </div>
+
+            <!-- Packages rows -->
+            <div class="summary-row" *ngFor="let pid of selectedPackages">
+              <span class="summary-item">
+                <i class="fas fa-box-open" style="font-size: 0.75rem; opacity: 0.7"></i>
+                {{ isArabic ? getPackageById(pid)?.nameAr : getPackageById(pid)?.nameEn }}
+              </span>
+              <span class="summary-amount gold-text"
+                >{{ getPackageById(pid)?.price || 0 | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</span
+              >
+            </div>
+
+            <div class="summary-divider"></div>
+            <div class="summary-row summary-row--total">
+              <span>{{ isArabic ? 'الإجمالي الكلي' : 'Grand Total' }}</span>
+              <span class="summary-total gold-text"
+                >{{ grandTotal() | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button
+              class="btn btn-gold-main rounded-pill px-5 py-3"
+              (click)="submitOrder()"
+              [disabled]="!isFormValid()"
+            >
+              <i class="fas fa-file-invoice"></i>
+              {{ isArabic ? 'معاينة الفاتورة والدفع' : 'Preview Invoice & Pay' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Invoice Print Area (hidden, shown on print) ══ -->
+  <div class="invoice-print-area" id="invoice-area">
+    <div class="invoice-header">
+      <div class="invoice-logo">
+        <i class="fas fa-paint-brush"></i>
+        <span>{{ isArabic ? 'تصميمات احترافية' : 'Professional Designs' }}</span>
+      </div>
+      <div class="invoice-meta">
+        <strong>{{ isArabic ? 'فاتورة' : 'Invoice' }} #{{ invoiceNumber }}</strong>
+        <span>{{ invoiceDate }}</span>
+      </div>
+    </div>
+
+    <div class="invoice-pay-note">
+      <i class="fas fa-exclamation-circle"></i>
+      {{
+        isArabic
+          ? 'برجاء الدفع لاتمام العملية — للدفع اضغط على رابط طرق الدفع'
+          : 'Please complete payment to proceed — visit the payment methods page'
+      }}
+    </div>
+
+    <div class="invoice-client">
+      <h4>{{ isArabic ? 'بيانات العميل' : 'Client Info' }}</h4>
+      <div class="invoice-client-grid">
+        <div>
+          <span>{{ isArabic ? 'الاسم' : 'Name' }}:</span> {{ orderForm.fullName || '—' }}
+        </div>
+        <div>
+          <span>{{ isArabic ? 'موبايل' : 'Mobile' }}:</span> {{ orderForm.mobile || '—' }}
+        </div>
+        <div>
+          <span>{{ isArabic ? 'واتساب' : 'WhatsApp' }}:</span> {{ orderForm.whatsapp || '—' }}
+        </div>
+        <div>
+          <span>{{ isArabic ? 'إيميل' : 'Email' }}:</span> {{ orderForm.email || '—' }}
+        </div>
+        <div *ngIf="orderForm.company">
+          <span>{{ isArabic ? 'شركة' : 'Company' }}:</span> {{ orderForm.company }}
+        </div>
+      </div>
+    </div>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>{{ isArabic ? 'الخدمة' : 'Service' }}</th>
+          <th>{{ isArabic ? 'الكمية' : 'Qty' }}</th>
+          <th>{{ isArabic ? 'السعر/قطعة' : 'Unit Price' }}</th>
+          <th>{{ isArabic ? 'الإجمالي' : 'Total' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let svc of selectedServices">
+          <td>{{ isArabic ? svc.nameAr : svc.nameEn }}</td>
+          <td>{{ getQty(svc.id) }}</td>
+          <td>{{ svc.price | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</td>
+          <td>{{ getSubtotal(svc) | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</td>
+        </tr>
+        <tr *ngFor="let pid of selectedPackages">
+          <td>{{ isArabic ? getPackageById(pid)?.nameAr : getPackageById(pid)?.nameEn }}</td>
+          <td>1</td>
+          <td>{{ getPackageById(pid)?.price || 0 | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</td>
+          <td>{{ getPackageById(pid)?.price || 0 | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">
+            <strong>{{ isArabic ? 'الإجمالي الكلي' : 'Grand Total' }}</strong>
+          </td>
+          <td>
+            <strong class="invoice-total"
+              >{{ grandTotal() | number }} {{ isArabic ? 'ج.م' : 'EGP' }}</strong
+            >
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="invoice-footer">
+      {{
+        isArabic
+          ? 'شكراً لثقتك — تصميمات احترافية'
+          : 'Thank you for your trust — Professional Designs'
+      }}
+    </div>
+  </div>
+
+  <!-- ══ Invoice Modal ══ -->
+  <div
+    class="invoice-modal-overlay"
+    [class.invoice-modal-overlay--open]="showInvoiceModal"
+    (click)="closeInvoiceModal($event)"
+  >
+    <div class="invoice-modal">
+      <button class="inv-close-btn" (click)="showInvoiceModal = false; bodyUnlock()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="inv-header">
+        <div class="inv-logo-wrap">
+          <div class="inv-logo-icon">
+            <svg
+              viewBox="0 0 36 36"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="inv-logo-svg"
+            >
+              <!-- Palette shape -->
+              <ellipse cx="18" cy="19" rx="13" ry="11" fill="#0a0800" opacity="0.08" />
+              <path
+                d="M18 6C11.373 6 6 11.373 6 18c0 3.866 3.58 6 8 6 1.657 0 2 .895 2 2s-.343 2-2 2c-.552 0-1 .448-1 1s.448 1 1 1c6.627 0 12-5.373 12-12S24.627 6 18 6z"
+                fill="#0a0800"
+              />
+              <!-- Color dots -->
+              <circle cx="12" cy="16" r="2.2" fill="#e74c3c" />
+              <circle cx="18" cy="13" r="2.2" fill="#f39c12" />
+              <circle cx="24" cy="16" r="2.2" fill="#2ecc71" />
+              <circle cx="22" cy="22" r="2.2" fill="#3498db" />
+            </svg>
+          </div>
+          <div>
+            <div class="inv-brand">
+              {{ isArabic ? 'تصميمات احترافية' : 'Professional Designs' }}
+            </div>
+            <div class="inv-brand-sub">{{ isArabic ? 'خدمات الديزاين' : 'Design Services' }}</div>
+          </div>
+        </div>
+        <div class="inv-meta">
+          <div class="inv-num"># {{ invoiceNumber }}</div>
+          <div class="inv-date">{{ invoiceDate }}</div>
+          <div class="inv-status">
+            <span class="inv-status-dot"></span>
+            {{ isArabic ? 'في انتظار الدفع' : 'Pending Payment' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-gold-bar"></div>
+
+      <div class="inv-client-section">
+        <div class="inv-section-label">
+          <i class="fas fa-user-circle"></i>
+          {{ isArabic ? 'بيانات العميل' : 'Client Details' }}
+        </div>
+        <div class="inv-client-grid">
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'الاسم' : 'Name' }}</span>
+            <span class="inv-client-val">{{ orderForm.fullName || '—' }}</span>
+          </div>
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'موبايل' : 'Mobile' }}</span>
+            <span class="inv-client-val">{{ orderForm.mobile || '—' }}</span>
+          </div>
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'واتساب' : 'WhatsApp' }}</span>
+            <span class="inv-client-val">{{ orderForm.whatsapp || '—' }}</span>
+          </div>
+          <div class="inv-client-item">
+            <span class="inv-client-key">{{ isArabic ? 'إيميل' : 'Email' }}</span>
+            <span class="inv-client-val">{{ orderForm.email || '—' }}</span>
+          </div>
+          <div class="inv-client-item" *ngIf="orderForm.company">
+            <span class="inv-client-key">{{ isArabic ? 'شركة' : 'Company' }}</span>
+            <span class="inv-client-val">{{ orderForm.company }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-section-label" style="margin-bottom: 0.75rem">
+        <i class="fas fa-list-check"></i>
+        {{ isArabic ? 'تفاصيل الطلب' : 'Order Details' }}
+      </div>
+      <div class="inv-table-wrap">
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>{{ isArabic ? 'الخدمة' : 'Service' }}</th>
+              <th>{{ isArabic ? 'الكمية' : 'Qty' }}</th>
+              <th>{{ isArabic ? 'سعر / قطعة' : 'Unit Price' }}</th>
+              <th>{{ isArabic ? 'الإجمالي' : 'Total' }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let svc of selectedServices">
+              <td>
+                <span class="inv-svc-name">{{ isArabic ? svc.nameAr : svc.nameEn }}</span>
+              </td>
+              <td>
+                <span class="inv-qty-badge">{{ getQty(svc.id) }}</span>
+              </td>
+              <td>
+                {{ svc.price | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+              </td>
+              <td class="inv-row-total">
+                {{ getSubtotal(svc) | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+              </td>
+            </tr>
+            <tr *ngFor="let pid of selectedPackages">
+              <td>
+                <span class="inv-svc-name">
+                  <i
+                    class="fas fa-box-open"
+                    style="font-size: 0.7rem; opacity: 0.7; margin-inline-end: 6px"
+                  ></i>
+                  {{ isArabic ? getPackageById(pid)?.nameAr : getPackageById(pid)?.nameEn }}
+                </span>
+              </td>
+              <td><span class="inv-qty-badge">1</span></td>
+              <td>
+                {{ getPackageById(pid)?.price || 0 | number }}
+                <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+              </td>
+              <td class="inv-row-total">
+                {{ getPackageById(pid)?.price || 0 | number }}
+                <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">{{ isArabic ? 'الإجمالي الكلي' : 'Grand Total' }}</td>
+              <td class="inv-grand-total">
+                {{ grandTotal() | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="inv-pay-note">
+        <div class="inv-pay-note-icon"><i class="fas fa-shield-halved"></i></div>
+        <div>
+          <div class="inv-pay-note-title">
+            {{ isArabic ? 'برجاء إتمام عملية الدفع' : 'Complete your payment' }}
+          </div>
+          <div class="inv-pay-note-sub">
+            {{
+              isArabic
+                ? 'لن يبدأ تنفيذ الطلب قبل تأكيد الدفع'
+                : 'Order will not start before payment confirmation'
+            }}
+          </div>
+        </div>
+      </div>
+
+      <div class="inv-actions">
+        <button class="inv-btn-pay" (click)="navigateToPayments(); showInvoiceModal = false">
+          <i class="fas fa-credit-card"></i>
+          {{ isArabic ? 'تأكيد وانتقل للدفع' : 'Confirm & Pay Now' }}
+          <span class="inv-btn-arrow">
+            <i class="fas fa-arrow-left" *ngIf="isArabic"></i>
+            <i class="fas fa-arrow-right" *ngIf="!isArabic"></i>
+          </span>
+        </button>
+        <div class="inv-secondary-actions">
+          <button class="inv-btn-print" (click)="printInvoiceFromModal()">
+            <i class="fas fa-print"></i>
+            {{ isArabic ? 'طباعة' : 'Print' }}
+          </button>
+          <button class="inv-btn-download" (click)="downloadInvoiceAsImage()">
+            <i class="fas fa-image"></i>
+            {{ isArabic ? 'تحميل صورة' : 'Download Image' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="inv-footer">
+        <i class="fas fa-heart" style="color: var(--gold); font-size: 0.7rem"></i>
+        {{
+          isArabic
+            ? 'شكراً لثقتك — تصميمات احترافية'
+            : 'Thank you for your trust — Professional Designs'
+        }}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Payment Modal ══ -->
+  <div
+    class="pay-modal-overlay"
+    [class.pay-modal-overlay--open]="showPaymentModal"
+    (click)="closePaymentModal($event)"
+  >
+    <div class="pay-modal">
+      <button class="inv-close-btn" (click)="showPaymentModal = false; bodyUnlock()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="pay-modal-header">
+        <div class="pay-lock-icon"><i class="fas fa-lock"></i></div>
+        <div>
+          <h3 class="pay-modal-title">{{ isArabic ? 'طرق الدفع' : 'Payment Methods' }}</h3>
+          <p class="pay-modal-sub">
+            {{ isArabic ? 'اختر طريقة الدفع المناسبة لك' : 'Choose your preferred payment method' }}
+          </p>
+        </div>
+        <div class="pay-modal-amount">
+          <div class="pay-modal-amount-label">
+            {{ isArabic ? 'المبلغ الإجمالي' : 'Total Amount' }}
+          </div>
+          <div class="pay-modal-amount-val">
+            {{ grandTotal() | number }} <span>{{ isArabic ? 'ج.م' : 'EGP' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-methods-list">
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('instapay')"
+          [class.pay-method-card--active]="selectedPayMethod === 'instapay'"
+        >
+          <div class="pay-method-icon pay-method-icon--instapay"><i class="fas fa-bolt"></i></div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">{{ isArabic ? 'انستاباي' : 'InstaPay' }}</div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'تحويل فوري عبر تطبيق البنك' : 'Instant transfer via banking app' }}
+            </div>
+          </div>
+          <div class="pay-method-badge">{{ isArabic ? 'فوري' : 'Instant' }}</div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('vodafone')"
+          [class.pay-method-card--active]="selectedPayMethod === 'vodafone'"
+        >
+          <div class="pay-method-icon pay-method-icon--vodafone">
+            <i class="fas fa-mobile-screen"></i>
+          </div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">{{ isArabic ? 'فودافون كاش' : 'Vodafone Cash' }}</div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'تحويل عبر محفظة فودافون كاش' : 'Transfer via Vodafone Cash wallet' }}
+            </div>
+          </div>
+          <div class="pay-method-badge pay-method-badge--red">{{ isArabic ? 'سريع' : 'Fast' }}</div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('bank')"
+          [class.pay-method-card--active]="selectedPayMethod === 'bank'"
+        >
+          <div class="pay-method-icon pay-method-icon--bank">
+            <i class="fas fa-building-columns"></i>
+          </div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">{{ isArabic ? 'تحويل بنكي' : 'Bank Transfer' }}</div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'تحويل من أي بنك مصري' : 'Transfer from any Egyptian bank' }}
+            </div>
+          </div>
+          <div class="pay-method-badge pay-method-badge--blue">
+            {{ isArabic ? 'آمن' : 'Secure' }}
+          </div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div
+          class="pay-method-card"
+          (click)="selectPayMethod('cash')"
+          [class.pay-method-card--active]="selectedPayMethod === 'cash'"
+        >
+          <div class="pay-method-icon pay-method-icon--cash">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+          <div class="pay-method-body">
+            <div class="pay-method-name">
+              {{ isArabic ? 'دفع عند التسليم' : 'Cash on Delivery' }}
+            </div>
+            <div class="pay-method-detail">
+              {{ isArabic ? 'ادفع عند استلام التصاميم' : 'Pay when receiving the designs' }}
+            </div>
+          </div>
+          <div class="pay-method-badge pay-method-badge--green">
+            {{ isArabic ? 'مرن' : 'Flexible' }}
+          </div>
+          <div class="pay-method-check"><i class="fas fa-check"></i></div>
+        </div>
+      </div>
+
+      <div class="pay-method-detail-box" *ngIf="selectedPayMethod">
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'instapay'">
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'رقم الهاتف' : 'Phone Number' }}</span>
+            <strong>01X-XXX-XXXX</strong>
+          </div>
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'الاسم' : 'Name' }}</span>
+            <strong>{{ isArabic ? 'تصميمات احترافية' : 'Professional Designs' }}</strong>
+          </div>
+        </div>
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'vodafone'">
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'رقم المحفظة' : 'Wallet Number' }}</span>
+            <strong>010X-XXX-XXXX</strong>
+          </div>
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'اسم المستلم' : 'Recipient' }}</span>
+            <strong>{{ isArabic ? 'تصميمات احترافية' : 'Professional Designs' }}</strong>
+          </div>
+        </div>
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'bank'">
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'رقم الحساب' : 'Account Number' }}</span>
+            <strong>XXXX-XXXX-XXXX-XXXX</strong>
+          </div>
+          <div class="pay-detail-row">
+            <span>{{ isArabic ? 'البنك' : 'Bank' }}</span>
+            <strong>{{ isArabic ? 'بنك مصر / CIB' : 'Banque Misr / CIB' }}</strong>
+          </div>
+        </div>
+        <div class="pay-detail-content" *ngIf="selectedPayMethod === 'cash'">
+          <div class="pay-detail-note">
+            <i class="fas fa-circle-info"></i>
+            {{
+              isArabic
+                ? 'سيتم التواصل معك لتحديد موعد الاستلام والدفع'
+                : 'We will contact you to arrange delivery and payment'
+            }}
+          </div>
+        </div>
+        <div class="pay-copy-note">
+          <i class="fas fa-copy gold-text" style="font-size: 0.75rem"></i>
+          {{
+            isArabic
+              ? 'انسخ البيانات وأرسل الإيصال على الواتساب'
+              : 'Copy details and send receipt on WhatsApp'
+          }}
+        </div>
+      </div>
+
+      <div class="pay-cta-row">
+        <button
+          class="pay-confirm-btn"
+          (click)="confirmAndSubmit()"
+          [disabled]="!selectedPayMethod"
+        >
+          <i class="fas fa-paper-plane"></i>
+          {{ isArabic ? 'تأكيد الطلب والإرسال' : 'Confirm & Submit Order' }}
+        </button>
+        <button class="pay-back-btn" (click)="showPaymentModal = false; showInvoiceModal = true">
+          <i class="fas fa-arrow-right" *ngIf="isArabic"></i>
+          <i class="fas fa-arrow-left" *ngIf="!isArabic"></i>
+          {{ isArabic ? 'رجوع للفاتورة' : 'Back to Invoice' }}
+        </button>
+      </div>
+
+      <div class="pay-secure-note">
+        <i class="fas fa-shield-halved"></i>
+        {{
+          isArabic
+            ? 'جميع بياناتك محمية ومشفرة بالكامل'
+            : 'All your data is fully protected and encrypted'
+        }}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Payment Popup (3-Tab) ══ -->
+  <div
+    class="pay-popup-overlay"
+    [class.pay-popup-overlay--open]="showPaymentPopup"
+    (click)="closePaymentPopup($event)"
+  >
+    <div class="pay-popup" [attr.dir]="isArabic ? 'rtl' : 'ltr'">
+      <!-- Close Button -->
+      <button class="pay-popup-close" (click)="showPaymentPopup = false; bodyUnlock()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <!-- ── Tab Navigation ── -->
+      <div class="pay-popup-tabs">
+        <button
+          class="pay-popup-tab"
+          [class.pay-popup-tab--active]="activePopupTab === 'invoice'"
+          (click)="activePopupTab = 'invoice'"
+        >
+          <i class="fas fa-file-invoice"></i>
+          <span>{{ isArabic ? 'الفاتورة' : 'Invoice' }}</span>
+        </button>
+        <button
+          class="pay-popup-tab"
+          [class.pay-popup-tab--active]="activePopupTab === 'methods'"
+          (click)="activePopupTab = 'methods'"
+        >
+          <i class="fas fa-credit-card"></i>
+          <span>{{ isArabic ? 'طرق الدفع' : 'Pay Methods' }}</span>
+        </button>
+        <button
+          class="pay-popup-tab"
+          [class.pay-popup-tab--active]="activePopupTab === 'proof'"
+          (click)="activePopupTab = 'proof'"
+        >
+          <i class="fas fa-paper-plane"></i>
+          <span>{{ isArabic ? 'إرسال الإثبات' : 'Send Proof' }}</span>
+        </button>
+      </div>
+
+      <!-- Tab Indicator Bar -->
+      <div class="pay-popup-tab-bar">
+        <div
+          class="pay-popup-tab-indicator"
+          [style.transform]="
+            activePopupTab === 'invoice'
+              ? 'translateX(0%)'
+              : activePopupTab === 'methods'
+                ? 'translateX(100%)'
+                : 'translateX(200%)'
+          "
+        ></div>
+      </div>
+
+      <!-- ════════ TAB 1 — INVOICE PREVIEW ════════ -->
+      <div class="pay-popup-panel" [class.pay-popup-panel--active]="activePopupTab === 'invoice'">
+        <div class="ppi-card">
+          <div class="ppi-header">
+            <div class="ppi-logo-wrap">
+              <div class="ppi-logo-icon"><i class="fas fa-paint-brush"></i></div>
+              <div>
+                <div class="ppi-brand">
+                  {{ isArabic ? 'تصميمات احترافية' : 'Professional Designs' }}
+                </div>
+                <div class="ppi-brand-sub">
+                  {{ isArabic ? 'خدمات الديزاين' : 'Design Services' }}
+                </div>
+              </div>
+            </div>
+            <div class="ppi-meta">
+              <div class="ppi-num"># {{ invoiceNumber }}</div>
+              <div class="ppi-date">{{ invoiceDate }}</div>
+              <div class="ppi-status">
+                <span class="ppi-status-dot"></span>
+                {{ isArabic ? 'في انتظار الدفع' : 'Pending Payment' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="ppi-gold-bar"></div>
+
+          <div class="ppi-section-label">
+            <i class="fas fa-user-circle"></i>
+            {{ isArabic ? 'بيانات العميل' : 'Client Details' }}
+          </div>
+          <div class="ppi-client-grid">
+            <div class="ppi-client-item">
+              <span class="ppi-key">{{ isArabic ? 'الاسم' : 'Name' }}</span>
+              <span class="ppi-val">{{ orderForm.fullName || '—' }}</span>
+            </div>
+            <div class="ppi-client-item">
+              <span class="ppi-key">{{ isArabic ? 'موبايل' : 'Mobile' }}</span>
+              <span class="ppi-val">{{ orderForm.mobile || '—' }}</span>
+            </div>
+            <div class="ppi-client-item">
+              <span class="ppi-key">{{ isArabic ? 'واتساب' : 'WhatsApp' }}</span>
+              <span class="ppi-val">{{ orderForm.whatsapp || '—' }}</span>
+            </div>
+            <div class="ppi-client-item">
+              <span class="ppi-key">{{ isArabic ? 'إيميل' : 'Email' }}</span>
+              <span class="ppi-val">{{ orderForm.email || '—' }}</span>
+            </div>
+            <div class="ppi-client-item" *ngIf="orderForm.company">
+              <span class="ppi-key">{{ isArabic ? 'شركة' : 'Company' }}</span>
+              <span class="ppi-val">{{ orderForm.company }}</span>
+            </div>
+          </div>
+
+          <div class="ppi-section-label" style="margin-top: 1.25rem">
+            <i class="fas fa-list-check"></i>
+            {{ isArabic ? 'تفاصيل الطلب' : 'Order Details' }}
+          </div>
+          <div class="ppi-table-wrap">
+            <table class="ppi-table">
+              <thead>
+                <tr>
+                  <th>{{ isArabic ? 'الخدمة' : 'Service' }}</th>
+                  <th>{{ isArabic ? 'الكمية' : 'Qty' }}</th>
+                  <th>{{ isArabic ? 'سعر / قطعة' : 'Unit Price' }}</th>
+                  <th>{{ isArabic ? 'الإجمالي' : 'Total' }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let svc of selectedServices">
+                  <td>
+                    <span class="ppi-svc-name">{{ isArabic ? svc.nameAr : svc.nameEn }}</span>
+                  </td>
+                  <td>
+                    <span class="ppi-qty-badge">{{ getQty(svc.id) }}</span>
+                  </td>
+                  <td>
+                    {{ svc.price | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+                  </td>
+                  <td class="ppi-row-total">
+                    {{ getSubtotal(svc) | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+                  </td>
+                </tr>
+                <tr *ngFor="let pid of selectedPackages">
+                  <td>
+                    <span class="ppi-svc-name">{{
+                      isArabic ? getPackageById(pid)?.nameAr : getPackageById(pid)?.nameEn
+                    }}</span>
+                  </td>
+                  <td><span class="ppi-qty-badge">1</span></td>
+                  <td>
+                    {{ getPackageById(pid)?.price || 0 | number }}
+                    <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+                  </td>
+                  <td class="ppi-row-total">
+                    {{ getPackageById(pid)?.price || 0 | number }}
+                    <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3">{{ isArabic ? 'الإجمالي الكلي' : 'Grand Total' }}</td>
+                  <td class="ppi-grand-total">
+                    {{ grandTotal() | number }} <small>{{ isArabic ? 'ج.م' : 'EGP' }}</small>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="ppi-pay-note">
+            <div class="ppi-pay-note-icon"><i class="fas fa-shield-halved"></i></div>
+            <div>
+              <div class="ppi-pay-note-title">
+                {{ isArabic ? 'برجاء إتمام عملية الدفع' : 'Complete your payment' }}
+              </div>
+              <div class="ppi-pay-note-sub">
+                {{
+                  isArabic
+                    ? 'لن يبدأ تنفيذ الطلب قبل تأكيد الدفع'
+                    : 'Order will not start before payment confirmation'
+                }}
+              </div>
+            </div>
+          </div>
+
+          <div class="ppi-actions">
+            <button class="ppi-btn-print" (click)="printInvoiceFromModal()">
+              <i class="fas fa-print"></i>
+              {{ isArabic ? 'طباعة' : 'Print' }}
+            </button>
+            <button class="ppi-btn-download" (click)="downloadInvoiceAsImage()">
+              <i class="fas fa-image"></i>
+              {{ isArabic ? 'تحميل صورة' : 'Download' }}
+            </button>
+            <button class="ppi-btn-next" (click)="activePopupTab = 'methods'">
+              <i class="fas fa-credit-card"></i>
+              {{ isArabic ? 'طرق الدفع' : 'Pay Methods' }}
+              <i
+                class="fas"
+                [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"
+                style="margin-inline-start: 6px"
+              ></i>
+            </button>
+          </div>
+
+          <div class="ppi-footer">
+            <i class="fas fa-heart" style="color: var(--gold); font-size: 0.7rem"></i>
+            {{
+              isArabic
+                ? 'شكراً لثقتك — تصميمات احترافية'
+                : 'Thank you for your trust — Professional Designs'
+            }}
+          </div>
+        </div>
+      </div>
+      <!-- /panel invoice -->
+
+      <!-- ════════ TAB 2 — PAYMENT METHODS ════════ -->
+      <div class="pay-popup-panel" [class.pay-popup-panel--active]="activePopupTab === 'methods'">
+        <div class="ppm-header">
+          <div class="ppm-header-icon"><i class="fas fa-lock"></i></div>
+          <div>
+            <h3 class="ppm-title">{{ isArabic ? 'طرق الدفع' : 'Payment Methods' }}</h3>
+            <p class="ppm-sub">
+              {{
+                isArabic ? 'اختر طريقة الدفع المناسبة لك' : 'Choose your preferred payment method'
+              }}
+            </p>
+          </div>
+          <div class="ppm-amount-badge">
+            <div class="ppm-amount-label">{{ isArabic ? 'المبلغ' : 'Total' }}</div>
+            <div class="ppm-amount-val">
+              {{ grandTotal() | number }} <span>{{ isArabic ? 'ج.م' : 'EGP' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ppm-cards-grid">
+          <!-- Vodafone Cash -->
+          <div class="ppm-card ppm-card--vodafone">
+            <div class="ppm-card-head">
+              <div class="ppm-card-logo">
+                <img
+                  src="payments/vodafone.png"
+                  alt="Vodafone Cash"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+                <span style="display: none"><i class="fas fa-mobile-screen-button"></i></span>
+              </div>
+              <div>
+                <div class="ppm-card-name">{{ 'PAYMENT.VODAFONE' | translate }}</div>
+                <div class="ppm-card-tag">
+                  <i class="fas fa-check-circle"></i> {{ isArabic ? 'متاح الآن' : 'Available Now' }}
+                </div>
+              </div>
+            </div>
+            <div class="ppm-fields">
+              <div class="ppm-field">
+                <label
+                  ><i class="fas fa-mobile-alt"></i> {{ 'PAYMENT.NUMBER_1' | translate }}</label
+                >
+                <div class="ppm-copy-row">
+                  <span>{{ environment.vodafone1 }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.vodafone1, 'ppm_vf1')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_vf1'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_vf1'"
+                      [class.fa-copy]="copySuccess !== 'ppm_vf1'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+              <div class="ppm-field">
+                <label
+                  ><i class="fas fa-mobile-alt"></i> {{ 'PAYMENT.NUMBER_2' | translate }}</label
+                >
+                <div class="ppm-copy-row">
+                  <span>{{ environment.vodafone2 }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.vodafone2, 'ppm_vf2')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_vf2'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_vf2'"
+                      [class.fa-copy]="copySuccess !== 'ppm_vf2'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Orange Cash -->
+          <div class="ppm-card ppm-card--orange">
+            <div class="ppm-card-head">
+              <div class="ppm-card-logo">
+                <img
+                  src="payments/Orange.png"
+                  alt="Orange Cash"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+                <span style="display: none"><i class="fas fa-mobile-screen-button"></i></span>
+              </div>
+              <div>
+                <div class="ppm-card-name">{{ 'PAYMENT.ORANGE' | translate }}</div>
+                <div class="ppm-card-tag">
+                  <i class="fas fa-check-circle"></i> {{ isArabic ? 'متاح الآن' : 'Available Now' }}
+                </div>
+              </div>
+            </div>
+            <div class="ppm-fields">
+              <div class="ppm-field">
+                <label><i class="fas fa-mobile-alt"></i> {{ 'PAYMENT.NUMBER' | translate }}</label>
+                <div class="ppm-copy-row">
+                  <span>{{ environment.orange }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.orange, 'ppm_or')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_or'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_or'"
+                      [class.fa-copy]="copySuccess !== 'ppm_or'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- InstaPay -->
+          <div class="ppm-card ppm-card--insta">
+            <div class="ppm-card-head">
+              <div class="ppm-card-logo">
+                <img
+                  src="payments/InstaPay.png"
+                  alt="InstaPay"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+                <span style="display: none"><i class="fas fa-bolt"></i></span>
+              </div>
+              <div>
+                <div class="ppm-card-name">{{ 'PAYMENT.INSTAPAY' | translate }}</div>
+                <div class="ppm-card-tag">
+                  <i class="fas fa-check-circle"></i> {{ isArabic ? 'متاح الآن' : 'Available Now' }}
+                </div>
+              </div>
+            </div>
+            <div class="ppm-fields">
+              <div class="ppm-field">
+                <label
+                  ><i class="fas fa-mobile-alt"></i> {{ 'PAYMENT.NUMBER_1' | translate }}</label
+                >
+                <div class="ppm-copy-row">
+                  <span>{{ environment.instaNumber1 }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.instaNumber1, 'ppm_ip1')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_ip1'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_ip1'"
+                      [class.fa-copy]="copySuccess !== 'ppm_ip1'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+              <div class="ppm-field">
+                <label><i class="fas fa-at"></i> {{ 'PAYMENT.NUMBER_2' | translate }}</label>
+                <div class="ppm-copy-row">
+                  <span>{{ environment.instaNumber2 }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.instaNumber2, 'ppm_ip2')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_ip2'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_ip2'"
+                      [class.fa-copy]="copySuccess !== 'ppm_ip2'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fawry -->
+          <div class="ppm-card ppm-card--fawry">
+            <div class="ppm-card-head">
+              <div class="ppm-card-logo">
+                <img
+                  src="payments/fawry.png"
+                  alt="Fawry"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+                <span style="display: none"><i class="fas fa-receipt"></i></span>
+              </div>
+              <div>
+                <div class="ppm-card-name">{{ 'PAYMENT.FAWRY' | translate }}</div>
+                <div class="ppm-card-tag">
+                  <i class="fas fa-check-circle"></i> {{ isArabic ? 'متاح الآن' : 'Available Now' }}
+                </div>
+              </div>
+            </div>
+            <div class="ppm-fields">
+              <div class="ppm-field">
+                <div class="ppm-info-box">
+                  <i class="fas fa-receipt"></i>
+                  <span>{{
+                    isArabic
+                      ? 'يتم إرسال كود لك حسب المبلغ — يتم الدفع من أي ماكينة فوري'
+                      : 'A code will be sent based on your amount — pay at any Fawry machine'
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Telda -->
+          <div class="ppm-card ppm-card--telda">
+            <div class="ppm-card-head">
+              <div class="ppm-card-logo">
+                <img
+                  src="payments/telda.jpg"
+                  alt="Telda"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+                <span style="display: none"><i class="fas fa-wallet"></i></span>
+              </div>
+              <div>
+                <div class="ppm-card-name">{{ 'PAYMENT.TELDA' | translate }}</div>
+                <div class="ppm-card-tag">
+                  <i class="fas fa-check-circle"></i> {{ isArabic ? 'متاح الآن' : 'Available Now' }}
+                </div>
+              </div>
+            </div>
+            <div class="ppm-fields">
+              <div class="ppm-field">
+                <label
+                  ><i class="fas fa-mobile-alt"></i> {{ 'PAYMENT.NUMBER_TELDA' | translate }}</label
+                >
+                <div class="ppm-copy-row">
+                  <span>{{ environment.telda }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.telda, 'ppm_tl')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_tl'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_tl'"
+                      [class.fa-copy]="copySuccess !== 'ppm_tl'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Binance -->
+          <div class="ppm-card ppm-card--binance">
+            <div class="ppm-card-head">
+              <div class="ppm-card-logo">
+                <img
+                  src="payments/binance.png"
+                  alt="Binance"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+                <span style="display: none"><i class="fas fa-coins"></i></span>
+              </div>
+              <div>
+                <div class="ppm-card-name">{{ 'PAYMENT.BINANCE' | translate }}</div>
+                <div class="ppm-card-tag"><i class="fas fa-check-circle"></i> USDT</div>
+              </div>
+            </div>
+            <div class="ppm-fields">
+              <div class="ppm-field">
+                <label
+                  ><i class="fas fa-id-badge"></i> {{ isArabic ? 'المعرّف' : 'Binance ID' }}</label
+                >
+                <div class="ppm-copy-row">
+                  <span>{{ environment.binanceId }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.binanceId, 'ppm_bn')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_bn'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_bn'"
+                      [class.fa-copy]="copySuccess !== 'ppm_bn'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bank Transfer -->
+          <div class="ppm-card ppm-card--bank">
+            <div class="ppm-card-head">
+              <div class="ppm-card-logo ppm-card-logo--icon">
+                <i class="fas fa-university"></i>
+              </div>
+              <div>
+                <div class="ppm-card-name">{{ 'PAYMENT.BANK' | translate }}</div>
+                <div class="ppm-card-tag">
+                  <i class="fas fa-check-circle"></i>
+                  {{ isArabic ? 'البنك الأهلي المصري' : 'National Bank of Egypt' }}
+                </div>
+              </div>
+            </div>
+            <div class="ppm-fields">
+              <div class="ppm-field">
+                <label
+                  ><i class="fas fa-hashtag"></i>
+                  {{ isArabic ? 'رقم الحساب' : 'Account Number' }}</label
+                >
+                <div class="ppm-copy-row">
+                  <span style="font-size: 0.8rem">{{ environment.bankAccount }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.bankAccount, 'ppm_ba')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_ba'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_ba'"
+                      [class.fa-copy]="copySuccess !== 'ppm_ba'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+              <div class="ppm-field">
+                <label><i class="fas fa-globe"></i> IBAN</label>
+                <div class="ppm-copy-row">
+                  <span style="font-size: 0.75rem">{{ environment.bankIban }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.bankIban, 'ppm_ib')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_ib'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_ib'"
+                      [class.fa-copy]="copySuccess !== 'ppm_ib'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+              <div class="ppm-field">
+                <label><i class="fas fa-code"></i> SWIFT</label>
+                <div class="ppm-copy-row">
+                  <span>{{ environment.bankSwift }}</span>
+                  <button
+                    type="button"
+                    class="ppm-copy-btn"
+                    (click)="copy(environment.bankSwift, 'ppm_sw')"
+                    [class.ppm-copy-btn--ok]="copySuccess === 'ppm_sw'"
+                  >
+                    <i
+                      class="fas"
+                      [class.fa-check]="copySuccess === 'ppm_sw'"
+                      [class.fa-copy]="copySuccess !== 'ppm_sw'"
+                    ></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /ppm-cards-grid -->
+
+        <div class="ppm-next-row">
+          <button class="ppm-next-btn" (click)="activePopupTab = 'proof'">
+            <i class="fas fa-paper-plane"></i>
+            {{ isArabic ? 'إرسال إثبات الدفع' : 'Send Payment Proof' }}
+            <i
+              class="fas"
+              [ngClass]="isArabic ? 'fa-arrow-left' : 'fa-arrow-right'"
+              style="margin-inline-start: 8px"
+            ></i>
+          </button>
+        </div>
+        <div class="ppm-secure-note">
+          <i class="fas fa-shield-alt"></i>
+          {{
+            isArabic
+              ? 'جميع طرق الدفع آمنة ومعتمدة رسمياً'
+              : 'All payment methods are secure and officially verified'
+          }}
+        </div>
+      </div>
+      <!-- /panel methods -->
+
+      <!-- ════════ TAB 3 — SEND PROOF ════════ -->
+      <div class="pay-popup-panel" [class.pay-popup-panel--active]="activePopupTab === 'proof'">
+        <div class="pps-header">
+          <div class="pps-header-icon"><i class="fas fa-paper-plane"></i></div>
+          <div>
+            <h3 class="pps-title">{{ isArabic ? 'أرسل إثبات الدفع' : 'Send Payment Proof' }}</h3>
+            <p class="pps-sub">
+              {{
+                isArabic
+                  ? 'ارفع الصورتين وأدخل بياناتك لتفعيل الخدمة'
+                  : 'Upload both images and fill your details to activate your service'
+              }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Client Form -->
+        <div class="pps-form-section">
+          <div class="pps-form-label">
+            <i class="fas fa-user"></i>
+            {{ isArabic ? 'بيانات العميل' : 'Client Information' }}
+          </div>
+          <div class="pps-form-grid">
+            <div class="pps-form-group">
+              <label class="pps-label"
+                >{{ isArabic ? 'الاسم الكامل' : 'Full Name' }} <span class="pps-req">*</span></label
+              >
+              <input
+                type="text"
+                class="pps-input"
+                [(ngModel)]="proofForm.fullName"
+                [placeholder]="isArabic ? 'أدخل اسمك الكامل' : 'Enter your full name'"
+              />
+            </div>
+            <div class="pps-form-group">
+              <label class="pps-label"
+                >{{ isArabic ? 'رقم الموبايل' : 'Mobile Number' }}
+                <span class="pps-req">*</span></label
+              >
+              <input
+                type="tel"
+                class="pps-input"
+                [(ngModel)]="proofForm.mobile"
+                [placeholder]="isArabic ? 'مثال: 01XXXXXXXXX' : 'e.g. 01XXXXXXXXX'"
+              />
+            </div>
+            <div class="pps-form-group">
+              <label class="pps-label">{{ isArabic ? 'واتساب' : 'WhatsApp' }}</label>
+              <input
+                type="tel"
+                class="pps-input"
+                [(ngModel)]="proofForm.whatsapp"
+                [placeholder]="isArabic ? 'رقم الواتساب' : 'WhatsApp number'"
+              />
+            </div>
+            <div class="pps-form-group">
+              <label class="pps-label">{{ isArabic ? 'البريد الإلكتروني' : 'Email' }}</label>
+              <input
+                type="email"
+                class="pps-input"
+                [(ngModel)]="proofForm.email"
+                [placeholder]="'example@email.com'"
+              />
+            </div>
+            <div class="pps-form-group pps-form-group--full">
+              <label class="pps-label">{{
+                isArabic ? 'ملاحظات إضافية' : 'Additional Notes'
+              }}</label>
+              <textarea
+                class="pps-input pps-textarea"
+                [(ngModel)]="proofForm.notes"
+                rows="2"
+                [placeholder]="isArabic ? 'أي تفاصيل إضافية...' : 'Any additional details...'"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload Zones -->
+        <div class="pps-zones-label">
+          <i class="fas fa-images"></i>
+          {{ isArabic ? 'الصور المطلوبة' : 'Required Images' }}
+        </div>
+        <div class="pps-two-zones">
+          <!-- Zone 1 — Transfer Screenshot -->
+          <div class="pps-zone-wrap">
+            <div class="pps-zone-title">
+              <i class="fas fa-money-bill-transfer"></i>
+              {{ isArabic ? 'صورة التحويل' : 'Transfer Screenshot' }}
+              <span class="pps-req">*</span>
+            </div>
+            <div
+              class="pps-upload-zone"
+              [class.pps-upload-zone--over]="isDragOver"
+              [class.pps-upload-zone--filled]="proofPreview"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)"
+              (click)="proofInput.click()"
+            >
+              <input
+                #proofInput
+                type="file"
+                accept="image/*"
+                style="display: none"
+                (change)="onProofSelected($event)"
+              />
+              <div class="pps-upload-empty" *ngIf="!proofPreview">
+                <div class="pps-upload-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                <p>{{ isArabic ? 'اسحب أو اضغط للاختيار' : 'Drag or click to select' }}</p>
+                <span>PNG / JPG / WEBP — {{ isArabic ? 'حتى 10 ميجا' : 'up to 10 MB' }}</span>
+              </div>
+              <div class="pps-upload-preview" *ngIf="proofPreview">
+                <img [src]="proofPreview" alt="transfer preview" />
+                <div class="pps-upload-overlay">
+                  <button type="button" class="pps-remove-btn" (click)="removeProof($event)">
+                    <i class="fas fa-times"></i> {{ isArabic ? 'إزالة' : 'Remove' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone 2 — Invoice Photo -->
+          <div class="pps-zone-wrap">
+            <div class="pps-zone-title">
+              <i class="fas fa-file-invoice"></i>
+              {{ isArabic ? 'صورة الفاتورة' : 'Invoice Photo' }}
+              <span class="pps-req">*</span>
+            </div>
+            <div
+              class="pps-upload-zone"
+              [class.pps-upload-zone--over]="isDragOver2"
+              [class.pps-upload-zone--filled]="invoicePreview"
+              (dragover)="onDragOver2($event)"
+              (dragleave)="onDragLeave2($event)"
+              (drop)="onDrop2($event)"
+              (click)="invoiceInput.click()"
+            >
+              <input
+                #invoiceInput
+                type="file"
+                accept="image/*"
+                style="display: none"
+                (change)="onInvoiceSelected($event)"
+              />
+              <div class="pps-upload-empty" *ngIf="!invoicePreview">
+                <div class="pps-upload-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                <p>{{ isArabic ? 'اسحب أو اضغط للاختيار' : 'Drag or click to select' }}</p>
+                <span>PNG / JPG / WEBP — {{ isArabic ? 'حتى 10 ميجا' : 'up to 10 MB' }}</span>
+              </div>
+              <div class="pps-upload-preview" *ngIf="invoicePreview">
+                <img [src]="invoicePreview" alt="invoice preview" />
+                <div class="pps-upload-overlay">
+                  <button type="button" class="pps-remove-btn" (click)="removeInvoice($event)">
+                    <i class="fas fa-times"></i> {{ isArabic ? 'إزالة' : 'Remove' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pps-both-required" *ngIf="!proofPreview || !invoicePreview">
+          <i class="fas fa-circle-info"></i>
+          <span>{{
+            isArabic
+              ? 'يجب رفع الصورتين معاً لتفعيل الخدمة'
+              : 'Both images are required to activate your service'
+          }}</span>
+        </div>
+
+        <!-- Send Buttons -->
+        <div class="pps-actions" *ngIf="proofPreview && invoicePreview">
+          <div class="pps-actions-label">
+            <i class="fas fa-bolt"></i>
+            {{ isArabic ? 'إرسال سريع' : 'Quick Send' }}
+          </div>
+          <div class="pps-buttons-row">
+            <button
+              type="button"
+              class="pps-btn pps-btn--email"
+              (click)="sendProofByEmail()"
+              [class.pps-btn--loading]="emailSending"
+              [class.pps-btn--success]="emailSent"
+              [disabled]="emailSending"
+            >
+              <span class="pps-btn-icon">
+                <i
+                  class="fas"
+                  [class.fa-envelope]="!emailSending && !emailSent"
+                  [class.fa-spinner]="emailSending"
+                  [class.fa-spin]="emailSending"
+                  [class.fa-check]="emailSent"
+                ></i>
+              </span>
+              <span class="pps-btn-text">
+                <strong>{{ isArabic ? 'إرسال بالإيميل' : 'Send by Email' }}</strong>
+                <small>{{ environment.supportEmail }}</small>
+              </span>
+            </button>
+            <a
+              [href]="whatsappProofLink"
+              target="_blank"
+              class="pps-btn pps-btn--wa"
+              (click)="onWhatsappProofClick()"
+            >
+              <span class="pps-btn-icon"><i class="fab fa-whatsapp"></i></span>
+              <span class="pps-btn-text">
+                <strong>{{ isArabic ? 'إرسال بالواتساب' : 'Send via WhatsApp' }}</strong>
+                <small>{{ environment.WhatsappNumber }}</small>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Success Banner -->
+        <div class="pps-success-banner" *ngIf="emailSent">
+          <i class="fas fa-circle-check"></i>
+          <div>
+            <strong>{{ isArabic ? 'تم الإرسال بنجاح!' : 'Sent successfully!' }}</strong>
+            <span>{{
+              isArabic
+                ? 'لا تنسى الإرسال عبر الواتساب أيضاً'
+                : 'Also send via WhatsApp for fastest activation'
+            }}</span>
+          </div>
+        </div>
+
+        <!-- Error Notice -->
+        <div class="pps-error-notice" *ngIf="emailError">
+          <i class="fas fa-triangle-exclamation"></i>
+          <div>
+            <strong>{{ isArabic ? 'تعذّر الإرسال' : 'Sending failed' }}</strong>
+            <span>{{
+              isArabic
+                ? 'أرسل الصور عبر الواتساب بدلاً من ذلك'
+                : 'Please send images via WhatsApp instead'
+            }}</span>
+            <a [href]="whatsappProofLink" target="_blank" class="pps-wa-fallback">
+              <i class="fab fa-whatsapp"></i>
+              {{ isArabic ? 'إرسال عبر الواتساب' : 'Send via WhatsApp' }}
+            </a>
+          </div>
+        </div>
+
+        <div class="pps-footer">
+          <i class="fas fa-lock"></i>
+          <span>{{
+            isArabic
+              ? 'الصور لا تُخزَّن — تُرسَل مباشرةً ثم تُحذَف'
+              : 'Images are not stored — sent directly then discarded'
+          }}</span>
+        </div>
+      </div>
+      <!-- /panel proof -->
+    </div>
+    <!-- /pay-popup -->
+  </div>
+  <!-- /pay-popup-overlay -->
+
+  <!-- ══ CTA Banner ══ -->
+  <section class="cta-section section-padding">
+    <div class="container">
+      <div class="cta-inner reveal">
+        <div class="cta-bg-orb"></div>
+        <div class="row align-items-center g-4">
+          <div class="col-lg-8">
+            <h2 class="cta-title">{{ 'CTA.TITLE' | translate }}</h2>
+            <p class="cta-desc">{{ 'CTA.DESC' | translate }}</p>
+          </div>
+          <div class="col-lg-4 text-lg-end">
+            <a routerLink="/contact" class="btn btn-gold rounded-pill px-5 py-3 fs-6">
+              {{ 'CTA.BTN' | translate }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
