@@ -43,7 +43,8 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
-    final appColors = context.theme.extension<AppColorsExtension>()!;
+    final appColors = context.theme.extension<AppColorsExtension>() ??
+        (cs.brightness == Brightness.dark ? AppPalettes.dark : AppPalettes.light);
     final isDisabled = onPressed == null || isLoading;
 
     final double buttonHeight = switch (height) {

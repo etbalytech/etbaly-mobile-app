@@ -1,7 +1,10 @@
-import 'package:etbaly/src/imports/core_imports.dart';
-import 'package:etbaly/src/imports/packages_imports.dart';
-
-import 'package:etbaly/src/features/auth/presentation/providers/session_bloc.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:go_router/go_router.dart';
+import '../../features/auth/presentation/providers/session_bloc.dart';
+import '../../routing/app_routes.dart';
+import '../../routing/global_navigator.dart';
 
 
 class SessionListenerWrapper extends StatelessWidget {
@@ -15,10 +18,13 @@ class SessionListenerWrapper extends StatelessWidget {
       listener: (context, state) {
         if (state.status != SessionStatus.unknown) {
           FlutterNativeSplash.remove();
+          final ctx = rootContext;
+          final router = ctx == null ? null : GoRouter.maybeOf(ctx);
+          if (router == null) return;
           if (state.status == SessionStatus.authenticated) {
-            context.go(AppRoutes.home);
+            router.go(AppRoutes.home);
           } else if (state.status == SessionStatus.unauthenticated) {
-            context.go(AppRoutes.onboarding);
+            router.go(AppRoutes.onboarding);
           }
         }
       },

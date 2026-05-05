@@ -22,7 +22,8 @@ class App extends StatelessWidget {
       supportedLocales: context.supportedLocales,
       locale: context.locale,
       builder: (context, child) {
-        Widget current = child!;
+        final safeChild = child ?? const SizedBox.shrink();
+        Widget current = safeChild;
         current = SkeletonWrapper(child: current);
         current = SessionListenerWrapper(child: current);
         return current;

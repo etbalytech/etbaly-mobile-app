@@ -1,4 +1,5 @@
-import '../../imports/imports.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// A wrapper to initialize [ScreenUtil] with design-specific constraints.
 class ScreenUtilWrapper extends StatelessWidget {

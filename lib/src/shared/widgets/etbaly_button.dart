@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../extensions/context_extension.dart';
 
 /// Etbaly Button Component
@@ -92,13 +90,14 @@ class EtbalyButton extends StatelessWidget {
         break;
     }
 
-    if (animate && !isDisabled) {
-      button = button.animate().scale(
-        begin: const Offset(0.95, 0.95),
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-      );
-    }
+    // Animation temporarily disabled to fix null check error
+    // if (animate && !isDisabled) {
+    //   button = button.animate().scale(
+    //     begin: const Offset(0.95, 0.95),
+    //     duration: const Duration(milliseconds: 200),
+    //     curve: Curves.easeOutCubic,
+    //   );
+    // }
 
     return button;
   }

@@ -1,5 +1,6 @@
 import 'dart:ui';
-import '../../imports/imports.dart';
+import 'package:flutter/material.dart';
+import '../../routing/global_navigator.dart';
 
 /// Shows a premium custom dialog with optional backdrop blur.
 /// 

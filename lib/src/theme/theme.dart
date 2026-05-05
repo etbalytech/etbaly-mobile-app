@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 import 'text_theme.dart';
 import 'etbaly_colors.dart';
+import 'color_schemes.dart';
 
 /// Custom theme extension for spacing and other design tokens
 /// Enhanced design tokens matching web version (--radius-sm: 10px, --radius-md: 16px, --radius-lg: 24px, --radius-xl: 36px)
@@ -101,6 +102,9 @@ class AppDesignTokens extends ThemeExtension<AppDesignTokens> {
 
 ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColors, [Locale? locale]) {
   final textTheme = buildTextTheme(locale);
+  final appPalette = colorScheme.brightness == Brightness.dark
+      ? AppPalettes.dark
+      : AppPalettes.light;
   
   return ThemeData(
     useMaterial3: true,
@@ -119,6 +123,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
     extensions: [
       etbalyColors,
       AppDesignTokens.fallback,
+      appPalette,
     ],
     
     // --- Basic Elements ---

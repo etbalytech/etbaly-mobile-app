@@ -1,4 +1,5 @@
-import '../../../imports/imports.dart';
+import 'package:flutter/material.dart';
+import '../../../extensions/context_extension.dart';
 
 /// ToastCard widget to display decent and rich looking toast.
 class ToastCard extends StatelessWidget {

@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'package:etbaly/src/imports/imports.dart';
-import 'package:etbaly/src/features/auth/domain/entities/user.dart';
-import 'package:etbaly/src/features/auth/domain/repositories/auth_repository.dart';
+import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 /// Session events
 abstract class SessionEvent extends Equatable {

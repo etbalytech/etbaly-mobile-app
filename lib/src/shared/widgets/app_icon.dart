@@ -1,4 +1,4 @@
-import '../../imports/imports.dart';
+import 'package:flutter/material.dart';
 
 /// A wrapper widget that handles different icon libraries.
 class AppIcon extends StatelessWidget {
