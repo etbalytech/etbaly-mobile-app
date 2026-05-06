@@ -16,12 +16,6 @@ import '../features/contact/presentation/screens/contact_screen.dart';
 import '../features/services/presentation/screens/service_detail_screen.dart';
 import '../features/privacy/presentation/screens/privacy_screen.dart';
 
-// Import auth screens
-import '../features/auth/presentation/screens/login_screen.dart';
-import '../features/auth/presentation/screens/signup_screen.dart';
-import '../features/auth/presentation/screens/forgot_password_screen.dart';
-import '../features/onboarding/presentation/screens/onboarding_page.dart';
-
 /// Bottom Navigation Bar for Etbaly App
 class EtbalyNavBar extends StatelessWidget {
   const EtbalyNavBar({super.key, required this.child});
@@ -151,7 +145,7 @@ class EtbalyNavBar extends StatelessWidget {
 /// Etbaly App Router Configuration
 final GoRouter etbalyRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: AppRoutes.onboarding,
+  initialLocation: AppRoutes.home,
   routes: [
     // Shell route with bottom navigation
     ShellRoute(
@@ -184,28 +178,6 @@ final GoRouter etbalyRouter = GoRouter(
           builder: (context, state) => const ContactScreen(),
         ),
       ],
-    ),
-
-    // Auth routes (no bottom nav)
-    GoRoute(
-      path: AppRoutes.onboarding,
-      name: 'onboarding',
-      builder: (context, state) => const OnboardingPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.login,
-      name: 'login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.signup,
-      name: 'signup',
-      builder: (context, state) => const SignupScreen(),
-    ),
-    GoRoute(
-      path: AppRoutes.forgotPassword,
-      name: 'forgotPassword',
-      builder: (context, state) => const ForgotPasswordScreen(),
     ),
 
     // Sub-routes (push navigation)

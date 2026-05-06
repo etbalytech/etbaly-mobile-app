@@ -1,8 +1,6 @@
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:etbaly/src/imports/packages_imports.dart';
 
-import 'package:etbaly/src/features/auth/presentation/providers/session_bloc.dart';
-
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -12,9 +10,6 @@ class HomePage extends StatelessWidget {
     final theme = context.theme;
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
-
-    final session = context.watch<SessionBloc>().state;
-    final user = session.user;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -35,7 +30,7 @@ class HomePage extends StatelessWidget {
               ),
               SizedBox(height: AppSpacing.lg.h),
               Text(
-                user?.name ?? user?.email ?? ('home.welcome_home'.tr()),
+                'home.welcome_home'.tr(),
                 textAlign: TextAlign.center,
                 style: textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
@@ -45,7 +40,7 @@ class HomePage extends StatelessWidget {
               ),
                             SizedBox(height: AppSpacing.md.h),
               Text(
-                user != null && user.name != null ? user.email : ('home.home_subtitle'.tr()),
+                'home.home_subtitle'.tr(),
                 textAlign: TextAlign.center,
                 style: textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,

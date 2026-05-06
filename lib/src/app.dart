@@ -25,7 +25,6 @@ class App extends StatelessWidget {
         final safeChild = child ?? const SizedBox.shrink();
         Widget current = safeChild;
         current = SkeletonWrapper(child: current);
-        current = SessionListenerWrapper(child: current);
         return current;
       },
     );
