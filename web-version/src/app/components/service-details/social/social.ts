@@ -1,12 +1,20 @@
-import { Component, inject, AfterViewInit, HostListener, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  AfterViewInit,
+  HostListener,
+  OnInit,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Theme } from '../../../core/theme';
+import { environment } from '../../../../environments/environment';
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
-interface SocialPackage {
+interface DesignService {
   id: string;
   nameAr: string;
   nameEn: string;
@@ -14,7 +22,14 @@ interface SocialPackage {
   descEn: string;
   price: number;
   image: string;
-  features: { ar: string; en: string }[];
+  minQty: number;
+}
+
+interface DesignPackage {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  price: number;
 }
 
 interface Platform {
@@ -44,152 +59,87 @@ export class Social implements AfterViewInit, OnInit {
   private themeService = inject(Theme);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+
+  // Expose environment to template
+  readonly environment = environment;
 
   get isArabic(): boolean {
     return this.themeService.currentLang() === 'ar';
   }
 
-  // ── Invoice meta ────────────────────────────────────────────────────────
+  // ── Invoice meta ──────────────────────────────────────────────────────────
   invoiceNumber = Math.floor(100000 + Math.random() * 900000);
   invoiceDate = new Date().toLocaleDateString('ar-EG');
+  isDownloadingImage = false;
 
-  // ── Social Media Packages (8 items) ─────────────────────────────────────
-  socialPackages: SocialPackage[] = [
+  // ── Design Services ───────────────────────────────────────────────────────
+  designServices: DesignService[] = [
     {
-      id: 'start-pkg',
-      nameAr: 'باقة Start',
-      nameEn: 'Start Package',
-      descAr: 'مثالية للبداية والتواجد الرقمي على فيسبوك وانستجرام',
-      descEn: 'Perfect for starting your digital presence on Facebook & Instagram',
-      price: 1200,
-      image: 'assets/images/social/start-pkg.jpg',
-      features: [
-        { ar: '7 بوستات بمحتوى وتصميم', en: '7 posts with content & design' },
-        { ar: '7 ستوريز', en: '7 stories' },
-        { ar: 'فيسبوك وانستجرام', en: 'Facebook & Instagram' },
-        { ar: 'إدارة Messenger', en: 'Messenger management' },
-      ],
+      id: 'social-design',
+      nameAr: 'تصميم سوشيال ميديا',
+      nameEn: 'Social Media Design',
+      descAr: 'تصميمات احترافية لمنصات التواصل الاجتماعي تعكس هوية علامتك التجارية',
+      descEn: 'Professional social media designs that reflect your brand identity',
+      price: 250,
+      image: 'assets/images/design/social-design.jpg',
+      minQty: 1,
     },
     {
-      id: 'boost-pkg',
-      nameAr: 'باقة Boost',
-      nameEn: 'Boost Package',
-      descAr: 'محتوى متنوع مع ريلز لتعزيز التفاعل والانتشار',
-      descEn: 'Diverse content with Reels to boost engagement and reach',
-      price: 1800,
-      image: 'assets/images/social/boost-pkg.jpg',
-      features: [
-        { ar: '8 بوستات بمحتوى وتصميم', en: '8 posts with content & design' },
-        { ar: '8 ستوريز', en: '8 stories' },
-        { ar: 'ريل واحد', en: '1 Reel' },
-        { ar: 'فيسبوك وانستجرام', en: 'Facebook & Instagram' },
-      ],
+      id: 'identity',
+      nameAr: 'هوية بصرية كاملة',
+      nameEn: 'Full Visual Identity',
+      descAr: 'هوية بصرية متكاملة تشمل لوجو + غلاف + سلوجات + كافة المواد التسويقية',
+      descEn: 'Full visual identity: logo + cover + slogans + all marketing materials',
+      price: 3000,
+      image: 'assets/images/design/identity.jpg',
+      minQty: 1,
     },
     {
-      id: 'pro-pkg',
-      nameAr: 'باقة Pro',
-      nameEn: 'Pro Package',
-      descAr: 'إدارة احترافية مع خطة تسويقية كاملة ومتابعة مستمرة',
-      descEn: 'Professional management with a complete marketing plan',
-      price: 2500,
-      image: 'assets/images/social/pro-pkg.jpg',
-      features: [
-        { ar: '13 بوست بمحتوى وتصميم', en: '13 posts with content & design' },
-        { ar: '13 ستوري', en: '13 stories' },
-        { ar: 'ريل واحد', en: '1 Reel' },
-        { ar: 'تحليل المنافسين', en: 'Competitor analysis' },
-      ],
+      id: 'logo',
+      nameAr: 'تصميم لوجو احترافي',
+      nameEn: 'Professional Logo Design',
+      descAr: 'لوجو + غلاف + سلوجات بتصميم عالي الجودة يمثل علامتك التجارية',
+      descEn: 'Logo + cover + slogans with high-quality design representing your brand',
+      price: 500,
+      image: 'assets/images/design/logo.jpg',
+      minQty: 1,
     },
     {
-      id: 'pro-max-pkg',
-      nameAr: 'باقة Pro Max',
-      nameEn: 'Pro Max Package',
-      descAr: 'الباقة الأقوى لإدارة شاملة على جميع المنصات',
-      descEn: 'The most powerful package for full management across all platforms',
-      price: 3500,
-      image: 'assets/images/social/pro-max-pkg.jpg',
-      features: [
-        { ar: '30 بوست بمحتوى وتصميم', en: '30 posts with content & design' },
-        { ar: '30 ستوري', en: '30 stories' },
-        { ar: 'ريلين', en: '2 Reels' },
-        { ar: 'فيسبوك وانستجرام وتيك توك', en: 'Facebook, Instagram & TikTok' },
-      ],
-    },
-    {
-      id: 'content-pkg',
-      nameAr: 'باقة المحتوى',
-      nameEn: 'Content Package',
-      descAr: 'محتوى إبداعي متخصص يعكس هوية علامتك التجارية بأسلوب مميز',
-      descEn: 'Creative specialized content reflecting your brand identity',
-      price: 1500,
-      image: 'assets/images/social/content-pkg.jpg',
-      features: [
-        { ar: 'كتابة محتوى احترافي', en: 'Professional content writing' },
-        { ar: 'بوستات دعائية', en: 'Promotional posts' },
-        { ar: 'هاشتاقات مدروسة', en: 'Researched hashtags' },
-        { ar: 'جدول نشر منظم', en: 'Organized publishing schedule' },
-      ],
-    },
-    {
-      id: 'community-pkg',
-      nameAr: 'باقة المجتمع',
-      nameEn: 'Community Package',
-      descAr: 'إدارة تفاعل الجمهور والرد على التعليقات والرسائل باحترافية',
-      descEn: 'Manage audience engagement, comments, and messages professionally',
-      price: 900,
-      image: 'assets/images/social/community-pkg.jpg',
-      features: [
-        { ar: 'رد على التعليقات والرسائل', en: 'Reply to comments & messages' },
-        { ar: 'فلترة التعليقات السلبية', en: 'Filter negative comments' },
-        { ar: 'تقارير التفاعل الأسبوعية', en: 'Weekly engagement reports' },
-        { ar: 'متابعة 7 أيام أسبوعياً', en: '7 days a week follow-up' },
-      ],
-    },
-    {
-      id: 'growth-pkg',
-      nameAr: 'باقة النمو',
-      nameEn: 'Growth Package',
-      descAr: 'خطة متكاملة لتنمية حضورك الرقمي وزيادة المتابعين بشكل عضوي',
-      descEn: 'Integrated plan to grow your digital presence organically',
-      price: 2000,
-      image: 'assets/images/social/growth-pkg.jpg',
-      features: [
-        { ar: 'استراتيجية نمو مخصصة', en: 'Custom growth strategy' },
-        { ar: 'تحسين SEO للصفحات', en: 'Page SEO optimization' },
-        { ar: 'تقارير أداء شهرية', en: 'Monthly performance reports' },
-        { ar: 'تحليل منافسين', en: 'Competitor analysis' },
-      ],
-    },
-    {
-      id: 'enterprise-pkg',
-      nameAr: 'باقة Enterprise',
-      nameEn: 'Enterprise Package',
-      descAr: 'حلول متكاملة للشركات الكبرى تشمل كل منصات التواصل الاجتماعي',
-      descEn: 'Integrated solutions for large enterprises across all social platforms',
-      price: 5000,
-      image: 'assets/images/social/enterprise-pkg.jpg',
-      features: [
-        { ar: 'إدارة كاملة لكل المنصات', en: 'Full management across all platforms' },
-        { ar: 'مدير حساب مخصص', en: 'Dedicated account manager' },
-        { ar: 'حملات إعلانية مدفوعة', en: 'Paid advertising campaigns' },
-        { ar: 'تقارير تفصيلية أسبوعية وشهرية', en: 'Detailed weekly & monthly reports' },
-      ],
+      id: 'about-us',
+      nameAr: 'تصميم About Us',
+      nameEn: 'About Us Design',
+      descAr: 'تصميم صفحة التعريف بشركتك بأسلوب احترافي وجذاب يعكس قيمك',
+      descEn: 'Professional About Us page design that reflects your company values',
+      price: 1000,
+      image: 'assets/images/design/about-us.jpg',
+      minQty: 1,
     },
   ];
 
-  // ── Platforms ────────────────────────────────────────────────────────────
+  // ── Packages ───────────────────────────────────────────────────────────────
+  designPackagesList: DesignPackage[] = [
+    { id: 'pkg-starter', nameAr: 'تصميم سوشيال ميديا', nameEn: 'Social Media Design', price: 250 },
+    { id: 'pkg-growth', nameAr: 'هوية بصرية كاملة', nameEn: 'Full Visual Identity', price: 3000 },
+    { id: 'pkg-pro', nameAr: 'تصميم لوجو احترافي', nameEn: 'Professional Logo Design', price: 500 },
+    { id: 'pkg-brand', nameAr: 'تصميم About Us', nameEn: 'About Us Design', price: 1000 },
+  ];
+
+  // ── Platforms ──────────────────────────────────────────────────────────────
   platforms: Platform[] = [
     { id: 'facebook', nameAr: 'فيسبوك', nameEn: 'Facebook', icon: 'fa-facebook-f' },
     { id: 'instagram', nameAr: 'انستجرام', nameEn: 'Instagram', icon: 'fa-instagram' },
     { id: 'tiktok', nameAr: 'تيك توك', nameEn: 'TikTok', icon: 'fa-tiktok' },
     { id: 'snapchat', nameAr: 'سناب شات', nameEn: 'Snapchat', icon: 'fa-snapchat' },
     { id: 'youtube', nameAr: 'يوتيوب', nameEn: 'YouTube', icon: 'fa-youtube' },
-    { id: 'google', nameAr: 'جوجل', nameEn: 'Google', icon: 'fa-google' },
+    { id: 'linkedin', nameAr: 'جوجل', nameEn: 'Google', icon: 'fa-google' },
     { id: 'telegram', nameAr: 'تيليجرام', nameEn: 'Telegram', icon: 'fa-telegram' },
   ];
 
-  // ── State ────────────────────────────────────────────────────────────────
-  selectedPackages: SocialPackage[] = [];
+  // ── State ──────────────────────────────────────────────────────────────────
+  selectedServices: DesignService[] = [];
+  qtyMap: Record<string, number> = {};
+  selectedPackages: string[] = [];
   selectedPlatforms: string[] = [];
   sameAsMobile = false;
   showInvoiceModal = false;
@@ -205,16 +155,47 @@ export class Social implements AfterViewInit, OnInit {
     description: '',
   };
 
-  // ── Package Selection ────────────────────────────────────────────────────
-  isSelected(id: string): boolean {
-    return this.selectedPackages.some((p) => p.id === id);
+  // ── NEW: Payment Popup State ───────────────────────────────────────────────
+  showPaymentPopup = false;
+  activePopupTab: 'invoice' | 'methods' | 'proof' = 'invoice';
+
+  // ── NEW: File upload state ─────────────────────────────────────────────────
+  proofFile: File | null = null;
+  proofPreview: string | null = null;
+  invoiceFile: File | null = null;
+  invoicePreview: string | null = null;
+  isDragOver = false;
+  isDragOver2 = false;
+
+  // ── NEW: Email send state ──────────────────────────────────────────────────
+  emailSending = false;
+  emailSent = false;
+  emailError = false;
+
+  // ── NEW: Copy state ────────────────────────────────────────────────────────
+  copySuccess: string | null = null;
+
+  // ── NEW: WhatsApp proof link ───────────────────────────────────────────────
+  get whatsappProofLink(): string {
+    const phone = (this.environment as any).WhatsappNumber?.replace(/\D/g, '') ?? '';
+    const name = this.orderForm.fullName || this.orderForm.fullName;
+    const msg = this.isArabic
+      ? `مرحباً، إثبات الدفع — ${name} — فاتورة رقم ${this.invoiceNumber}`
+      : `Hello, Payment Proof — ${name} — Invoice #${this.invoiceNumber}`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   }
 
-  togglePackage(pkg: SocialPackage) {
-    if (this.isSelected(pkg.id)) {
-      this.selectedPackages = this.selectedPackages.filter((p) => p.id !== pkg.id);
+  // ── Service Selection ──────────────────────────────────────────────────────
+  isSelected(id: string): boolean {
+    return this.selectedServices.some((s) => s.id === id);
+  }
+
+  toggleService(svc: DesignService) {
+    if (this.isSelected(svc.id)) {
+      this.selectedServices = this.selectedServices.filter((s) => s.id !== svc.id);
     } else {
-      this.selectedPackages.push(pkg);
+      this.selectedServices.push(svc);
+      if (!this.qtyMap[svc.id]) this.qtyMap[svc.id] = 1;
       setTimeout(() => {
         const el = document.getElementById('order-form');
         el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -223,10 +204,56 @@ export class Social implements AfterViewInit, OnInit {
   }
 
   clearSelection() {
-    this.selectedPackages = [];
+    this.selectedServices = [];
+    this.qtyMap = {};
   }
 
-  // ── Platforms ────────────────────────────────────────────────────────────
+  // ── Qty ────────────────────────────────────────────────────────────────────
+  getQty(id: string): number {
+    return this.qtyMap[id] || 1;
+  }
+
+  increaseQty(svc: DesignService) {
+    this.qtyMap[svc.id] = (this.qtyMap[svc.id] || svc.minQty) + 1;
+  }
+
+  decreaseQty(svc: DesignService) {
+    const current = this.qtyMap[svc.id] || svc.minQty;
+    if (current > svc.minQty) this.qtyMap[svc.id] = current - 1;
+  }
+
+  setQty(svc: DesignService, event: Event) {
+    const val = parseInt((event.target as HTMLInputElement).value, 10);
+    if (!isNaN(val) && val >= svc.minQty) {
+      this.qtyMap[svc.id] = val;
+    } else {
+      this.qtyMap[svc.id] = svc.minQty;
+      (event.target as HTMLInputElement).value = String(svc.minQty);
+    }
+  }
+
+  getSubtotal(svc: DesignService): number {
+    return svc.price * this.getQty(svc.id);
+  }
+
+  // ── Packages ───────────────────────────────────────────────────────────────
+  isPackageSelected(id: string): boolean {
+    return this.selectedPackages.includes(id);
+  }
+
+  togglePackage(id: string) {
+    if (this.isPackageSelected(id)) {
+      this.selectedPackages = this.selectedPackages.filter((p) => p !== id);
+    } else {
+      this.selectedPackages.push(id);
+    }
+  }
+
+  getPackageById(id: string): DesignPackage | undefined {
+    return this.designPackagesList.find((p) => p.id === id);
+  }
+
+  // ── Platforms ──────────────────────────────────────────────────────────────
   isPlatformSelected(id: string): boolean {
     return this.selectedPlatforms.includes(id);
   }
@@ -239,43 +266,126 @@ export class Social implements AfterViewInit, OnInit {
     }
   }
 
-  // ── Same as mobile ───────────────────────────────────────────────────────
+  // ── Same as mobile ─────────────────────────────────────────────────────────
   onSameAsMobileChange() {
     if (this.sameAsMobile) {
       this.orderForm.whatsapp = this.orderForm.mobile;
     }
   }
 
-  // ── Grand Total ──────────────────────────────────────────────────────────
+  // ── Grand Total ────────────────────────────────────────────────────────────
   grandTotal(): number {
-    return this.selectedPackages.reduce((sum, pkg) => sum + pkg.price, 0);
+    const svcTotal = this.selectedServices.reduce((sum, svc) => sum + this.getSubtotal(svc), 0);
+    const pkgTotal = this.selectedPackages.reduce((sum, pid) => {
+      const pkg = this.getPackageById(pid);
+      return sum + (pkg ? pkg.price : 0);
+    }, 0);
+    return svcTotal + pkgTotal;
   }
 
-  // ── Form Validation ──────────────────────────────────────────────────────
-  isFormValid(): boolean {
-    return !!(
-      this.orderForm.fullName.trim() &&
-      this.orderForm.mobile.trim() &&
-      this.orderForm.whatsapp.trim() &&
-      this.orderForm.email.trim() &&
-      this.selectedPackages.length > 0
-    );
+  // ── Form Validation ────────────────────────────────────────────────────────
+  formTouched = false;
+
+  /** Live field-level error messages (Arabic / English based on isArabic) */
+  get fieldErrors(): Record<string, string> {
+    const ar = this.isArabic;
+    const f = this.orderForm;
+    const errors: Record<string, string> = {};
+
+    // Full name — at least 2 words
+    if (!f.fullName.trim()) {
+      errors['fullName'] = ar ? 'الاسم الكامل مطلوب' : 'Full name is required';
+    } else if (f.fullName.trim().split(/\s+/).length < 2) {
+      errors['fullName'] = ar
+        ? 'أدخل الاسم الكامل (اسمان على الأقل)'
+        : 'Enter at least first and last name';
+    }
+
+    // Mobile — Egyptian 11-digit starting with 01
+    const mobileRegex = /^01[0-9]{9}$/;
+    if (!f.mobile.trim()) {
+      errors['mobile'] = ar ? 'رقم الموبايل مطلوب' : 'Mobile number is required';
+    } else if (!mobileRegex.test(f.mobile.trim())) {
+      errors['mobile'] = ar
+        ? 'رقم موبايل غير صحيح (11 رقم يبدأ بـ 01)'
+        : 'Invalid mobile (11 digits starting with 01)';
+    }
+
+    // WhatsApp — same rule
+    if (!f.whatsapp.trim()) {
+      errors['whatsapp'] = ar ? 'رقم الواتساب مطلوب' : 'WhatsApp number is required';
+    } else if (!mobileRegex.test(f.whatsapp.trim())) {
+      errors['whatsapp'] = ar
+        ? 'رقم واتساب غير صحيح (11 رقم يبدأ بـ 01)'
+        : 'Invalid WhatsApp (11 digits starting with 01)';
+    }
+
+    // Email — valid format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!f.email.trim()) {
+      errors['email'] = ar ? 'البريد الإلكتروني مطلوب' : 'Email address is required';
+    } else if (!emailRegex.test(f.email.trim())) {
+      errors['email'] = ar ? 'صيغة البريد الإلكتروني غير صحيحة' : 'Invalid email address format';
+    }
+
+    // At least one platform selected
+    if (this.selectedPlatforms.length === 0) {
+      errors['platforms'] = ar ? 'اختر منصة واحدة على الأقل' : 'Select at least one platform';
+    }
+
+    // Description required
+    if (!f.description.trim()) {
+      errors['description'] = ar ? 'برجاء وصف طلبك بالتفصيل' : 'Please describe your request';
+    } else if (f.description.trim().length < 10) {
+      errors['description'] = ar
+        ? 'الوصف قصير جداً — أدخل تفاصيل أكثر'
+        : 'Description is too short — please add more details';
+    }
+
+    return errors;
   }
 
-  // ── Submit ───────────────────────────────────────────────────────────────
+  get isFormValid(): boolean {
+    return Object.keys(this.fieldErrors).length === 0 && this.selectedServices.length > 0;
+  }
+
+  /** Returns error for a specific field only after form is touched */
+  getError(field: string): string {
+    if (!this.formTouched) return '';
+    return this.fieldErrors[field] ?? '';
+  }
+
+  /** Mark field as touched on blur to show inline errors progressively */
+  touchField(field: string) {
+    this.formTouched = true;
+    this.cdr.markForCheck();
+  }
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
   submitOrder() {
-    if (!this.isFormValid()) {
-      alert(
-        this.isArabic ? 'برجاء إدخال جميع البيانات المطلوبة' : 'Please fill in all required fields',
-      );
+    this.formTouched = true;
+    this.cdr.markForCheck();
+
+    if (!this.isFormValid) {
+      // Scroll to first error field
+      setTimeout(() => {
+        const firstErr = document.querySelector('.field-error-msg');
+        firstErr?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
       return;
     }
+    this.invoiceDate = new Date().toLocaleDateString(this.isArabic ? 'ar-EG' : 'en-US');
+    this.openPaymentPopup();
+  }
+
+  // ── Print Invoice ──────────────────────────────────────────────────────────
+  printInvoice() {
     this.invoiceDate = new Date().toLocaleDateString(this.isArabic ? 'ar-EG' : 'en-US');
     this.showInvoiceModal = true;
     document.body.classList.add('modal-open');
   }
 
-  // ── Modal Controls ───────────────────────────────────────────────────────
+  // ── Modal Controls ─────────────────────────────────────────────────────────
   bodyUnlock() {
     document.body.classList.remove('modal-open');
   }
@@ -287,24 +397,16 @@ export class Social implements AfterViewInit, OnInit {
     }
   }
 
+  openPaymentModal() {
+    this.showInvoiceModal = false;
+    this.showPaymentModal = true;
+  }
+
+  // ── REPLACED: navigateToPayments → opens Payment Popup ────────────────────
   navigateToPayments() {
     this.showInvoiceModal = false;
     document.body.classList.remove('modal-open');
-    try {
-      sessionStorage.setItem(
-        'social_order',
-        JSON.stringify({
-          packages: this.selectedPackages.map((p) => ({
-            name: this.isArabic ? p.nameAr : p.nameEn,
-            price: p.price,
-          })),
-          platforms: this.selectedPlatforms,
-          form: this.orderForm,
-          total: this.grandTotal(),
-        }),
-      );
-    } catch {}
-    this.router.navigate(['/payments']);
+    this.openPaymentPopup();
   }
 
   closePaymentModal(event: MouseEvent) {
@@ -314,17 +416,238 @@ export class Social implements AfterViewInit, OnInit {
     }
   }
 
-  fixArabic(text: string) {
-    return text.split('').reverse().join('');
-  }
-
   selectPayMethod(method: string) {
     this.selectedPayMethod = method;
   }
 
-  printInvoiceFromModal() {
-    const invoiceEl = document.querySelector('.invoice-modal') as HTMLElement;
+  // ── NEW: Payment Popup ─────────────────────────────────────────────────────
+  openPaymentPopup() {
+    this.activePopupTab = 'invoice';
+    this.showPaymentPopup = true;
+    document.body.classList.add('modal-open');
+  }
+
+  closePaymentPopup(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('pay-popup-overlay')) {
+      this.showPaymentPopup = false;
+      document.body.classList.remove('modal-open');
+    }
+  }
+
+  // ── NEW: Copy to clipboard ─────────────────────────────────────────────────
+  copy(value: string, key: string) {
+    navigator.clipboard.writeText(value).then(() => {
+      this.copySuccess = key;
+      setTimeout(() => {
+        this.copySuccess = null;
+        this.cdr.markForCheck();
+      }, 2000);
+      this.cdr.markForCheck();
+    });
+  }
+
+  // ── NEW: Drag & Drop — Zone 1 (Transfer Screenshot) ───────────────────────
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver = false;
+    const file = event.dataTransfer?.files[0];
+    if (file && file.type.startsWith('image/')) this.setProofFile(file);
+  }
+
+  onProofSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.setProofFile(file);
+  }
+
+  private setProofFile(file: File) {
+    this.proofFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.proofPreview = reader.result as string;
+      this.cdr.markForCheck();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeProof(event: MouseEvent) {
+    event.stopPropagation();
+    this.proofFile = null;
+    this.proofPreview = null;
+    this.emailSent = false;
+  }
+
+  // ── NEW: Drag & Drop — Zone 2 (Invoice Photo) ─────────────────────────────
+  onDragOver2(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver2 = true;
+  }
+
+  onDragLeave2(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver2 = false;
+  }
+
+  onDrop2(event: DragEvent) {
+    event.preventDefault();
+    this.isDragOver2 = false;
+    const file = event.dataTransfer?.files[0];
+    if (file && file.type.startsWith('image/')) this.setInvoiceFile(file);
+  }
+
+  onInvoiceSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.setInvoiceFile(file);
+  }
+
+  private setInvoiceFile(file: File) {
+    this.invoiceFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.invoicePreview = reader.result as string;
+      this.cdr.markForCheck();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeInvoice(event: MouseEvent) {
+    event.stopPropagation();
+    this.invoiceFile = null;
+    this.invoicePreview = null;
+    this.emailSent = false;
+  }
+
+  // ── NEW: WhatsApp proof click handler ─────────────────────────────────────
+  onWhatsappProofClick() {
+    // Optionally track or log
+  }
+
+  // ── NEW: Send Proof by Email (with form data + 2 attachments) ─────────────
+  async sendProofByEmail() {
+    if (!this.proofFile || !this.invoiceFile || this.emailSending) return;
+
+    this.emailSending = true;
+    this.emailError = false;
+    this.cdr.detectChanges();
+
+    try {
+      const base64Transfer = await this.fileToBase64(this.proofFile);
+      const base64Invoice = await this.fileToBase64(this.invoiceFile);
+
+      const isAr = this.isArabic;
+
+      const subject = isAr
+        ? `إثبات دفع + فاتورة — ${this.orderForm.fullName || 'عميل جديد'}`
+        : `Payment Proof & Invoice — ${this.orderForm.fullName || 'New Client'}`;
+
+      const body = isAr
+        ? `مرحباً،\n\nبيانات العميل:\n` +
+          `الاسم: ${this.orderForm.fullName}\n` +
+          `الموبايل: ${this.orderForm.mobile}\n` +
+          `واتساب: ${this.orderForm.whatsapp || '—'}\n` +
+          `الإيميل: ${this.orderForm.email || '—'}\n` +
+          `ملاحظات: ${this.orderForm.description || '—'}\n\n` +
+          `أرفق صورة التحويل وصورة الفاتورة — برجاء تفعيل الخدمة.`
+        : `Hello,\n\nClient Details:\n` +
+          `Name: ${this.orderForm.fullName}\n` +
+          `Mobile: ${this.orderForm.mobile}\n` +
+          `WhatsApp: ${this.orderForm.whatsapp || '—'}\n` +
+          `Email: ${this.orderForm.email || '—'}\n` +
+          `Notes: ${this.orderForm.description || '—'}\n\n` +
+          `Please find the transfer screenshot and invoice attached. Kindly activate the service.`;
+
+      const apiUrl = (this.environment as any).receiptApiUrl as string;
+      if (!apiUrl) throw new Error('receiptApiUrl not configured');
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          body,
+          attachment1: base64Transfer,
+          filename1: this.proofFile.name,
+          attachment2: base64Invoice,
+          filename2: this.invoiceFile.name,
+          clientData: {
+            fullName: this.orderForm.fullName,
+            mobile: this.orderForm.mobile,
+            whatsapp: this.orderForm.whatsapp,
+            email: this.orderForm.email,
+            notes: this.orderForm.description,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any).error ?? `HTTP ${res.status}`);
+      }
+
+      this.emailSent = true;
+    } catch (e) {
+      console.error('[sendProofByEmail]', e);
+      this.emailError = true;
+    } finally {
+      this.emailSending = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // ── Confirm & Submit (old payment modal) ──────────────────────────────────
+  confirmAndSubmit() {
+    if (!this.selectedPayMethod || !this.isFormValid) return;
+    try {
+      sessionStorage.setItem(
+        'design_order',
+        JSON.stringify({
+          services: this.selectedServices.map((s) => ({
+            name: this.isArabic ? s.nameAr : s.nameEn,
+            qty: this.getQty(s.id),
+            subtotal: this.getSubtotal(s),
+          })),
+          packages: this.selectedPackages.map((pid) => this.getPackageById(pid)),
+          platforms: this.selectedPlatforms,
+          form: this.orderForm,
+          total: this.grandTotal(),
+          payMethod: this.selectedPayMethod,
+        }),
+      );
+    } catch {}
+    this.showPaymentModal = false;
+    document.body.classList.remove('modal-open');
+    this.router.navigate(['/contact'], {
+      queryParams: { service: 'design', pay: this.selectedPayMethod },
+    });
+  }
+
+  // ── Print Invoice from Popup ───────────────────────────────────────────────
+  async printInvoiceFromModal() {
+    const invoiceEl = document.querySelector('.ppi-card') as HTMLElement;
     if (!invoiceEl) return;
+
+    // Convert logo to base64 to ensure it renders in print window
+    let logoBase64 = '';
+    try {
+      const resp = await fetch('/logo.png');
+      const blob = await resp.blob();
+      logoBase64 = await new Promise<string>((res) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      /* logo optional */
+    }
 
     const styles = Array.from(document.styleSheets)
       .map((sheet) => {
@@ -338,15 +661,34 @@ export class Social implements AfterViewInit, OnInit {
       })
       .join('\n');
 
+    // Clone the invoice HTML and replace font-awesome icons + logo icon with actual logo
+    const clonedEl = invoiceEl.cloneNode(true) as HTMLElement;
+
+    // Replace the paint-brush icon wrapper with logo image in header
+    const logoIconEl = clonedEl.querySelector('.ppi-logo-icon') as HTMLElement | null;
+    if (logoIconEl && logoBase64) {
+      logoIconEl.innerHTML = `<img src="${logoBase64}" alt="Logo" style="width:52px;height:52px;object-fit:contain;border-radius:10px;display:block;" />`;
+      logoIconEl.style.cssText =
+        'background:transparent;border:none;padding:0;display:flex;align-items:center;justify-content:center;';
+    }
+
+    // Hide action buttons in clone
+    clonedEl
+      .querySelectorAll('.ppi-actions')
+      .forEach((el) => ((el as HTMLElement).style.display = 'none'));
+
     const printWin = window.open('', '_blank', 'width=900,height=700');
     if (!printWin) return;
 
+    const isAr = this.isArabic;
     printWin.document.write(`
       <!DOCTYPE html>
-      <html dir="${this.isArabic ? 'rtl' : 'ltr'}" lang="${this.isArabic ? 'ar' : 'en'}">
+      <html dir="${isAr ? 'rtl' : 'ltr'}" lang="${isAr ? 'ar' : 'en'}">
       <head>
         <meta charset="UTF-8"/>
-        <title>${this.isArabic ? 'طباعة الفاتورة' : 'Print Invoice'}</title>
+        <title>${isAr ? 'طباعة الفاتورة' : 'Print Invoice'}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
         <style>
           :root {
@@ -355,32 +697,205 @@ export class Social implements AfterViewInit, OnInit {
             --bg-card: #fff;
             --text-main: #1a1a2e;
             --text-muted: #6c757d;
+            --border-color: #e0e0e0;
+            --border-subtle: #eeeeee;
+            --bg-subtle: #fafaf8;
             --radius-lg: 16px;
           }
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f4f4f8; padding: 2rem; }
-          ${styles}
-          .invoice-modal {
-            position: static !important;
-            max-width: 760px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+          ${
+            isAr
+              ? `body, * { font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important; }`
+              : `body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }`
           }
-          .inv-close-btn, .inv-actions { display: none !important; }
+          body {
+            background: #f4f4f8;
+            padding: 2rem;
+            color: #1a1a2e;
+            direction: ${isAr ? 'rtl' : 'ltr'};
+          }
+          ${styles}
+          /* ── Layout overrides ── */
+          .ppi-card {
+            position: static !important;
+            max-width: 760px !important;
+            margin: 0 auto !important;
+            background: #fff !important;
+            border-radius: 16px !important;
+            padding: 2.5rem 2.5rem 2rem !important;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12) !important;
+            transform: none !important;
+            opacity: 1 !important;
+          }
+          .ppi-actions { display: none !important; }
+          /* ── Header ── */
+          .ppi-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 1rem !important;
+          }
+          .ppi-logo-wrap {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+          }
+          .ppi-logo-icon img {
+            width: 52px !important;
+            height: 52px !important;
+            object-fit: contain !important;
+            border-radius: 10px !important;
+          }
+          .ppi-brand {
+            font-size: 1.2rem !important;
+            font-weight: 800 !important;
+            color: #1a1a2e !important;
+          }
+          .ppi-brand-sub {
+            font-size: 0.8rem !important;
+            color: #888 !important;
+          }
+          .ppi-meta { text-align: ${isAr ? 'left' : 'right'} !important; }
+          .ppi-num { font-size: 1.1rem !important; font-weight: 800 !important; color: #b8860b !important; }
+          .ppi-date { font-size: 0.85rem !important; color: #555 !important; margin-top: 2px !important; }
+          .ppi-status {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            background: #fff8e1 !important;
+            color: #7a5c00 !important;
+            border: 1px solid #d4af37 !important;
+            border-radius: 20px !important;
+            padding: 2px 10px !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            margin-top: 4px !important;
+          }
+          /* ── Gold bar ── */
+          .ppi-gold-bar {
+            height: 3px !important;
+            background: linear-gradient(90deg, #d4af37, #f0c040, #d4af37) !important;
+            border-radius: 2px !important;
+            margin: 1rem 0 !important;
+          }
+          /* ── Section label ── */
+          .ppi-section-label {
+            font-weight: 700 !important;
+            color: #b8860b !important;
+            font-size: 0.9rem !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-bottom: 0.5rem !important;
+          }
+          /* ── Client grid ── */
+          .ppi-client-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 0.5rem 1rem !important;
+            background: #faf8f0 !important;
+            border: 1px solid #e0d5a0 !important;
+            border-radius: 10px !important;
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 0.75rem !important;
+          }
+          .ppi-key { font-size: 0.72rem !important; color: #888 !important; display: block !important; }
+          .ppi-val { font-size: 0.9rem !important; font-weight: 600 !important; color: #1a1a2e !important; }
+          /* ── Table ── */
+          .ppi-table-wrap { overflow: visible !important; border-radius: 10px !important; border: 1px solid rgba(212,175,55,0.3) !important; margin-bottom: 1rem !important; }
+          .ppi-table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; }
+          .ppi-table thead th {
+            background: linear-gradient(135deg, rgba(212,175,55,0.9), rgba(184,138,11,0.95)) !important;
+            padding: 0.65rem 0.8rem !important;
+            text-align: start !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            color: #0a0800 !important;
+            white-space: nowrap !important;
+          }
+          .ppi-table tbody td {
+            padding: 0.6rem 0.8rem !important;
+            font-size: 0.85rem !important;
+            border-bottom: 1px solid rgba(212,175,55,0.1) !important;
+            color: #1a1a2e !important;
+          }
+          .ppi-table tbody td:first-child { white-space: normal !important; }
+          .ppi-table tbody td:not(:first-child) { white-space: nowrap !important; }
+          .ppi-table tbody tr:nth-child(even) td { background: #faf8f0 !important; }
+          .ppi-table tfoot td {
+            padding: 0.65rem 0.8rem !important;
+            background: rgba(212,175,55,0.08) !important;
+            border-top: 2px solid rgba(212,175,55,0.4) !important;
+            border-bottom: none !important;
+            font-weight: 700 !important;
+            color: #b8860b !important;
+          }
+          .ppi-qty-badge {
+            background: #f0e8c8 !important;
+            color: #7a5c00 !important;
+            border: 1px solid #d4af37 !important;
+            border-radius: 6px !important;
+            padding: 1px 8px !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+          }
+          /* ── Pay note ── */
+          .ppi-pay-note {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            background: #fff8e1 !important;
+            border: 1px solid #d4af37 !important;
+            border-radius: 10px !important;
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 1rem !important;
+          }
+          .ppi-pay-note-title { font-weight: 700 !important; color: #7a5c00 !important; font-size: 0.9rem !important; }
+          .ppi-pay-note-sub { font-size: 0.78rem !important; color: #a08030 !important; }
+          /* ── Footer ── */
+          .ppi-footer {
+            text-align: center !important;
+            border-top: 1px solid #e0d8b0 !important;
+            padding-top: 0.75rem !important;
+            font-size: 0.78rem !important;
+            color: #888 !important;
+            margin-top: 1rem !important;
+          }
+          /* ── Platforms ── */
+          .ppi-platforms-wrap { display: flex !important; flex-wrap: wrap !important; gap: 0.4rem !important; margin-bottom: 0.75rem !important; }
+          .ppi-platform-tag {
+            background: #f5f0e0 !important;
+            border: 1px solid #d4af37 !important;
+            color: #7a5c00 !important;
+            border-radius: 20px !important;
+            padding: 2px 10px !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+          }
+          /* ── Client message ── */
+          .ppi-client-msg {
+            background: #faf8f0 !important;
+            border-right: 3px solid #d4af37 !important;
+            padding: 0.6rem 0.85rem !important;
+            font-size: 0.85rem !important;
+            border-radius: 6px !important;
+            margin-bottom: 0.75rem !important;
+            color: #333 !important;
+          }
           @media print {
-            body { background: white; padding: 0; }
-            .invoice-modal { box-shadow: none; }
+            body { background: white !important; padding: 0 !important; }
+            .ppi-card { box-shadow: none !important; border-radius: 0 !important; padding: 1.5rem !important; }
           }
         </style>
       </head>
       <body>
-        ${invoiceEl.outerHTML}
+        ${clonedEl.outerHTML}
         <script>
-          document.querySelectorAll('.inv-close-btn, .inv-actions').forEach(el => el.style.display = 'none');
-          setTimeout(() => { window.print(); window.close(); }, 600);
+          document.querySelectorAll('.ppi-actions').forEach(el => el.style.display = 'none');
+          setTimeout(() => { window.print(); window.close(); }, 800);
         <\/script>
       </body>
       </html>
@@ -388,318 +903,364 @@ export class Social implements AfterViewInit, OnInit {
     printWin.document.close();
   }
 
-  async downloadInvoiceAsPdf() {
-    // ── تحميل المكتبات ──────────────────────────────────────────────────────
-    const loadScript = (src: string, globalKey: string): Promise<void> =>
-      new Promise((resolve, reject) => {
-        if ((window as any)[globalKey]) {
-          resolve();
-          return;
-        }
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = () => resolve();
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-
-    try {
-      await loadScript(
-        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-        'jspdf',
-      );
-      await loadScript(
-        'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
-        'jspdfAutoTable',
-      );
-
-      const { jsPDF } = (window as any).jspdf;
-      const isAr = this.isArabic;
-      const cairoFont = 'PUT_BASE64_FONT_HERE';
-
-      // ── إنشاء مستند PDF ─────────────────────────────────────────────────
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      doc.addFileToVFS('Cairo.ttf', cairoFont);
-      doc.addFont('Cairo.ttf', 'Cairo', 'normal');
-      doc.setFont('Cairo');
-      const W = doc.internal.pageSize.getWidth(); // 210mm
-      const mar = 14; // هامش جانبي
-      let y = mar;
-
-      // ── ألوان وخطوط ─────────────────────────────────────────────────────
-      const GOLD = [212, 175, 55] as [number, number, number];
-      const DARK = [26, 26, 46] as [number, number, number];
-      const MUTED = [108, 117, 133] as [number, number, number];
-      const WHITE = [255, 255, 255] as [number, number, number];
-      const LIGHT = [248, 248, 252] as [number, number, number];
-
-      // ── دالة مساعدة: نص محاذى يمين/يسار حسب اللغة ──────────────────────
-      const txt = (
-        text: string,
-        xL: number,
-        yPos: number,
-        opts: {
-          size?: number;
-          bold?: boolean;
-          color?: [number, number, number];
-          align?: 'left' | 'right' | 'center';
-        } = {},
-      ) => {
-        doc.setFontSize(opts.size ?? 10);
-        doc.setFont('Cairo');
-        doc.setTextColor(...(opts.color ?? DARK));
-        const align = opts.align ?? (isAr ? 'right' : 'left');
-        const xPos = align === 'right' ? W - xL : align === 'center' ? W / 2 : xL;
-        doc.text(text, xPos, yPos, { align });
-      };
-
-      // ══════════════════════════════════════════════════════════════════════
-      // ١. شريط العنوان الذهبي (Header bar)
-      // ══════════════════════════════════════════════════════════════════════
-      doc.setFillColor(...GOLD);
-      doc.rect(0, 0, W, 22, 'F');
-
-      doc.setFontSize(13);
-        doc.setFont('Cairo');
-      doc.setTextColor(...WHITE);
-      const brand = isAr ? 'تصميمات احترافية' : 'Professional Designs';
-      const sub = isAr ? 'خدمات التواصل الاجتماعي' : 'Social Services';
-      doc.text(brand, isAr ? W - mar : mar, 10, { align: isAr ? 'right' : 'left' });
-
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(sub, isAr ? W - mar : mar, 16, { align: isAr ? 'right' : 'left' });
-
-      // رقم الفاتورة والتاريخ (يمين/يسار)
-      const invLabel = isAr ? `# ${this.invoiceNumber}` : `Invoice # ${this.invoiceNumber}`;
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text(invLabel, isAr ? mar : W - mar, 10, { align: isAr ? 'left' : 'right' });
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.text(this.invoiceDate, isAr ? mar : W - mar, 16, { align: isAr ? 'left' : 'right' });
-
-      y = 30;
-
-      // ══════════════════════════════════════════════════════════════════════
-      // ٢. بطاقة حالة الفاتورة
-      // ══════════════════════════════════════════════════════════════════════
-      doc.setFillColor(...LIGHT);
-      doc.roundedRect(mar, y, W - mar * 2, 10, 3, 3, 'F');
-      doc.setFillColor(...GOLD);
-      doc.circle(isAr ? W - mar - 4 : mar + 4, y + 5, 2, 'F');
-      txt(isAr ? 'في انتظار الدفع' : 'Pending Payment', mar + 9, y + 6.5, {
-        size: 9,
-        bold: true,
-        color: DARK,
-        align: isAr ? 'right' : 'left',
-      });
-      y += 16;
-
-      // ══════════════════════════════════════════════════════════════════════
-      // ٣. بيانات العميل
-      // ══════════════════════════════════════════════════════════════════════
-      // عنوان القسم
-      doc.setDrawColor(...GOLD);
-      doc.setLineWidth(0.5);
-      doc.line(mar, y, W - mar, y);
-      y += 5;
-      txt(isAr ? 'بيانات العميل' : 'Client Details', mar, y, { size: 10, bold: true, color: GOLD });
-      y += 7;
-
-      // شبكة البيانات (صفين)
-      const fields = [
-        { key: isAr ? 'الاسم' : 'Name', val: this.orderForm.fullName || '—' },
-        { key: isAr ? 'موبايل' : 'Mobile', val: this.orderForm.mobile || '—' },
-        { key: isAr ? 'واتساب' : 'WhatsApp', val: this.orderForm.whatsapp || '—' },
-        { key: isAr ? 'إيميل' : 'Email', val: this.orderForm.email || '—' },
-      ];
-      if (this.orderForm.company) {
-        fields.push({ key: isAr ? 'شركة' : 'Company', val: this.orderForm.company });
-      }
-
-      const colW = (W - mar * 2 - 5) / 2;
-      const rowH = 13;
-      for (let i = 0; i < fields.length; i += 2) {
-        const xA = isAr ? W - mar - colW : mar;
-        const xB = isAr ? mar : mar + colW + 5;
-
-        // خلفية فاتحة للصف
-        doc.setFillColor(...LIGHT);
-        doc.roundedRect(mar, y, W - mar * 2, rowH - 1, 2, 2, 'F');
-
-        // عمود A
-        doc.setFontSize(7.5);
-        doc.setFont('Cairo');
-        doc.setTextColor(...MUTED);
-        doc.text(fields[i].key, isAr ? xA + colW : xA, y + 4.5, { align: isAr ? 'right' : 'left' });
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...DARK);
-        doc.text(fields[i].val, isAr ? xA + colW : xA, y + 10, { align: isAr ? 'right' : 'left' });
-
-        // عمود B (إن وُجد)
-        if (fields[i + 1]) {
-          doc.setFontSize(7.5);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(...MUTED);
-          doc.text(fields[i + 1].key, isAr ? xB + colW : xB, y + 4.5, {
-            align: isAr ? 'right' : 'left',
-          });
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(...DARK);
-          doc.text(fields[i + 1].val, isAr ? xB + colW : xB, y + 10, {
-            align: isAr ? 'right' : 'left',
-          });
-        }
-        y += rowH;
-      }
-      y += 6;
-
-      // ══════════════════════════════════════════════════════════════════════
-      // ٤. جدول الطلب (autoTable)
-      // ══════════════════════════════════════════════════════════════════════
-      doc.setDrawColor(...GOLD);
-      doc.line(mar, y, W - mar, y);
-      y += 5;
-      txt(isAr ? 'تفاصيل الطلب' : 'Order Details', mar, y, { size: 10, bold: true, color: GOLD });
-      y += 5;
-
-      // بناء صفوف الجدول
-      const tableRows = this.selectedPackages.map((pkg, idx) => {
-        const name = isAr ? pkg.nameAr : pkg.nameEn;
-        const qty = '1';
-        const price = `${pkg.price.toLocaleString()} ${isAr ? 'ج.م' : 'EGP'}`;
-        const total = `${pkg.price.toLocaleString()} ${isAr ? 'ج.م' : 'EGP'}`;
-        return isAr ? [total, price, qty, name] : [idx + 1, name, qty, price, total];
-      });
-
-      const headAr = [['الإجمالي', 'سعر / قطعة', 'الكمية', 'الخدمة']];
-      const headEn = [['#', 'Service', 'Qty', 'Unit Price', 'Total']];
-
-      (doc as any).autoTable({
-        head: isAr ? headAr : headEn,
-        body: tableRows,
-        startY: y,
-        margin: { left: mar, right: mar },
-        tableWidth: W - mar * 2,
-        styles: {
-          font: 'helvetica',
-          fontSize: 9,
-          cellPadding: 4,
-          textColor: DARK,
-          halign: isAr ? 'right' : 'left',
-        },
-        headStyles: {
-          fillColor: GOLD,
-          textColor: WHITE,
-          fontStyle: 'bold',
-          halign: isAr ? 'right' : 'left',
-        },
-        alternateRowStyles: { fillColor: LIGHT },
-        columnStyles: isAr
-          ? { 0: { halign: 'right', fontStyle: 'bold', textColor: DARK } }
-          : { 4: { halign: 'right', fontStyle: 'bold', textColor: DARK } },
-        didParseCell: (data: any) => {
-          // تلوين صف الإجمالي الكلي
-          if (data.row.index === tableRows.length - 1 && data.section === 'body') {
-            data.cell.styles.fillColor = [245, 240, 220];
-          }
-        },
-      });
-
-      y = (doc as any).lastAutoTable.finalY + 4;
-
-      // ── صف الإجمالي الكلي ──────────────────────────────────────────────
-      doc.setFillColor(...GOLD);
-      doc.roundedRect(mar, y, W - mar * 2, 11, 3, 3, 'F');
-      doc.setFontSize(10);
-        doc.setFont('Cairo');
-      doc.setTextColor(...WHITE);
-      const totalLabel = isAr ? 'الإجمالي الكلي' : 'Grand Total';
-      const totalVal = `${this.grandTotal().toLocaleString()} ${isAr ? 'ج.م' : 'EGP'}`;
-      doc.text(totalLabel, isAr ? W - mar - 4 : mar + 4, y + 7.5, {
-        align: isAr ? 'right' : 'left',
-      });
-      doc.text(totalVal, isAr ? mar + 4 : W - mar - 4, y + 7.5, { align: isAr ? 'left' : 'right' });
-      y += 17;
-
-      // ══════════════════════════════════════════════════════════════════════
-      // ٥. تنبيه الدفع
-      // ══════════════════════════════════════════════════════════════════════
-      doc.setFillColor(255, 249, 230);
-      doc.setDrawColor(...GOLD);
-      doc.setLineWidth(0.4);
-      doc.roundedRect(mar, y, W - mar * 2, 16, 3, 3, 'FD');
-
-      doc.setFontSize(9);
-        doc.setFont('Cairo');
-      doc.setTextColor(...DARK);
-      txt(isAr ? 'برجاء إتمام عملية الدفع' : 'Please Complete Payment', mar + 4, y + 6.5, {
-        size: 9,
-        bold: true,
-      });
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(...MUTED);
-      txt(
-        isAr
-          ? 'لن يبدأ تنفيذ الطلب قبل تأكيد الدفع'
-          : 'Order will not start before payment confirmation',
-        mar + 4,
-        y + 12.5,
-        { size: 7.5 },
-      );
-      y += 22;
-
-      // ══════════════════════════════════════════════════════════════════════
-      // ٦. تذييل الصفحة
-      // ══════════════════════════════════════════════════════════════════════
-      const footerY = doc.internal.pageSize.getHeight() - 10;
-      doc.setDrawColor(...GOLD);
-      doc.setLineWidth(0.3);
-      doc.line(mar, footerY - 4, W - mar, footerY - 4);
-      doc.setFontSize(8);
-        doc.setFont('Cairo');
-      doc.setTextColor(...MUTED);
-      const footerTxt = isAr
-        ? 'شكراً لثقتك — تصميمات احترافية'
-        : 'Thank you for your trust — Professional Designs';
-      doc.text(footerTxt, W / 2, footerY, { align: 'center' });
-
-      // ── حفظ الملف ───────────────────────────────────────────────────────
-      doc.save(`invoice-${this.invoiceNumber}.pdf`);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
-    }
-  }
-
-  confirmAndSubmit() {
-    if (!this.selectedPayMethod || !this.isFormValid()) return;
-    try {
-      sessionStorage.setItem(
-        'social_order',
-        JSON.stringify({
-          packages: this.selectedPackages.map((p) => ({
-            name: this.isArabic ? p.nameAr : p.nameEn,
-            price: p.price,
-          })),
-          platforms: this.selectedPlatforms,
-          form: this.orderForm,
-          total: this.grandTotal(),
-          payMethod: this.selectedPayMethod,
-        }),
-      );
-    } catch {}
-    this.showPaymentModal = false;
-    document.body.classList.remove('modal-open');
-    this.router.navigate(['/contact'], {
-      queryParams: { service: 'social', pay: this.selectedPayMethod },
+  // ── Download Invoice as Image ──────────────────────────────────────────────
+  /**
+   * Waits for the browser to complete a full layout/paint cycle.
+   * Two nested requestAnimationFrame calls guarantee we are past
+   * the reflow that follows any DOM/style mutation.
+   */
+  private waitForLayout(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
   }
 
-  // ── Scroll reveal ────────────────────────────────────────────────────────
+  async downloadInvoiceAsImage(): Promise<void> {
+    if (this.isDownloadingImage) return;
+
+    this.isDownloadingImage = true;
+    this.cdr.detectChanges();
+
+    // Let Angular finish its change-detection pass before touching the DOM
+    await this.waitForLayout();
+
+    const modal = document.querySelector('.ppi-card') as HTMLElement | null;
+    if (!modal) {
+      this.isDownloadingImage = false;
+      return;
+    }
+
+    const isRtl = this.isArabic;
+    const dir = isRtl ? 'rtl' : 'ltr';
+    const filename = `invoice-${this.invoiceNumber}.png`;
+
+    const ensureScript = (url: string, ready: () => boolean): Promise<void> =>
+      new Promise((res, rej) => {
+        if (ready()) {
+          res();
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = url;
+        s.crossOrigin = 'anonymous';
+        s.onload = () => res();
+        s.onerror = () => rej(new Error(`Cannot load: ${url}`));
+        document.head.appendChild(s);
+      });
+
+    const buildFontCss = async (): Promise<string> => {
+      if (!isRtl) return '';
+      const entries = [
+        { w: '400', subset: 'arabic' },
+        { w: '700', subset: 'arabic' },
+        { w: '900', subset: 'arabic' },
+        { w: '400', subset: 'latin' },
+        { w: '700', subset: 'latin' },
+      ];
+      const faces: string[] = [];
+      await Promise.allSettled(
+        entries.map(async ({ w, subset }) => {
+          const url = `https://cdn.jsdelivr.net/fontsource/fonts/cairo@latest/${subset}-${w}-normal.woff2`;
+          try {
+            const buf = await fetch(url).then((r) => r.arrayBuffer());
+            const bytes = new Uint8Array(buf);
+            let b64 = '';
+            const CHUNK = 8192;
+            for (let i = 0; i < bytes.length; i += CHUNK) {
+              b64 += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+            }
+            faces.push(
+              `@font-face{font-family:'Cairo';font-style:normal;font-weight:${w};` +
+                `src:url('data:font/woff2;base64,${btoa(b64)}') format('woff2');}`,
+            );
+          } catch {
+            /* skip */
+          }
+        }),
+      );
+      return faces.join('\n');
+    };
+
+    const getCssVars = (): string => {
+      const cs = getComputedStyle(document.documentElement);
+      const pairs: string[] = [];
+      for (let i = 0; i < cs.length; i++) {
+        const p = cs[i];
+        if (p.startsWith('--')) pairs.push(`${p}:${cs.getPropertyValue(p).trim()}`);
+      }
+      return `:root{${pairs.join(';')}}`;
+    };
+
+    let tempStyle: HTMLStyleElement | null = null;
+
+    // Load logo as base64 so dom-to-image can embed it correctly
+    let logoBase64 = '';
+    try {
+      const resp = await fetch('/logo.png');
+      const blob = await resp.blob();
+      logoBase64 = await new Promise<string>((res) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      /* logo optional */
+    }
+
+    // Replace the icon in .ppi-logo-icon with the real logo image
+    const logoIconEl = modal.querySelector('.ppi-logo-icon') as HTMLElement | null;
+    let originalLogoContent = '';
+    if (logoIconEl && logoBase64) {
+      originalLogoContent = logoIconEl.innerHTML;
+      logoIconEl.innerHTML = `<img src="${logoBase64}" alt="Logo" style="width:52px;height:52px;object-fit:contain;border-radius:10px;display:block;" />`;
+      logoIconEl.style.cssText =
+        'background:transparent;border:none;padding:0;display:flex;align-items:center;justify-content:center;width:52px;height:52px;';
+    }
+
+    // Keep old variable for cleanup (no separate logoImg needed now)
+    let logoImg: HTMLImageElement | null = null;
+
+    let watermark: HTMLElement | null = null;
+    watermark = document.createElement('div');
+    watermark.style.cssText = `
+      text-align:center;
+      font-size:1.1rem;
+      font-weight:700;
+      color:#d4af37;
+      letter-spacing:2px;
+      padding:0.5rem 0 0.25rem;
+      opacity:0.85;
+    `;
+    watermark.textContent = 'تصميمات احترافية';
+    const invFooter = modal.querySelector('.inv-footer') as HTMLElement | null;
+    if (invFooter) invFooter.insertAdjacentElement('beforebegin', watermark);
+
+    try {
+      await ensureScript(
+        'https://unpkg.com/dom-to-image-more@3.4.0/dist/dom-to-image-more.min.js',
+        () => typeof (window as any).domtoimage?.toPng === 'function',
+      );
+      const dti = (window as any).domtoimage;
+
+      const [fontCss, cssVars] = await Promise.all([buildFontCss(), Promise.resolve(getCssVars())]);
+
+      const originals: Record<string, string> = {};
+      const modalStyle = modal.style;
+      const props = [
+        'transform',
+        'opacity',
+        'maxHeight',
+        'overflow',
+        'direction',
+        'position',
+        'width',
+        'height',
+        'boxShadow',
+        'borderRadius',
+        'transition',
+      ];
+      props.forEach((p) => {
+        originals[p] = (modalStyle as any)[p];
+      });
+
+      // Detect current theme to preserve dark/light mode in exported image
+      const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+      const captureBackground = isDark ? '#1e1b30' : '#ffffff';
+      const captureColor = isDark ? '#ede8ff' : '#111111';
+
+      Object.assign(modalStyle, {
+        transform: 'none',
+        opacity: '1',
+        maxHeight: 'none',
+        overflow: 'visible',
+        direction: dir,
+        position: 'relative',
+        width: '800px',
+        boxShadow: 'none',
+        transition: 'none',
+        borderRadius: '0',
+        padding: '40px 56px 56px',
+        background: captureBackground,
+        color: captureColor,
+      });
+
+      const hideTargets = [
+        modal.querySelector('.ppi-actions') as HTMLElement | null,
+        modal.querySelector('.pay-popup-close') as HTMLElement | null,
+      ].filter((el): el is HTMLElement => !!el);
+      const hiddenOriginals = hideTargets.map((el) => el.style.display);
+      hideTargets.forEach((el) => {
+        el.style.display = 'none';
+      });
+
+      // ── CRITICAL FIX ──────────────────────────────────────────────────────
+      // After mutating styles we MUST wait for the browser to reflow before
+      // reading scrollWidth/scrollHeight.  A double-rAF guarantees we are in
+      // a fresh paint frame and all dimensions are settled.
+      // (The old setTimeout(300) was unreliable: on fast machines the layout
+      // was measured before reflow; on slow machines it caused visible flicker.)
+      await this.waitForLayout();
+      // Force a synchronous reflow so the values below are always fresh:
+      void modal.offsetHeight; // triggers layout flush
+
+      const W = modal.scrollWidth;
+      const H = modal.scrollHeight;
+      const SCALE = 4;
+
+      tempStyle = document.createElement('style');
+      tempStyle.id = '__inv-capture-style__';
+      tempStyle.textContent = `
+        ${fontCss}
+        ${cssVars}
+        *, *::before, *::after {
+          font-family: ${
+            isRtl
+              ? "'Cairo','Amiri','Noto Sans Arabic',Tahoma"
+              : "'Segoe UI','Helvetica Neue','Arial'"
+          }, sans-serif !important;
+          -webkit-font-smoothing: antialiased;
+        }
+        ${isRtl ? `html,body,[dir]{direction:rtl!important;unicode-bidi:embed}` : ''}
+        .ppi-actions, .pay-popup-close { display: none !important; }
+        /* ── Theme-aware card reset ── */
+        .ppi-card {
+          transform: none !important;
+          opacity: 1 !important;
+          max-height: none !important;
+          overflow: visible !important;
+          box-shadow: none !important;
+          transition: none !important;
+          background: ${isDark ? '#1e1b30' : '#ffffff'} !important;
+          color: ${isDark ? '#ede8ff' : '#111111'} !important;
+          --text-main: ${isDark ? '#ede8ff' : '#111111'} !important;
+          --text-muted: ${isDark ? '#b9a3ff' : '#4a4a4a'} !important;
+          --text-light: ${isDark ? '#8b7dc8' : '#777777'} !important;
+          --bg-card: ${isDark ? '#1e1b30' : '#ffffff'} !important;
+          --bg-subtle: ${isDark ? '#252040' : '#fafaf8'} !important;
+          --border-color: ${isDark ? '#332d55' : '#dddddd'} !important;
+          --border-subtle: ${isDark ? '#2a2448' : '#eeeeee'} !important;
+          --gold: ${isDark ? '#d4af37' : '#b8860b'} !important;
+        }
+        .ppi-client-grid {
+          background: ${isDark ? '#252040' : '#faf8f0'} !important;
+          border-color: ${isDark ? '#3d3560' : '#e0d5a0'} !important;
+        }
+        .ppi-gold-bar {
+          background: linear-gradient(90deg, #d4af37, #f0c040, #d4af37) !important;
+          opacity: 1 !important;
+        }
+        .ppi-table thead th {
+          background: linear-gradient(135deg, rgba(212,175,55,0.9), rgba(184,138,11,0.95)) !important;
+          color: #0a0800 !important;
+          border-bottom: none !important;
+        }
+        .ppi-table tfoot td {
+          background: ${isDark ? 'rgba(212,175,55,0.12)' : '#fff8e1'} !important;
+          border-top-color: #d4af37 !important;
+          color: ${isDark ? '#d4af37' : '#b8860b'} !important;
+        }
+        .ppi-table tbody td { color: ${isDark ? '#ede8ff' : '#1a1a2e'} !important; }
+        .ppi-table tbody tr:nth-child(even) td { background: ${isDark ? '#252040' : '#faf8f0'} !important; }
+        .ppi-table-wrap {
+          border-color: rgba(212,175,55,0.2) !important;
+          overflow: hidden !important;
+        }
+        .ppi-grand-total { color: ${isDark ? '#d4af37' : '#b8860b'} !important; }
+        .ppi-status { background: ${isDark ? 'rgba(212,175,55,0.12)' : '#fff8e1'} !important; border-color: #d4af37 !important; color: ${isDark ? '#d4af37' : '#7a5c00'} !important; }
+        .ppi-num { color: ${isDark ? '#d4af37' : '#b8860b'} !important; }
+        .ppi-section-label { color: ${isDark ? '#d4af37' : '#b8860b'} !important; }
+        .ppi-pay-note { background: ${isDark ? 'rgba(212,175,55,0.08)' : '#fff8e1'} !important; border-color: #d4af37 !important; }
+        .ppi-pay-note-title { color: ${isDark ? '#d4af37' : '#7a5c00'} !important; }
+        .ppi-pay-note-sub { color: ${isDark ? '#b8922a' : '#a08030'} !important; }
+        .ppi-qty-badge { background: ${isDark ? 'rgba(212,175,55,0.15)' : '#f0e8c8'} !important; color: ${isDark ? '#d4af37' : '#7a5c00'} !important; border-color: #d4af37 !important; }
+        .ppi-footer { border-top-color: ${isDark ? '#332d55' : '#e0d8b0'} !important; color: ${isDark ? '#8b7dc8' : '#888'} !important; }
+        .ppi-row-total { color: ${isDark ? '#ede8ff' : '#111'} !important; font-weight: 600 !important; }
+        .ppi-key { color: ${isDark ? '#8b7dc8' : '#888'} !important; }
+        .ppi-val { color: ${isDark ? '#ede8ff' : '#1a1a2e'} !important; }
+        .ppi-client-msg { background: ${isDark ? '#252040' : '#faf8f0'} !important; color: ${isDark ? '#ede8ff' : '#333'} !important; border-right-color: #d4af37 !important; }
+        .ppi-platform-tag { background: ${isDark ? 'rgba(212,175,55,0.1)' : '#f5f0e0'} !important; border-color: #d4af37 !important; color: ${isDark ? '#d4af37' : '#7a5c00'} !important; }
+      `;
+      document.head.appendChild(tempStyle);
+
+      // Wait for the new style sheet to be parsed and applied before capturing.
+      await this.waitForLayout();
+      void modal.offsetHeight; // second layout flush
+
+      const dataUrl: string = await dti.toPng(modal, {
+        width: W * SCALE,
+        height: H * SCALE,
+        bgcolor: isDark ? '#1e1b30' : '#ffffff',
+        style: {
+          transform: `scale(${SCALE})`,
+          transformOrigin: 'top left',
+          width: `${W}px`,
+          height: `${H}px`,
+        },
+        filter: (node: Node): boolean => {
+          if (!(node instanceof HTMLElement)) return true;
+          return (
+            !node.classList.contains('ppi-actions') && !node.classList.contains('pay-popup-close')
+          );
+        },
+      });
+
+      tempStyle.remove();
+      tempStyle = null;
+      props.forEach((p) => {
+        (modalStyle as any)[p] = originals[p];
+      });
+      hideTargets.forEach((el, i) => {
+        el.style.display = hiddenOriginals[i];
+      });
+
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = dataUrl;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('[Invoice] download failed →', err);
+      tempStyle?.remove();
+    } finally {
+      if (logoIconEl && originalLogoContent !== undefined) {
+        logoIconEl.innerHTML = originalLogoContent;
+        logoIconEl.style.cssText = '';
+      }
+      watermark?.remove();
+      this.isDownloadingImage = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  get fieldErrorCount(): number {
+    return Object.keys(this.fieldErrors).length;
+  }
+
+  // ── Platform helpers ───────────────────────────────────────────────────────
+  getPlatformIcon(id: string): string {
+    return this.platforms.find((p) => p.id === id)?.icon ?? 'fa-globe';
+  }
+
+  getPlatformNameAr(id: string): string {
+    return this.platforms.find((p) => p.id === id)?.nameAr ?? id;
+  }
+
+  getPlatformNameEn(id: string): string {
+    return this.platforms.find((p) => p.id === id)?.nameEn ?? id;
+  }
+
+  // ── Scroll reveal ──────────────────────────────────────────────────────────
   ngOnInit() {}
 
   ngAfterViewInit() {

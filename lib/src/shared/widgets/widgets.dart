@@ -18,3 +18,4 @@ export 'etbaly_button.dart';
 export 'etbaly_section_header.dart';
 export 'etbaly_gold_divider.dart';
 export 'etbaly_service_card.dart';
+export 'etbaly_page_sections.dart';

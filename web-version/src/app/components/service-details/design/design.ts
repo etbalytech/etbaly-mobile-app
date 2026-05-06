@@ -159,15 +159,6 @@ export class Design implements AfterViewInit, OnInit {
   showPaymentPopup = false;
   activePopupTab: 'invoice' | 'methods' | 'proof' = 'invoice';
 
-  // ── NEW: Proof Form (Send Proof tab) ──────────────────────────────────────
-  proofForm = {
-    fullName: '',
-    mobile: '',
-    whatsapp: '',
-    email: '',
-    notes: '',
-  };
-
   // ── NEW: File upload state ─────────────────────────────────────────────────
   proofFile: File | null = null;
   proofPreview: string | null = null;
@@ -187,7 +178,7 @@ export class Design implements AfterViewInit, OnInit {
   // ── NEW: WhatsApp proof link ───────────────────────────────────────────────
   get whatsappProofLink(): string {
     const phone = (this.environment as any).WhatsappNumber?.replace(/\D/g, '') ?? '';
-    const name = this.proofForm.fullName || this.orderForm.fullName;
+    const name = this.orderForm.fullName || this.orderForm.fullName;
     const msg = this.isArabic
       ? `مرحباً، إثبات الدفع — ${name} — فاتورة رقم ${this.invoiceNumber}`
       : `Hello, Payment Proof — ${name} — Invoice #${this.invoiceNumber}`;
@@ -293,27 +284,99 @@ export class Design implements AfterViewInit, OnInit {
   }
 
   // ── Form Validation ────────────────────────────────────────────────────────
-  isFormValid(): boolean {
-    return !!(
-      this.orderForm.fullName.trim() &&
-      this.orderForm.mobile.trim() &&
-      this.orderForm.whatsapp.trim() &&
-      this.orderForm.email.trim() &&
-      this.selectedServices.length > 0
-    );
+  formTouched = false;
+
+  /** Live field-level error messages (Arabic / English based on isArabic) */
+  get fieldErrors(): Record<string, string> {
+    const ar = this.isArabic;
+    const f = this.orderForm;
+    const errors: Record<string, string> = {};
+
+    // Full name — at least 2 words
+    if (!f.fullName.trim()) {
+      errors['fullName'] = ar ? 'الاسم الكامل مطلوب' : 'Full name is required';
+    } else if (f.fullName.trim().split(/\s+/).length < 2) {
+      errors['fullName'] = ar
+        ? 'أدخل الاسم الكامل (اسمان على الأقل)'
+        : 'Enter at least first and last name';
+    }
+
+    // Mobile — Egyptian 11-digit starting with 01
+    const mobileRegex = /^01[0-9]{9}$/;
+    if (!f.mobile.trim()) {
+      errors['mobile'] = ar ? 'رقم الموبايل مطلوب' : 'Mobile number is required';
+    } else if (!mobileRegex.test(f.mobile.trim())) {
+      errors['mobile'] = ar
+        ? 'رقم موبايل غير صحيح (11 رقم يبدأ بـ 01)'
+        : 'Invalid mobile (11 digits starting with 01)';
+    }
+
+    // WhatsApp — same rule
+    if (!f.whatsapp.trim()) {
+      errors['whatsapp'] = ar ? 'رقم الواتساب مطلوب' : 'WhatsApp number is required';
+    } else if (!mobileRegex.test(f.whatsapp.trim())) {
+      errors['whatsapp'] = ar
+        ? 'رقم واتساب غير صحيح (11 رقم يبدأ بـ 01)'
+        : 'Invalid WhatsApp (11 digits starting with 01)';
+    }
+
+    // Email — valid format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!f.email.trim()) {
+      errors['email'] = ar ? 'البريد الإلكتروني مطلوب' : 'Email address is required';
+    } else if (!emailRegex.test(f.email.trim())) {
+      errors['email'] = ar ? 'صيغة البريد الإلكتروني غير صحيحة' : 'Invalid email address format';
+    }
+
+    // At least one platform selected
+    if (this.selectedPlatforms.length === 0) {
+      errors['platforms'] = ar ? 'اختر منصة واحدة على الأقل' : 'Select at least one platform';
+    }
+
+    // Description required
+    if (!f.description.trim()) {
+      errors['description'] = ar ? 'برجاء وصف طلبك بالتفصيل' : 'Please describe your request';
+    } else if (f.description.trim().length < 10) {
+      errors['description'] = ar
+        ? 'الوصف قصير جداً — أدخل تفاصيل أكثر'
+        : 'Description is too short — please add more details';
+    }
+
+    return errors;
+  }
+
+  get isFormValid(): boolean {
+    return Object.keys(this.fieldErrors).length === 0 && this.selectedServices.length > 0;
+  }
+
+  /** Returns error for a specific field only after form is touched */
+  getError(field: string): string {
+    if (!this.formTouched) return '';
+    return this.fieldErrors[field] ?? '';
+  }
+
+  /** Mark field as touched on blur to show inline errors progressively */
+  touchField(field: string) {
+    // We use a simple flag — once any field is blurred we enable all error display
+    this.formTouched = true;
+    this.cdr.markForCheck();
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
   submitOrder() {
-    if (!this.isFormValid()) {
-      alert(
-        this.isArabic ? 'برجاء إدخال جميع البيانات المطلوبة' : 'Please fill in all required fields',
-      );
+    this.formTouched = true;
+    this.cdr.markForCheck();
+
+    if (!this.isFormValid) {
+      // Scroll to first error field
+      setTimeout(() => {
+        const firstErr = document.querySelector('.field-error-msg');
+        firstErr?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
       return;
     }
     this.invoiceDate = new Date().toLocaleDateString(this.isArabic ? 'ar-EG' : 'en-US');
-    this.showInvoiceModal = true;
-    document.body.classList.add('modal-open');
+    this.openPaymentPopup();
   }
 
   // ── Print Invoice ──────────────────────────────────────────────────────────
@@ -360,11 +423,6 @@ export class Design implements AfterViewInit, OnInit {
 
   // ── NEW: Payment Popup ─────────────────────────────────────────────────────
   openPaymentPopup() {
-    // Pre-fill proofForm from orderForm
-    this.proofForm.fullName = this.orderForm.fullName || '';
-    this.proofForm.mobile   = this.orderForm.mobile   || '';
-    this.proofForm.whatsapp = this.orderForm.whatsapp || '';
-    this.proofForm.email    = this.orderForm.email    || '';
     this.activePopupTab = 'invoice';
     this.showPaymentPopup = true;
     document.body.classList.add('modal-open');
@@ -381,7 +439,10 @@ export class Design implements AfterViewInit, OnInit {
   copy(value: string, key: string) {
     navigator.clipboard.writeText(value).then(() => {
       this.copySuccess = key;
-      setTimeout(() => { this.copySuccess = null; this.cdr.markForCheck(); }, 2000);
+      setTimeout(() => {
+        this.copySuccess = null;
+        this.cdr.markForCheck();
+      }, 2000);
       this.cdr.markForCheck();
     });
   }
@@ -481,28 +542,28 @@ export class Design implements AfterViewInit, OnInit {
 
     try {
       const base64Transfer = await this.fileToBase64(this.proofFile);
-      const base64Invoice  = await this.fileToBase64(this.invoiceFile);
+      const base64Invoice = await this.fileToBase64(this.invoiceFile);
 
       const isAr = this.isArabic;
 
       const subject = isAr
-        ? `إثبات دفع + فاتورة — ${this.proofForm.fullName || 'عميل جديد'}`
-        : `Payment Proof & Invoice — ${this.proofForm.fullName || 'New Client'}`;
+        ? `إثبات دفع + فاتورة — ${this.orderForm.fullName || 'عميل جديد'}`
+        : `Payment Proof & Invoice — ${this.orderForm.fullName || 'New Client'}`;
 
       const body = isAr
         ? `مرحباً،\n\nبيانات العميل:\n` +
-          `الاسم: ${this.proofForm.fullName}\n` +
-          `الموبايل: ${this.proofForm.mobile}\n` +
-          `واتساب: ${this.proofForm.whatsapp || '—'}\n` +
-          `الإيميل: ${this.proofForm.email || '—'}\n` +
-          `ملاحظات: ${this.proofForm.notes || '—'}\n\n` +
+          `الاسم: ${this.orderForm.fullName}\n` +
+          `الموبايل: ${this.orderForm.mobile}\n` +
+          `واتساب: ${this.orderForm.whatsapp || '—'}\n` +
+          `الإيميل: ${this.orderForm.email || '—'}\n` +
+          `ملاحظات: ${this.orderForm.description || '—'}\n\n` +
           `أرفق صورة التحويل وصورة الفاتورة — برجاء تفعيل الخدمة.`
         : `Hello,\n\nClient Details:\n` +
-          `Name: ${this.proofForm.fullName}\n` +
-          `Mobile: ${this.proofForm.mobile}\n` +
-          `WhatsApp: ${this.proofForm.whatsapp || '—'}\n` +
-          `Email: ${this.proofForm.email || '—'}\n` +
-          `Notes: ${this.proofForm.notes || '—'}\n\n` +
+          `Name: ${this.orderForm.fullName}\n` +
+          `Mobile: ${this.orderForm.mobile}\n` +
+          `WhatsApp: ${this.orderForm.whatsapp || '—'}\n` +
+          `Email: ${this.orderForm.email || '—'}\n` +
+          `Notes: ${this.orderForm.description || '—'}\n\n` +
           `Please find the transfer screenshot and invoice attached. Kindly activate the service.`;
 
       const apiUrl = (this.environment as any).receiptApiUrl as string;
@@ -519,11 +580,11 @@ export class Design implements AfterViewInit, OnInit {
           attachment2: base64Invoice,
           filename2: this.invoiceFile.name,
           clientData: {
-            fullName: this.proofForm.fullName,
-            mobile:   this.proofForm.mobile,
-            whatsapp: this.proofForm.whatsapp,
-            email:    this.proofForm.email,
-            notes:    this.proofForm.notes,
+            fullName: this.orderForm.fullName,
+            mobile: this.orderForm.mobile,
+            whatsapp: this.orderForm.whatsapp,
+            email: this.orderForm.email,
+            notes: this.orderForm.description,
           },
         }),
       });
@@ -545,7 +606,7 @@ export class Design implements AfterViewInit, OnInit {
 
   // ── Confirm & Submit (old payment modal) ──────────────────────────────────
   confirmAndSubmit() {
-    if (!this.selectedPayMethod || !this.isFormValid()) return;
+    if (!this.selectedPayMethod || !this.isFormValid) return;
     try {
       sessionStorage.setItem(
         'design_order',
@@ -570,30 +631,65 @@ export class Design implements AfterViewInit, OnInit {
     });
   }
 
-  // ── Print Invoice ──────────────────────────────────────────────────────────
-  printInvoiceFromModal() {
-    const invoiceEl = document.querySelector('.invoice-modal') as HTMLElement;
+  // ── Print Invoice from Popup ───────────────────────────────────────────────
+  async printInvoiceFromModal() {
+    const invoiceEl = document.querySelector('.ppi-card') as HTMLElement;
     if (!invoiceEl) return;
+
+    // Convert logo to base64 to ensure it renders in print window
+    let logoBase64 = '';
+    try {
+      const resp = await fetch('/logo.png');
+      const blob = await resp.blob();
+      logoBase64 = await new Promise<string>((res) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      /* logo optional */
+    }
 
     const styles = Array.from(document.styleSheets)
       .map((sheet) => {
         try {
-          return Array.from(sheet.cssRules).map((r) => r.cssText).join('\n');
+          return Array.from(sheet.cssRules)
+            .map((r) => r.cssText)
+            .join('\n');
         } catch {
           return '';
         }
       })
       .join('\n');
 
+    // Clone the invoice HTML and replace font-awesome icons + logo icon with actual logo
+    const clonedEl = invoiceEl.cloneNode(true) as HTMLElement;
+
+    // Replace the paint-brush icon wrapper with logo image in header
+    const logoIconEl = clonedEl.querySelector('.ppi-logo-icon') as HTMLElement | null;
+    if (logoIconEl && logoBase64) {
+      logoIconEl.innerHTML = `<img src="${logoBase64}" alt="Logo" style="width:52px;height:52px;object-fit:contain;border-radius:10px;display:block;" />`;
+      logoIconEl.style.cssText =
+        'background:transparent;border:none;padding:0;display:flex;align-items:center;justify-content:center;';
+    }
+
+    // Hide action buttons in clone
+    clonedEl
+      .querySelectorAll('.ppi-actions')
+      .forEach((el) => ((el as HTMLElement).style.display = 'none'));
+
     const printWin = window.open('', '_blank', 'width=900,height=700');
     if (!printWin) return;
 
+    const isAr = this.isArabic;
     printWin.document.write(`
       <!DOCTYPE html>
-      <html dir="${this.isArabic ? 'rtl' : 'ltr'}" lang="${this.isArabic ? 'ar' : 'en'}">
+      <html dir="${isAr ? 'rtl' : 'ltr'}" lang="${isAr ? 'ar' : 'en'}">
       <head>
         <meta charset="UTF-8"/>
-        <title>${this.isArabic ? 'طباعة الفاتورة' : 'Print Invoice'}</title>
+        <title>${isAr ? 'طباعة الفاتورة' : 'Print Invoice'}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"/>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
         <style>
           :root {
@@ -602,37 +698,205 @@ export class Design implements AfterViewInit, OnInit {
             --bg-card: #fff;
             --text-main: #1a1a2e;
             --text-muted: #6c757d;
+            --border-color: #e0e0e0;
+            --border-subtle: #eeeeee;
+            --bg-subtle: #fafaf8;
             --radius-lg: 16px;
           }
           * { box-sizing: border-box; margin: 0; padding: 0; }
           ${
-            this.isArabic
-              ? `@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
-                 body, * { font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important; background: #f4f4f8; padding: 2rem; }`
-              : `body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f4f4f8; padding: 2rem; }`
+            isAr
+              ? `body, * { font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important; }`
+              : `body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }`
+          }
+          body {
+            background: #f4f4f8;
+            padding: 2rem;
+            color: #1a1a2e;
+            direction: ${isAr ? 'rtl' : 'ltr'};
           }
           ${styles}
-          .invoice-modal {
+          /* ── Layout overrides ── */
+          .ppi-card {
             position: static !important;
-            max-width: 760px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+            max-width: 760px !important;
+            margin: 0 auto !important;
+            background: #fff !important;
+            border-radius: 16px !important;
+            padding: 2.5rem 2.5rem 2rem !important;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.12) !important;
+            transform: none !important;
+            opacity: 1 !important;
           }
-          .inv-close-btn, .inv-actions { display: none !important; }
+          .ppi-actions { display: none !important; }
+          /* ── Header ── */
+          .ppi-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 1rem !important;
+          }
+          .ppi-logo-wrap {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+          }
+          .ppi-logo-icon img {
+            width: 52px !important;
+            height: 52px !important;
+            object-fit: contain !important;
+            border-radius: 10px !important;
+          }
+          .ppi-brand {
+            font-size: 1.2rem !important;
+            font-weight: 800 !important;
+            color: #1a1a2e !important;
+          }
+          .ppi-brand-sub {
+            font-size: 0.8rem !important;
+            color: #888 !important;
+          }
+          .ppi-meta { text-align: ${isAr ? 'left' : 'right'} !important; }
+          .ppi-num { font-size: 1.1rem !important; font-weight: 800 !important; color: #b8860b !important; }
+          .ppi-date { font-size: 0.85rem !important; color: #555 !important; margin-top: 2px !important; }
+          .ppi-status {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            background: #fff8e1 !important;
+            color: #7a5c00 !important;
+            border: 1px solid #d4af37 !important;
+            border-radius: 20px !important;
+            padding: 2px 10px !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            margin-top: 4px !important;
+          }
+          /* ── Gold bar ── */
+          .ppi-gold-bar {
+            height: 3px !important;
+            background: linear-gradient(90deg, #d4af37, #f0c040, #d4af37) !important;
+            border-radius: 2px !important;
+            margin: 1rem 0 !important;
+          }
+          /* ── Section label ── */
+          .ppi-section-label {
+            font-weight: 700 !important;
+            color: #b8860b !important;
+            font-size: 0.9rem !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-bottom: 0.5rem !important;
+          }
+          /* ── Client grid ── */
+          .ppi-client-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 0.5rem 1rem !important;
+            background: #faf8f0 !important;
+            border: 1px solid #e0d5a0 !important;
+            border-radius: 10px !important;
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 0.75rem !important;
+          }
+          .ppi-key { font-size: 0.72rem !important; color: #888 !important; display: block !important; }
+          .ppi-val { font-size: 0.9rem !important; font-weight: 600 !important; color: #1a1a2e !important; }
+          /* ── Table ── */
+          .ppi-table-wrap { overflow: visible !important; border-radius: 10px !important; border: 1px solid rgba(212,175,55,0.3) !important; margin-bottom: 1rem !important; }
+          .ppi-table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; }
+          .ppi-table thead th {
+            background: linear-gradient(135deg, rgba(212,175,55,0.9), rgba(184,138,11,0.95)) !important;
+            padding: 0.65rem 0.8rem !important;
+            text-align: start !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            color: #0a0800 !important;
+            white-space: nowrap !important;
+          }
+          .ppi-table tbody td {
+            padding: 0.6rem 0.8rem !important;
+            font-size: 0.85rem !important;
+            border-bottom: 1px solid rgba(212,175,55,0.1) !important;
+            color: #1a1a2e !important;
+          }
+          .ppi-table tbody td:first-child { white-space: normal !important; }
+          .ppi-table tbody td:not(:first-child) { white-space: nowrap !important; }
+          .ppi-table tbody tr:nth-child(even) td { background: #faf8f0 !important; }
+          .ppi-table tfoot td {
+            padding: 0.65rem 0.8rem !important;
+            background: rgba(212,175,55,0.08) !important;
+            border-top: 2px solid rgba(212,175,55,0.4) !important;
+            border-bottom: none !important;
+            font-weight: 700 !important;
+            color: #b8860b !important;
+          }
+          .ppi-qty-badge {
+            background: #f0e8c8 !important;
+            color: #7a5c00 !important;
+            border: 1px solid #d4af37 !important;
+            border-radius: 6px !important;
+            padding: 1px 8px !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+          }
+          /* ── Pay note ── */
+          .ppi-pay-note {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+            background: #fff8e1 !important;
+            border: 1px solid #d4af37 !important;
+            border-radius: 10px !important;
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 1rem !important;
+          }
+          .ppi-pay-note-title { font-weight: 700 !important; color: #7a5c00 !important; font-size: 0.9rem !important; }
+          .ppi-pay-note-sub { font-size: 0.78rem !important; color: #a08030 !important; }
+          /* ── Footer ── */
+          .ppi-footer {
+            text-align: center !important;
+            border-top: 1px solid #e0d8b0 !important;
+            padding-top: 0.75rem !important;
+            font-size: 0.78rem !important;
+            color: #888 !important;
+            margin-top: 1rem !important;
+          }
+          /* ── Platforms ── */
+          .ppi-platforms-wrap { display: flex !important; flex-wrap: wrap !important; gap: 0.4rem !important; margin-bottom: 0.75rem !important; }
+          .ppi-platform-tag {
+            background: #f5f0e0 !important;
+            border: 1px solid #d4af37 !important;
+            color: #7a5c00 !important;
+            border-radius: 20px !important;
+            padding: 2px 10px !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+          }
+          /* ── Client message ── */
+          .ppi-client-msg {
+            background: #faf8f0 !important;
+            border-right: 3px solid #d4af37 !important;
+            padding: 0.6rem 0.85rem !important;
+            font-size: 0.85rem !important;
+            border-radius: 6px !important;
+            margin-bottom: 0.75rem !important;
+            color: #333 !important;
+          }
           @media print {
-            body { background: white; padding: 0; }
-            .invoice-modal { box-shadow: none; }
+            body { background: white !important; padding: 0 !important; }
+            .ppi-card { box-shadow: none !important; border-radius: 0 !important; padding: 1.5rem !important; }
           }
         </style>
       </head>
       <body>
-        ${invoiceEl.outerHTML}
+        ${clonedEl.outerHTML}
         <script>
-          document.querySelectorAll('.inv-close-btn, .inv-actions').forEach(el => el.style.display = 'none');
-          setTimeout(() => { window.print(); window.close(); }, 600);
+          document.querySelectorAll('.ppi-actions').forEach(el => el.style.display = 'none');
+          setTimeout(() => { window.print(); window.close(); }, 800);
         <\/script>
       </body>
       </html>
@@ -641,15 +905,27 @@ export class Design implements AfterViewInit, OnInit {
   }
 
   // ── Download Invoice as Image ──────────────────────────────────────────────
+  /**
+   * Waits for the browser to complete a full layout/paint cycle.
+   * Two nested requestAnimationFrame calls guarantee we are past
+   * the reflow that follows any DOM/style mutation.
+   */
+  private waitForLayout(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+  }
+
   async downloadInvoiceAsImage(): Promise<void> {
     if (this.isDownloadingImage) return;
 
     this.isDownloadingImage = true;
     this.cdr.detectChanges();
 
-    await new Promise((r) => setTimeout(r, 400));
+    // Let Angular finish its change-detection pass before touching the DOM
+    await this.waitForLayout();
 
-    const modal = document.querySelector('.invoice-modal') as HTMLElement | null;
+    const modal = document.querySelector('.ppi-card') as HTMLElement | null;
     if (!modal) {
       this.isDownloadingImage = false;
       return;
@@ -661,7 +937,10 @@ export class Design implements AfterViewInit, OnInit {
 
     const ensureScript = (url: string, ready: () => boolean): Promise<void> =>
       new Promise((res, rej) => {
-        if (ready()) { res(); return; }
+        if (ready()) {
+          res();
+          return;
+        }
         const s = document.createElement('script');
         s.src = url;
         s.crossOrigin = 'anonymous';
@@ -695,7 +974,9 @@ export class Design implements AfterViewInit, OnInit {
               `@font-face{font-family:'Cairo';font-style:normal;font-weight:${w};` +
                 `src:url('data:font/woff2;base64,${btoa(b64)}') format('woff2');}`,
             );
-          } catch { /* skip */ }
+          } catch {
+            /* skip */
+          }
         }),
       );
       return faces.join('\n');
@@ -713,16 +994,32 @@ export class Design implements AfterViewInit, OnInit {
 
     let tempStyle: HTMLStyleElement | null = null;
 
-    const logoWrap = modal.querySelector('.inv-logo-wrap') as HTMLElement | null;
-    let logoImg: HTMLImageElement | null = null;
-    if (logoWrap) {
-      logoImg = document.createElement('img');
-      logoImg.src = '/logo.png';
-      logoImg.style.cssText =
-        'width:48px;height:48px;object-fit:contain;margin-inline-end:8px;border-radius:8px;';
-      logoImg.alt = 'Logo';
-      logoWrap.insertAdjacentElement('afterbegin', logoImg);
+    // Load logo as base64 so dom-to-image can embed it correctly
+    let logoBase64 = '';
+    try {
+      const resp = await fetch('/logo.png');
+      const blob = await resp.blob();
+      logoBase64 = await new Promise<string>((res) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      /* logo optional */
     }
+
+    // Replace the icon in .ppi-logo-icon with the real logo image
+    const logoIconEl = modal.querySelector('.ppi-logo-icon') as HTMLElement | null;
+    let originalLogoContent = '';
+    if (logoIconEl && logoBase64) {
+      originalLogoContent = logoIconEl.innerHTML;
+      logoIconEl.innerHTML = `<img src="${logoBase64}" alt="Logo" style="width:52px;height:52px;object-fit:contain;border-radius:10px;display:block;" />`;
+      logoIconEl.style.cssText =
+        'background:transparent;border:none;padding:0;display:flex;align-items:center;justify-content:center;width:52px;height:52px;';
+    }
+
+    // Keep old variable for cleanup (no separate logoImg needed now)
+    let logoImg: HTMLImageElement | null = null;
 
     let watermark: HTMLElement | null = null;
     watermark = document.createElement('div');
@@ -751,10 +1048,26 @@ export class Design implements AfterViewInit, OnInit {
       const originals: Record<string, string> = {};
       const modalStyle = modal.style;
       const props = [
-        'transform', 'opacity', 'maxHeight', 'overflow', 'direction',
-        'position', 'width', 'height', 'boxShadow', 'borderRadius', 'transition',
+        'transform',
+        'opacity',
+        'maxHeight',
+        'overflow',
+        'direction',
+        'position',
+        'width',
+        'height',
+        'boxShadow',
+        'borderRadius',
+        'transition',
       ];
-      props.forEach((p) => { originals[p] = (modalStyle as any)[p]; });
+      props.forEach((p) => {
+        originals[p] = (modalStyle as any)[p];
+      });
+
+      // Detect current theme to preserve dark/light mode in exported image
+      const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+      const captureBackground = isDark ? '#1e1b30' : '#ffffff';
+      const captureColor = isDark ? '#ede8ff' : '#111111';
 
       Object.assign(modalStyle, {
         transform: 'none',
@@ -763,23 +1076,37 @@ export class Design implements AfterViewInit, OnInit {
         overflow: 'visible',
         direction: dir,
         position: 'relative',
-        width: '680px',
+        width: '800px',
         boxShadow: 'none',
         transition: 'none',
+        borderRadius: '0',
+        padding: '40px 56px 56px',
+        background: captureBackground,
+        color: captureColor,
       });
 
       const hideTargets = [
-        modal.querySelector('.inv-actions') as HTMLElement | null,
-        modal.querySelector('.inv-close-btn') as HTMLElement | null,
+        modal.querySelector('.ppi-actions') as HTMLElement | null,
+        modal.querySelector('.pay-popup-close') as HTMLElement | null,
       ].filter((el): el is HTMLElement => !!el);
       const hiddenOriginals = hideTargets.map((el) => el.style.display);
-      hideTargets.forEach((el) => { el.style.display = 'none'; });
+      hideTargets.forEach((el) => {
+        el.style.display = 'none';
+      });
 
-      await new Promise((r) => setTimeout(r, 300));
+      // ── CRITICAL FIX ──────────────────────────────────────────────────────
+      // After mutating styles we MUST wait for the browser to reflow before
+      // reading scrollWidth/scrollHeight.  A double-rAF guarantees we are in
+      // a fresh paint frame and all dimensions are settled.
+      // (The old setTimeout(300) was unreliable: on fast machines the layout
+      // was measured before reflow; on slow machines it caused visible flicker.)
+      await this.waitForLayout();
+      // Force a synchronous reflow so the values below are always fresh:
+      void modal.offsetHeight; // triggers layout flush
 
       const W = modal.scrollWidth;
       const H = modal.scrollHeight;
-      const SCALE = 3;
+      const SCALE = 4;
 
       tempStyle = document.createElement('style');
       tempStyle.id = '__inv-capture-style__';
@@ -795,22 +1122,75 @@ export class Design implements AfterViewInit, OnInit {
           -webkit-font-smoothing: antialiased;
         }
         ${isRtl ? `html,body,[dir]{direction:rtl!important;unicode-bidi:embed}` : ''}
-        .inv-actions, .inv-close-btn { display: none !important; }
-        .invoice-modal {
+        .ppi-actions, .pay-popup-close { display: none !important; }
+        /* ── Theme-aware card reset ── */
+        .ppi-card {
           transform: none !important;
           opacity: 1 !important;
           max-height: none !important;
           overflow: visible !important;
           box-shadow: none !important;
           transition: none !important;
+          background: ${isDark ? '#1e1b30' : '#ffffff'} !important;
+          color: ${isDark ? '#ede8ff' : '#111111'} !important;
+          --text-main: ${isDark ? '#ede8ff' : '#111111'} !important;
+          --text-muted: ${isDark ? '#b9a3ff' : '#4a4a4a'} !important;
+          --text-light: ${isDark ? '#8b7dc8' : '#777777'} !important;
+          --bg-card: ${isDark ? '#1e1b30' : '#ffffff'} !important;
+          --bg-subtle: ${isDark ? '#252040' : '#fafaf8'} !important;
+          --border-color: ${isDark ? '#332d55' : '#dddddd'} !important;
+          --border-subtle: ${isDark ? '#2a2448' : '#eeeeee'} !important;
+          --gold: ${isDark ? '#d4af37' : '#b8860b'} !important;
         }
+        .ppi-client-grid {
+          background: ${isDark ? '#252040' : '#faf8f0'} !important;
+          border-color: ${isDark ? '#3d3560' : '#e0d5a0'} !important;
+        }
+        .ppi-gold-bar {
+          background: linear-gradient(90deg, #d4af37, #f0c040, #d4af37) !important;
+          opacity: 1 !important;
+        }
+        .ppi-table thead th {
+          background: linear-gradient(135deg, rgba(212,175,55,0.9), rgba(184,138,11,0.95)) !important;
+          color: #0a0800 !important;
+          border-bottom: none !important;
+        }
+        .ppi-table tfoot td {
+          background: ${isDark ? 'rgba(212,175,55,0.12)' : '#fff8e1'} !important;
+          border-top-color: #d4af37 !important;
+          color: ${isDark ? '#d4af37' : '#b8860b'} !important;
+        }
+        .ppi-table tbody td { color: ${isDark ? '#ede8ff' : '#1a1a2e'} !important; }
+        .ppi-table tbody tr:nth-child(even) td { background: ${isDark ? '#252040' : '#faf8f0'} !important; }
+        .ppi-table-wrap {
+          border-color: rgba(212,175,55,0.2) !important;
+          overflow: hidden !important;
+        }
+        .ppi-grand-total { color: ${isDark ? '#d4af37' : '#b8860b'} !important; }
+        .ppi-status { background: ${isDark ? 'rgba(212,175,55,0.12)' : '#fff8e1'} !important; border-color: #d4af37 !important; color: ${isDark ? '#d4af37' : '#7a5c00'} !important; }
+        .ppi-num { color: ${isDark ? '#d4af37' : '#b8860b'} !important; }
+        .ppi-section-label { color: ${isDark ? '#d4af37' : '#b8860b'} !important; }
+        .ppi-pay-note { background: ${isDark ? 'rgba(212,175,55,0.08)' : '#fff8e1'} !important; border-color: #d4af37 !important; }
+        .ppi-pay-note-title { color: ${isDark ? '#d4af37' : '#7a5c00'} !important; }
+        .ppi-pay-note-sub { color: ${isDark ? '#b8922a' : '#a08030'} !important; }
+        .ppi-qty-badge { background: ${isDark ? 'rgba(212,175,55,0.15)' : '#f0e8c8'} !important; color: ${isDark ? '#d4af37' : '#7a5c00'} !important; border-color: #d4af37 !important; }
+        .ppi-footer { border-top-color: ${isDark ? '#332d55' : '#e0d8b0'} !important; color: ${isDark ? '#8b7dc8' : '#888'} !important; }
+        .ppi-row-total { color: ${isDark ? '#ede8ff' : '#111'} !important; font-weight: 600 !important; }
+        .ppi-key { color: ${isDark ? '#8b7dc8' : '#888'} !important; }
+        .ppi-val { color: ${isDark ? '#ede8ff' : '#1a1a2e'} !important; }
+        .ppi-client-msg { background: ${isDark ? '#252040' : '#faf8f0'} !important; color: ${isDark ? '#ede8ff' : '#333'} !important; border-right-color: #d4af37 !important; }
+        .ppi-platform-tag { background: ${isDark ? 'rgba(212,175,55,0.1)' : '#f5f0e0'} !important; border-color: #d4af37 !important; color: ${isDark ? '#d4af37' : '#7a5c00'} !important; }
       `;
       document.head.appendChild(tempStyle);
+
+      // Wait for the new style sheet to be parsed and applied before capturing.
+      await this.waitForLayout();
+      void modal.offsetHeight; // second layout flush
 
       const dataUrl: string = await dti.toPng(modal, {
         width: W * SCALE,
         height: H * SCALE,
-        bgcolor: '#ffffff',
+        bgcolor: isDark ? '#1e1b30' : '#ffffff',
         style: {
           transform: `scale(${SCALE})`,
           transformOrigin: 'top left',
@@ -820,15 +1200,19 @@ export class Design implements AfterViewInit, OnInit {
         filter: (node: Node): boolean => {
           if (!(node instanceof HTMLElement)) return true;
           return (
-            !node.classList.contains('inv-actions') && !node.classList.contains('inv-close-btn')
+            !node.classList.contains('ppi-actions') && !node.classList.contains('pay-popup-close')
           );
         },
       });
 
       tempStyle.remove();
       tempStyle = null;
-      props.forEach((p) => { (modalStyle as any)[p] = originals[p]; });
-      hideTargets.forEach((el, i) => { el.style.display = hiddenOriginals[i]; });
+      props.forEach((p) => {
+        (modalStyle as any)[p] = originals[p];
+      });
+      hideTargets.forEach((el, i) => {
+        el.style.display = hiddenOriginals[i];
+      });
 
       const a = document.createElement('a');
       a.download = filename;
@@ -840,7 +1224,10 @@ export class Design implements AfterViewInit, OnInit {
       console.error('[Invoice] download failed →', err);
       tempStyle?.remove();
     } finally {
-      logoImg?.remove();
+      if (logoIconEl && originalLogoContent !== undefined) {
+        logoIconEl.innerHTML = originalLogoContent;
+        logoIconEl.style.cssText = '';
+      }
       watermark?.remove();
       this.isDownloadingImage = false;
       this.cdr.markForCheck();
@@ -855,6 +1242,23 @@ export class Design implements AfterViewInit, OnInit {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  }
+
+  get fieldErrorCount(): number {
+    return Object.keys(this.fieldErrors).length;
+  }
+
+  // ── Platform helpers ───────────────────────────────────────────────────────
+  getPlatformIcon(id: string): string {
+    return this.platforms.find((p) => p.id === id)?.icon ?? 'fa-globe';
+  }
+
+  getPlatformNameAr(id: string): string {
+    return this.platforms.find((p) => p.id === id)?.nameAr ?? id;
+  }
+
+  getPlatformNameEn(id: string): string {
+    return this.platforms.find((p) => p.id === id)?.nameEn ?? id;
   }
 
   // ── Scroll reveal ──────────────────────────────────────────────────────────

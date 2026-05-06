@@ -9,6 +9,7 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
   
   await AppConfig.init();
+  FlutterNativeSplash.remove();
 
   runApp(
     const LocalizationWrapper(

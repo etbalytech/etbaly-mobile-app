@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import 'app_routes.dart';
@@ -60,35 +60,35 @@ class EtbalyNavBar extends StatelessWidget {
             children: [
               _buildNavItem(
                 context,
-                icon: FontAwesomeIcons.home,
+                icon: Icons.home,
                 label: 'navigation.home'.tr(),
                 route: AppRoutes.home,
                 isActive: location == AppRoutes.home,
               ),
               _buildNavItem(
                 context,
-                icon: FontAwesomeIcons.thLarge,
+                icon: Icons.grid_view,
                 label: 'navigation.services'.tr(),
                 route: AppRoutes.services,
                 isActive: location == AppRoutes.services,
               ),
               _buildNavItem(
                 context,
-                icon: FontAwesomeIcons.images,
+                icon: Icons.photo_library,
                 label: 'navigation.portfolio'.tr(),
                 route: AppRoutes.portfolio,
                 isActive: location == AppRoutes.portfolio,
               ),
               _buildNavItem(
                 context,
-                icon: FontAwesomeIcons.users,
+                icon: Icons.people,
                 label: 'navigation.about'.tr(),
                 route: AppRoutes.about,
                 isActive: location == AppRoutes.about,
               ),
               _buildNavItem(
                 context,
-                icon: FontAwesomeIcons.paperPlane,
+                icon: Icons.send,
                 label: 'navigation.contact'.tr(),
                 route: AppRoutes.contact,
                 isActive: location == AppRoutes.contact,

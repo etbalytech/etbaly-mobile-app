@@ -50,6 +50,12 @@ class EtbalyCard extends StatelessWidget {
             offset: const Offset(0, 8),
             spreadRadius: 0,
           ),
+          BoxShadow(
+            color: etbalyColors.primaryGlow,
+            blurRadius: 32,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
         ],
       ),
       child: child,
