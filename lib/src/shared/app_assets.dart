@@ -3,13 +3,19 @@ class AppAssets {
 
   static const String _basePath = 'assets';
   static const String _iconsPath = '$_basePath/icons';
+  static const String _imagesPath = '$_basePath/images';
 
   // SVGs
   static const String googleIcon = '$_iconsPath/google.svg';
   static const String facebookIcon = '$_iconsPath/facebook.svg';
   static const String appleIcon = '$_iconsPath/apple.svg';
-  
-  // You can add more categories here as well, such as:
-  // static const String _imagesPath = '$_basePath/images';
-  // static const String logo = '$_imagesPath/logo.png';
+
+  // Images
+  static const String logo = '$_imagesPath/logo.png';
+  static const String logo3d = '$_imagesPath/logo_3d.png';
+  static const String airplaneLeft = '$_imagesPath/airplane-left.svg';
+  static const String airplaneRight = '$_imagesPath/airplane-right.svg';
+
+  static String partnerLogo(int index) => '$_imagesPath/partners/$index.webp';
+  static String stripImage(int index) => '$_imagesPath/strip/tab_$index.webp';
 }

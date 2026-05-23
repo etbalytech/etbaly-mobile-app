@@ -90,6 +90,8 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/partners/
+    - assets/images/strip/
     - assets/icons/
     - assets/translations/
     - assets/fonts/
