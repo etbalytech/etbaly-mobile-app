@@ -8,10 +8,12 @@ class EtbalyPage extends StatelessWidget {
     super.key,
     required this.children,
     this.padding = const EdgeInsets.fromLTRB(20, 18, 20, 28),
+    this.separatorHeight = 18,
   });
 
   final List<Widget> children;
   final EdgeInsets padding;
+  final double separatorHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +22,7 @@ class EtbalyPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.bgMain,
       body: SafeArea(
+        top: false,
         child: CustomScrollView(
           slivers: [
             SliverPadding(
@@ -28,7 +31,7 @@ class EtbalyPage extends StatelessWidget {
                 itemCount: children.length,
                 itemBuilder: (context, index) => children[index],
                 separatorBuilder: (context, index) =>
-                    const SizedBox(height: 18),
+                    SizedBox(height: separatorHeight),
               ),
             ),
           ],

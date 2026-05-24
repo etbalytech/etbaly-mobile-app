@@ -162,6 +162,33 @@ const _details = {
       ),
     ],
   ),
+  'mobile-app': _ServiceDetail(
+    title: 'تصميم وتطوير تطبيقات موبايل',
+    description:
+        'نطور تطبيقات موبايل عالية الجودة لأندرويد وiOS بتقنيات حديثة وتجربة مستخدم استثنائية.',
+    icon: Icons.phone_iphone,
+    points: [
+      _DetailPoint(
+        title: 'واجهة سهلة وجذابة',
+        description:
+            'تصميم تجربة استخدام واضحة وسلسة تناسب جمهورك وتدعم أهداف التطبيق.',
+        icon: Icons.dashboard_customize,
+      ),
+      _DetailPoint(
+        title: 'تطبيقات أندرويد وiOS',
+        description:
+            'تطوير تطبيقات متكاملة تعمل باحترافية على المنصات الأساسية للموبايل.',
+        icon: Icons.devices,
+        accentGold: true,
+      ),
+      _DetailPoint(
+        title: 'دعم وصيانة',
+        description:
+            'متابعة وتحسينات مستمرة بعد الإطلاق للحفاظ على استقرار التطبيق وتطوره.',
+        icon: Icons.support_agent,
+      ),
+    ],
+  ),
   'video': _ServiceDetail(
     title: 'إنتاج الفيديو',
     description:
@@ -231,6 +258,33 @@ const _details = {
         title: 'توجيه الباقة',
         description: 'اختيار المسار المناسب لهدفك وميزانيتك.',
         icon: Icons.view_list,
+      ),
+    ],
+  ),
+  'moderator': _ServiceDetail(
+    title: 'إدارة التعليقات والرسائل',
+    description:
+        'متابعة يومية للمحادثات والرسائل والتعليقات للحفاظ على سرعة الرد وجودة تجربة العملاء.',
+    icon: Icons.support_agent,
+    points: [
+      _DetailPoint(
+        title: 'ردود منظمة',
+        description:
+            'صياغة ردود مناسبة لصوت العلامة وتوجيه الأسئلة المتكررة بشكل واضح.',
+        icon: Icons.mark_chat_read,
+      ),
+      _DetailPoint(
+        title: 'متابعة العملاء',
+        description:
+            'فرز المحادثات المهمة وتحويل المهتمين إلى خطوة البيع أو التواصل.',
+        icon: Icons.people_alt,
+        accentGold: true,
+      ),
+      _DetailPoint(
+        title: 'تقارير تفاعل',
+        description:
+            'ملخصات لما يتكرر من أسئلة واعتراضات وفرص لتحسين المحتوى والعروض.',
+        icon: Icons.fact_check,
       ),
     ],
   ),

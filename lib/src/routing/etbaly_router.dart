@@ -6,6 +6,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'app_routes.dart';
 import 'global_navigator.dart';
 import '../extensions/context_extension.dart';
+import '../shared/app_assets.dart';
+import '../shared/etbaly_web_tokens.dart';
 
 // Import screens (will create these in Phase 4)
 import '../features/home/presentation/screens/home_page.dart';
@@ -14,6 +16,7 @@ import '../features/portfolio/presentation/screens/portfolio_screen.dart';
 import '../features/about/presentation/screens/about_screen.dart';
 import '../features/contact/presentation/screens/contact_screen.dart';
 import '../features/services/presentation/screens/service_detail_screen.dart';
+import '../features/services/presentation/screens/why_choose_us_detail_screen.dart';
 import '../features/privacy/presentation/screens/privacy_screen.dart';
 
 /// Bottom Navigation Bar for Etbaly App
@@ -25,6 +28,7 @@ class EtbalyNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const _EtbalyBrandAppBar(),
       body: child,
       bottomNavigationBar: _buildBottomNavBar(context),
     );
@@ -34,7 +38,7 @@ class EtbalyNavBar extends StatelessWidget {
     final etbalyColors = context.etbalyColors;
     final location = GoRouterState.of(context).uri.toString();
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: etbalyColors.bgCard,
         border: Border(
@@ -123,13 +127,16 @@ class EtbalyNavBar extends StatelessWidget {
                 Icon(
                   icon,
                   size: 20,
-                  color: isActive ? etbalyColors.primary : etbalyColors.textLight,
+                  color:
+                      isActive ? etbalyColors.primary : etbalyColors.textLight,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   label,
                   style: context.textTheme.labelSmall?.copyWith(
-                    color: isActive ? etbalyColors.primary : etbalyColors.textLight,
+                    color: isActive
+                        ? etbalyColors.primary
+                        : etbalyColors.textLight,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
@@ -138,6 +145,162 @@ class EtbalyNavBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _EtbalyBrandAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const _EtbalyBrandAppBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: EtbalyWebColors.appBarBg,
+        border: Border(
+          bottom: BorderSide(color: Color(0x663D236C)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x5528155E),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+          child: Row(
+            children: [
+              const _AppBarBrand(),
+              const Spacer(),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _AppBarIconButton(icon: Icons.lightbulb_outline),
+                  const SizedBox(width: 10),
+                  _AppBarLanguageButton(
+                    onTap: () {
+                      final nextLocale = context.locale.languageCode == 'ar'
+                          ? const Locale('en')
+                          : const Locale('ar');
+                      context.setLocale(nextLocale);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(74);
+}
+
+class _AppBarBrand extends StatelessWidget {
+  const _AppBarBrand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: Color(0x44D4AF37), blurRadius: 14),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(AppAssets.logo, fit: BoxFit.contain),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          'اطبعلي',
+          style: context.textTheme.headlineSmall?.copyWith(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            height: 0.95,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AppBarLanguageButton extends StatelessWidget {
+  const _AppBarLanguageButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = context.locale.languageCode == 'ar' ? 'EN' : 'AR';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: EtbalyWebColors.darkPill,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: const Color(0x443D365C)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: context.textTheme.labelLarge?.copyWith(
+                  color: EtbalyWebColors.body,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Icon(
+                Icons.language,
+                color: EtbalyWebColors.body,
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppBarIconButton extends StatelessWidget {
+  const _AppBarIconButton({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: EtbalyWebColors.darkPill,
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0x443D365C)),
+      ),
+      child: Icon(icon, color: EtbalyWebColors.body, size: 22),
     );
   }
 }
@@ -187,6 +350,14 @@ final GoRouter etbalyRouter = GoRouter(
       builder: (context, state) {
         final slug = state.pathParameters['slug']!;
         return ServiceDetailScreen(slug: slug);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.whyChooseUsDetail,
+      name: 'whyChooseUsDetail',
+      builder: (context, state) {
+        final slug = state.pathParameters['slug']!;
+        return WhyChooseUsDetailScreen(slug: slug);
       },
     ),
     GoRoute(

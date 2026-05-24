@@ -21,5 +21,6 @@ abstract final class AppRoutes {
 
   // Sub-routes (push navigation)
   static const String serviceDetail = '/services/:slug';
+  static const String whyChooseUsDetail = '/why-choose-us/:slug';
   static const String privacy = '/privacy';
 }

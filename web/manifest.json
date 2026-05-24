@@ -1,11 +1,11 @@
 {
-    "name": "etbaly_app",
-    "short_name": "etbaly_app",
+    "name": "Etbaly",
+    "short_name": "Etbaly",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0F0E18",
+    "theme_color": "#6F3FF5",
+    "description": "Etbaly",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
