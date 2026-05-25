@@ -286,8 +286,31 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 }
 
-class _ContactHero extends StatelessWidget {
+class _ContactHero extends StatefulWidget {
   const _ContactHero();
+
+  @override
+  State<_ContactHero> createState() => _ContactHeroState();
+}
+
+class _ContactHeroState extends State<_ContactHero>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -299,92 +322,145 @@ class _ContactHero extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       clipBehavior: Clip.antiAlias,
-      child: CustomPaint(
-        painter: _ContactBackgroundPainter(),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 42, 18, 34),
-          child: Column(
-            children: [
-              const _WebBadge(label: 'تواصل معنا', icon: Icons.send_rounded),
-              const SizedBox(height: 18),
-              Text(
-                'نحن هنا لمساعدتك',
-                textAlign: TextAlign.center,
-                style: context.textTheme.headlineMedium?.copyWith(
-                  color: EtbalyWebColors.heading,
-                  fontWeight: FontWeight.w900,
-                  height: 1.05,
-                  fontSize: context.width < 390 ? 32 : 38,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                width: math.min(context.width - 58, 520),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: EtbalyWebColors.sectionBlack.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: EtbalyWebColors.goldBorder),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x3328155E),
-                      blurRadius: 28,
-                      offset: Offset(0, 14),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'هل لديك مشروع في ذهنك؟',
-                      textAlign: TextAlign.center,
-                      style: context.textTheme.titleMedium?.copyWith(
-                        color: EtbalyWebColors.heading,
-                        fontWeight: FontWeight.w900,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return CustomPaint(
+            painter: _ContactBackgroundPainter(progress: _controller.value),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 42, 18, 34),
+              child: Column(
+                children: [
+                  const _WebBadge(label: 'تواصل معنا', icon: Icons.send_rounded)
+                      .animate()
+                      .fadeIn(duration: const Duration(milliseconds: 450))
+                      .slideY(
+                        begin: -0.25,
+                        duration: const Duration(milliseconds: 450),
                       ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'نحن هنا لمساعدتك',
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.headlineMedium?.copyWith(
+                      color: EtbalyWebColors.heading,
+                      fontWeight: FontWeight.w900,
+                      height: 1.05,
+                      fontSize: context.width < 390 ? 32 : 38,
                     ),
-                    const SizedBox(height: 8),
-                    const EtbalyWebGoldDivider(width: 120),
-                    const SizedBox(height: 12),
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          color: EtbalyWebColors.body,
-                          height: 1.45,
-                        ),
-                        children: const [
-                          TextSpan(text: 'نحن هنا لنحوّل '),
-                          TextSpan(
-                            text: 'أفكارك',
-                            style: TextStyle(
-                              color: EtbalyWebColors.gold,
+                  )
+                      .animate()
+                      .fadeIn(
+                        delay: const Duration(milliseconds: 90),
+                        duration: const Duration(milliseconds: 520),
+                      )
+                      .slideY(
+                        begin: 0.18,
+                        delay: const Duration(milliseconds: 90),
+                        duration: const Duration(milliseconds: 520),
+                      ),
+                  const SizedBox(height: 20),
+                  _AnimatedGoldFrame(
+                    progress: _controller.value,
+                    child: Container(
+                      width: math.min(context.width - 58, 520),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: EtbalyWebColors.sectionBlack
+                            .withValues(alpha: 0.86),
+                        borderRadius: BorderRadius.circular(17),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x3328155E),
+                            blurRadius: 28,
+                            offset: Offset(0, 14),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'هل لديك مشروع في ذهنك؟',
+                            textAlign: TextAlign.center,
+                            style: context.textTheme.titleMedium?.copyWith(
+                              color: EtbalyWebColors.heading,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          TextSpan(text: ' إلى واقع رقمي مؤثر'),
+                          const SizedBox(height: 8),
+                          const EtbalyWebGoldDivider(width: 120),
+                          const SizedBox(height: 12),
+                          RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                color: EtbalyWebColors.body,
+                                height: 1.55,
+                              ),
+                              children: const [
+                                TextSpan(text: 'نحن هنا لنحوّل '),
+                                TextSpan(
+                                  text: 'أفكارك',
+                                  style: TextStyle(
+                                    color: EtbalyWebColors.gold,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                TextSpan(text: ' إلى واقع رقمي '),
+                                TextSpan(
+                                  text: 'مؤثر',
+                                  style: TextStyle(
+                                    color: Color(0xFFE8C878),
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          const _MiniPill(text: 'الاستشارة مجانية +'),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    const _MiniPill(text: 'الاستشارة مجانية +'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _HeroStat(icon: Icons.timer_rounded, text: 'رد سريع'),
-                  _HeroStat(icon: Icons.shield_rounded, text: 'بيانات محمية'),
-                  _HeroStat(icon: Icons.headset_mic_rounded, text: 'دوام كامل'),
+                  )
+                      .animate()
+                      .fadeIn(
+                        delay: const Duration(milliseconds: 180),
+                        duration: const Duration(milliseconds: 560),
+                      )
+                      .slideY(
+                        begin: 0.12,
+                        delay: const Duration(milliseconds: 180),
+                        duration: const Duration(milliseconds: 560),
+                      ),
+                  const SizedBox(height: 20),
+                  const Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _HeroStat(icon: Icons.timer_rounded, text: 'رد سريع'),
+                      _HeroStat(
+                          icon: Icons.shield_rounded, text: 'بيانات محمية'),
+                      _HeroStat(
+                          icon: Icons.headset_mic_rounded, text: 'دوام كامل'),
+                    ],
+                  )
+                      .animate()
+                      .fadeIn(
+                        delay: const Duration(milliseconds: 280),
+                        duration: const Duration(milliseconds: 520),
+                      )
+                      .slideY(
+                        begin: 0.16,
+                        delay: const Duration(milliseconds: 280),
+                        duration: const Duration(milliseconds: 520),
+                      ),
                 ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     ).animate().fadeIn(duration: const Duration(milliseconds: 450)).slideY(
           begin: 0.05,
@@ -552,32 +628,9 @@ class _ContactFormCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: ElevatedButton.icon(
-              onPressed: isSubmitting ? null : onSubmit,
-              icon: isSubmitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.arrow_back_rounded),
-              label: Text(isSubmitting ? 'جاري الإرسال...' : 'أرسل الرسالة'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: EtbalyWebColors.gold,
-                foregroundColor: Colors.black,
-                disabledBackgroundColor:
-                    EtbalyWebColors.gold.withValues(alpha: 0.52),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                textStyle: context.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
+          _SubmitGradientButton(
+            isSubmitting: isSubmitting,
+            onTap: onSubmit,
           ),
         ],
       ),
@@ -598,6 +651,7 @@ class _ContactInfoColumn extends StatelessWidget {
           subtitle: 'متاح 7 أيام في الأسبوع',
           icon: FontAwesomeIcons.whatsapp,
           color: const Color(0xFF25D366),
+          pulse: true,
           onTap: () => _open('https://wa.me/+201010285020'),
         ),
         _ContactChannelCard(
@@ -651,7 +705,11 @@ class _ContactInfoColumn extends StatelessWidget {
         ),
         const _HoursCard(),
       ],
-    );
+    ).animate().fadeIn(duration: const Duration(milliseconds: 500)).slideX(
+          begin: -0.04,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+        );
   }
 }
 
@@ -663,6 +721,7 @@ class _ContactChannelCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onTap,
+    this.pulse = false,
   });
 
   final String label;
@@ -671,6 +730,7 @@ class _ContactChannelCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final bool pulse;
 
   @override
   Widget build(BuildContext context) {
@@ -681,66 +741,164 @@ class _ContactChannelCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: EtbalyWebColors.sectionDeep.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: EtbalyWebColors.border),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: color.withValues(alpha: 0.32)),
-                  ),
-                  child: Icon(icon, color: color, size: 22),
+          child: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: EtbalyWebColors.sectionDeep.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: EtbalyWebColors.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.06),
+                      blurRadius: 22,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: context.textTheme.labelMedium?.copyWith(
-                          color: EtbalyWebColors.body,
-                          fontWeight: FontWeight.w800,
-                        ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: color.withValues(alpha: 0.32)),
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        value,
-                        textDirection: value.startsWith('+') ||
-                                value.startsWith('@') ||
-                                value.contains('@')
-                            ? TextDirection.ltr
-                            : TextDirection.rtl,
-                        textAlign: TextAlign.right,
-                        style: context.textTheme.titleSmall?.copyWith(
-                          color: EtbalyWebColors.heading,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      child: Icon(icon, color: color, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: context.textTheme.labelMedium?.copyWith(
+                              color: EtbalyWebColors.body,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            value,
+                            textDirection: value.startsWith('+') ||
+                                    value.startsWith('@') ||
+                                    value.contains('@')
+                                ? TextDirection.ltr
+                                : TextDirection.rtl,
+                            textAlign: TextAlign.right,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.titleSmall?.copyWith(
+                              color: EtbalyWebColors.heading,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: EtbalyWebColors.body,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: EtbalyWebColors.body,
-                        ),
-                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: EtbalyWebColors.body,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+              if (pulse)
+                PositionedDirectional(
+                  top: 12,
+                  end: 12,
+                  child: _PulseDot(color: color),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SubmitGradientButton extends StatelessWidget {
+  const _SubmitGradientButton({
+    required this.isSubmitting,
+    required this.onTap,
+  });
+
+  final bool isSubmitting;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isSubmitting ? null : onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          height: 54,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: LinearGradient(
+              colors: isSubmitting
+                  ? [
+                      EtbalyWebColors.gold.withValues(alpha: 0.48),
+                      EtbalyWebColors.gold.withValues(alpha: 0.72),
+                    ]
+                  : const [
+                      Color(0xFFB8922A),
+                      EtbalyWebColors.gold,
+                      Color(0xFFE8C878),
                     ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: EtbalyWebColors.gold.withValues(alpha: 0.26),
+                blurRadius: 26,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isSubmitting)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFF1A1501),
+                      ),
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Color(0xFF1A1501),
+                    size: 20,
                   ),
-                ),
                 const SizedBox(width: 10),
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: EtbalyWebColors.body,
-                  size: 18,
+                Text(
+                  isSubmitting ? 'جاري الإرسال...' : 'أرسل الرسالة',
+                  style: context.textTheme.labelLarge?.copyWith(
+                    color: const Color(0xFF1A1501),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -748,6 +906,42 @@ class _ContactChannelCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _PulseDot extends StatelessWidget {
+  const _PulseDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.7),
+            blurRadius: 10,
+            spreadRadius: 3,
+          ),
+        ],
+      ),
+    )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .scale(
+          begin: const Offset(0.72, 0.72),
+          end: const Offset(1.25, 1.25),
+          duration: const Duration(milliseconds: 900),
+        )
+        .fade(
+          begin: 0.65,
+          end: 1,
+          duration: const Duration(milliseconds: 900),
+        );
   }
 }
 
@@ -1413,9 +1607,101 @@ class _SquareIcon extends StatelessWidget {
   }
 }
 
-class _ContactBackgroundPainter extends CustomPainter {
+class _AnimatedGoldFrame extends StatelessWidget {
+  const _AnimatedGoldFrame({
+    required this.progress,
+    required this.child,
+  });
+
+  final double progress;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _GoldFramePainter(progress: progress),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _GoldFramePainter extends CustomPainter {
+  const _GoldFramePainter({required this.progress});
+
+  final double progress;
+
   @override
   void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(18));
+    final sweep = SweepGradient(
+      startAngle: 0,
+      endAngle: math.pi * 2,
+      transform: GradientRotation(progress * math.pi * 2),
+      colors: const [
+        Colors.transparent,
+        Color(0xFFD4AF37),
+        Color(0xFFFFE08A),
+        Color(0xFFD4AF37),
+        Colors.transparent,
+        Color(0x66B8922A),
+        Colors.transparent,
+      ],
+      stops: const [0, 0.18, 0.27, 0.36, 0.52, 0.76, 1],
+    );
+
+    final paint = Paint()
+      ..shader = sweep.createShader(rect)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.7;
+
+    canvas.drawRRect(rrect.deflate(0.9), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GoldFramePainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _ContactBackgroundPainter extends CustomPainter {
+  const _ContactBackgroundPainter({this.progress = 0});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    _drawOrb(
+      canvas,
+      Offset(
+        size.width * (0.86 + math.sin(progress * math.pi * 2) * 0.025),
+        size.height * (0.02 + math.cos(progress * math.pi * 2) * 0.035),
+      ),
+      210,
+      EtbalyWebColors.gold.withValues(alpha: 0.13),
+    );
+    _drawOrb(
+      canvas,
+      Offset(
+        size.width * (0.08 + math.cos(progress * math.pi * 2) * 0.025),
+        size.height * (0.86 + math.sin(progress * math.pi * 2) * 0.035),
+      ),
+      170,
+      EtbalyWebColors.gold.withValues(alpha: 0.08),
+    );
+    _drawOrb(
+      canvas,
+      Offset(
+        size.width * (0.32 + math.sin(progress * math.pi * 4) * 0.02),
+        size.height * (0.46 + math.cos(progress * math.pi * 4) * 0.025),
+      ),
+      110,
+      EtbalyWebColors.purple.withValues(alpha: 0.06),
+    );
+
     final gridPaint = Paint()
       ..color = EtbalyWebColors.grid
       ..strokeWidth = 1;
@@ -1429,29 +1715,33 @@ class _ContactBackgroundPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = EtbalyWebColors.purpleLine
+      ..color = EtbalyWebColors.gold.withValues(alpha: 0.14)
       ..strokeWidth = 1.2
       ..style = PaintingStyle.stroke;
 
-    canvas.drawLine(
-      Offset(-20, size.height * 0.18),
-      Offset(size.width * 0.28, -40),
-      linePaint,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.76, 0),
-      Offset(size.width + 40, size.height * 0.2),
-      linePaint,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.92, size.height * 0.78),
-      Offset(size.width + 40, size.height * 0.98),
-      linePaint,
-    );
+    for (var i = 0; i < 5; i++) {
+      final baseY = size.height * (0.22 + i * 0.15);
+      final offset = ((progress + i * 0.18) % 1) * size.width * 2;
+      canvas.drawLine(
+        Offset(size.width - offset, baseY),
+        Offset(size.width * 1.35 - offset, baseY),
+        linePaint,
+      );
+    }
+  }
+
+  void _drawOrb(Canvas canvas, Offset center, double radius, Color color) {
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: [color, color.withValues(alpha: 0)],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ContactBackgroundPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
 }
 
 class _MapPreviewPainter extends CustomPainter {

@@ -49,6 +49,7 @@ dependencies:
   # Animations
   flutter_animate: ^4.5.2
   smooth_page_indicator: ^2.0.1
+  video_player: ^2.10.1
 
   # Environment
   flutter_dotenv: ^6.0.0
@@ -112,6 +113,10 @@ flutter:
     - assets/images/partners/
     - assets/images/services/
     - assets/images/strip/
+    - assets/images/about/
+    - assets/images/about/team/
+    - assets/images/about/contract/
+    - assets/videos/about/
     - assets/icons/
     - assets/translations/
     - assets/fonts/
