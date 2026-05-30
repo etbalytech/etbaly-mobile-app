@@ -14,10 +14,10 @@ import '../features/home/presentation/screens/home_page.dart';
 import '../features/services/presentation/screens/services_screen.dart';
 import '../features/portfolio/presentation/screens/portfolio_screen.dart';
 import '../features/about/presentation/screens/about_screen.dart';
+import '../features/payments/presentation/screens/payments_screen.dart';
 import '../features/contact/presentation/screens/contact_screen.dart';
 import '../features/services/presentation/screens/service_detail_screen.dart';
 import '../features/services/presentation/screens/why_choose_us_detail_screen.dart';
-import '../features/privacy/presentation/screens/privacy_screen.dart';
 
 /// Bottom Navigation Bar for Etbaly App
 class EtbalyNavBar extends StatelessWidget {
@@ -92,6 +92,13 @@ class EtbalyNavBar extends StatelessWidget {
               ),
               _buildNavItem(
                 context,
+                icon: Icons.account_balance_wallet,
+                label: 'navigation.payments'.tr(),
+                route: AppRoutes.payments,
+                isActive: location == AppRoutes.payments,
+              ),
+              _buildNavItem(
+                context,
                 icon: Icons.send,
                 label: 'navigation.contact'.tr(),
                 route: AppRoutes.contact,
@@ -133,10 +140,14 @@ class EtbalyNavBar extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: context.textTheme.labelSmall?.copyWith(
                     color: isActive
                         ? etbalyColors.primary
                         : etbalyColors.textLight,
+                    fontSize: 10,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
@@ -336,6 +347,11 @@ final GoRouter etbalyRouter = GoRouter(
           builder: (context, state) => const AboutScreen(),
         ),
         GoRoute(
+          path: AppRoutes.payments,
+          name: 'payments',
+          builder: (context, state) => const PaymentsScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.contact,
           name: 'contact',
           builder: (context, state) => const ContactScreen(),
@@ -359,11 +375,6 @@ final GoRouter etbalyRouter = GoRouter(
         final slug = state.pathParameters['slug']!;
         return WhyChooseUsDetailScreen(slug: slug);
       },
-    ),
-    GoRoute(
-      path: AppRoutes.privacy,
-      name: 'privacy',
-      builder: (context, state) => const PrivacyScreen(),
     ),
   ],
 );

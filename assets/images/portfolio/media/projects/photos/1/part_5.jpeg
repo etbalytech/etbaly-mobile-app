@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-beasties-container>
+  <head>
+    <meta charset="utf-8">
+
+    <title>اطبعلي للدعاية والإعلان | Etbaly Digital Marketing</title>
+
+    <base href="/">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- SEO -->
+    <meta name="description" content="اطبعلي للدعاية والإعلان شركة متخصصة في التسويق الرقمي وتصميم الهوية البصرية وإدارة صفحات السوشيال ميديا وتصميم المواقع الإلكترونية وصناعة المحتوى الإبداعي باحترافية.">
+
+    <meta name="keywords" content="اطبعلي, دعاية واعلان, تسويق رقمي, تصميم مواقع, إدارة صفحات, سوشيال ميديا, تصميم هوية بصرية, براندنج, إعلانات ممولة, تصميم جرافيك, شركة تسويق في الاسكندرية">
+
+    <meta name="author" content="Etbaly Digital Marketing">
+    <meta name="application-name" content="اطبعلي للدعاية والإعلان">
+
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+    <!-- Location -->
+    <meta name="geo.region" content="EG-ALX">
+    <meta name="geo.placename" content="Alexandria, Egypt">
+
+    <!-- Performance -->
+    <meta name="theme-color" content="#6F3FF5">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://etba3ly-dm.com/">
+
+    <!-- Languages -->
+    <link rel="alternate" hreflang="x-default" href="https://etba3ly-dm.com/">
+
+    <link rel="alternate" hreflang="ar" href="https://etba3ly-dm.com/?lang=ar">
+
+    <link rel="alternate" hreflang="en" href="https://etba3ly-dm.com/?lang=en">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+
+    <meta property="og:site_name" content="Etbaly Digital Marketing">
+
+    <meta property="og:title" content="اطبعلي للدعاية والإعلان | Etbaly Digital Marketing">
+
+    <meta property="og:description" content="شركة متخصصة في التسويق الرقمي وتصميم المواقع الإلكترونية والهوية البصرية وإدارة صفحات السوشيال ميديا.">
+
+    <meta property="og:url" content="https://etba3ly-dm.com/">
+
+    <meta property="og:image" content="https://etba3ly-dm.com/logo-preview.webp">
+    <meta property="og:image:secure_url" content="https://etba3ly-dm.com/logo-preview.webp">
+    <meta property="og:image:type" content="image/webp">
+    <meta property="og:image:alt" content="اطبعلي للدعاية والإعلان">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="1280">
+
+    <meta property="og:locale" content="ar_EG">
+    <meta property="og:locale:alternate" content="en_US">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@etba3ly">
+
+    <meta name="twitter:title" content="اطبعلي للدعاية والإعلان | Etbaly Digital Marketing">
+
+    <meta name="twitter:description" content="شركة متخصصة في التسويق الرقمي وتصميم المواقع والهوية البصرية وصناعة المحتوى الإبداعي.">
+
+    <meta name="twitter:image" content="https://etba3ly-dm.com/logo-preview.webp">
+    <meta name="twitter:image:alt" content="اطبعلي للدعاية والإعلان">
+
+    <!-- PWA -->
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="apple-mobile-web-app-title" content="Etbaly Digital Marketing">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo.png">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- FontAwesome -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+    <!-- Spline -->
+    <link rel="preconnect" href="https://prod.spline.design" crossorigin>
+
+    <!-- DNS -->
+    <link rel="dns-prefetch" href="https://unpkg.com">
+
+    <link rel="dns-prefetch" href="https://corsproxy.io">
+
+    <link rel="dns-prefetch" href="https://etba3ly-api.xo.je">
+
+    <!-- Structured Data — Organization -->
+    <script type="application/ld+json">
+      [
+        {
+          "@context": "https://schema.org",
+          "@type": ["Organization", "MarketingAgency"],
+          "name": "اطبعلي للدعاية والإعلان",
+          "alternateName": "Etbaly Digital Marketing",
+          "url": "https://etba3ly-dm.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://etba3ly-dm.com/logo.png",
+            "width": 512,
+            "height": 512,
+            "caption": "اطبعلي للدعاية والإعلان"
+          },
+          "image": "https://etba3ly-dm.com/logo-preview.webp",
+          "description": "اطبعلي وكالة متخصصة في الهوية البصرية، إدارة السوشيال ميديا، الإعلانات المدفوعة وتصميم المواقع. نحوّل علامتك التجارية إلى تجربة بصرية لا تُنسى.",
+          "telephone": "+201010285020",
+          "email": "support@etba3ly-dm.com",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Alexandria",
+            "addressCountry": "EG"
+          },
+          "sameAs": [
+            "https://www.facebook.com/etba3lydigitalmarkerting",
+            "https://www.instagram.com/etba3ly2022",
+            "https://www.youtube.com/@etba3ly4adv",
+            "https://www.tiktok.com/@etba3ly2"
+          ],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+201010285020",
+            "contactType": "customer support",
+            "availableLanguage": ["Arabic", "English"]
+          }
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "اطبعلي للدعاية والإعلان",
+          "alternateName": "Etbaly Digital Marketing",
+          "url": "https://etba3ly-dm.com/",
+          "inLanguage": "ar",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://etba3ly-dm.com/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    </script>
+
+    <style>
+      /* ─── Splash Root ─────────────────────────────── */
+      #lux-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        transition: opacity 0.7s ease;
+
+        /* dark default — overridden by JS before paint */
+        background: #080807;
+      }
+
+      /* ─── Light Mode ──────────────────────────────── */
+      #lux-splash.light {
+        background: #f7f3ec;
+      }
+
+      /* ─── Noise overlay ──────────────────────────── */
+      #lux-splash::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+        opacity: 0.035;
+        pointer-events: none;
+      }
+
+      /* ─── Radial glow center ─────────────────────── */
+      #lux-splash::after {
+        content: '';
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.09) 0%, transparent 70%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        animation: glow-breathe 3s ease-in-out infinite;
+      }
+
+      #lux-splash.light::after {
+        background: radial-gradient(circle, rgba(184, 148, 30, 0.12) 0%, transparent 70%);
+      }
+
+      /* ─── Grid Lines ─────────────────────────────── */
+      .splash-grid {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0;
+        animation: grid-fade-in 1.2s ease forwards 0.3s;
+      }
+
+      .splash-grid line {
+        stroke: #d4af37;
+        stroke-width: 0.3;
+        stroke-dasharray: 4 6;
+      }
+
+      #lux-splash.light .splash-grid line {
+        stroke: #b8941e;
+        opacity: 0.45;
+      }
+
+      /* ─── Corner ornaments ───────────────────────── */
+      .corner {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        opacity: 0;
+        animation: corner-in 0.8s ease forwards;
+      }
+      .corner svg {
+        width: 100%;
+        height: 100%;
+      }
+      .corner-tl {
+        top: 28px;
+        left: 28px;
+        animation-delay: 0.5s;
+      }
+      .corner-tr {
+        top: 28px;
+        right: 28px;
+        transform: scaleX(-1);
+        animation-delay: 0.6s;
+      }
+      .corner-bl {
+        bottom: 28px;
+        left: 28px;
+        transform: scaleY(-1);
+        animation-delay: 0.7s;
+      }
+      .corner-br {
+        bottom: 28px;
+        right: 28px;
+        transform: scale(-1);
+        animation-delay: 0.8s;
+      }
+
+      .corner-stroke {
+        stroke: #d4af37;
+        fill: none;
+        stroke-width: 1;
+      }
+      #lux-splash.light .corner-stroke {
+        stroke: #b8941e;
+      }
+
+      /* ─── Loader Container ───────────────────────── */
+      .lux-loader {
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+
+      /* ─── Logo area ──────────────────────────────── */
+      .logo-wrap {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin-bottom: 20px;
+        opacity: 0;
+        animation: logo-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s;
+      }
+
+      .logo-img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 12px;
+      }
+
+      /* ─── Dual ring system ───────────────────────── */
+      .ring-outer {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(212, 175, 55, 0.12);
+        border-top: 1.5px solid #d4af37;
+        animation: spin 2s linear infinite;
+      }
+
+      .ring-inner {
+        position: absolute;
+        inset: 10px;
+        border-radius: 50%;
+        border: 1px solid rgba(212, 175, 55, 0.07);
+        border-bottom: 1px solid rgba(212, 175, 55, 0.5);
+        animation: spin-reverse 1.5s linear infinite;
+      }
+
+      #lux-splash.light .ring-outer {
+        border-color: rgba(184, 148, 30, 0.12);
+        border-top-color: #b8941e;
+      }
+      #lux-splash.light .ring-inner {
+        border-color: rgba(184, 148, 30, 0.07);
+        border-bottom-color: rgba(184, 148, 30, 0.5);
+      }
+
+      /* ─── Brand name ─────────────────────────────── */
+      .brand-name {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-weight: 400;
+        font-size: 34px;
+        letter-spacing: 8px;
+        color: #d4af37;
+        margin: 0 0 6px 0;
+        opacity: 0;
+        animation: text-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.5s;
+      }
+
+      #lux-splash.light .brand-name {
+        color: #8a6800;
+      }
+
+      /* ─── Divider ────────────────────────────────── */
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 240px;
+        margin-bottom: 14px;
+        opacity: 0;
+        animation: text-reveal 0.7s ease forwards 0.7s;
+      }
+      .divider-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4));
+      }
+      .divider-line.right {
+        background: linear-gradient(270deg, transparent, rgba(212, 175, 55, 0.4));
+      }
+      .divider-diamond {
+        width: 5px;
+        height: 5px;
+        background: #d4af37;
+        transform: rotate(45deg);
+        opacity: 0.7;
+      }
+      #lux-splash.light .divider-line {
+        background: linear-gradient(90deg, transparent, rgba(184, 148, 30, 0.4));
+      }
+      #lux-splash.light .divider-line.right {
+        background: linear-gradient(270deg, transparent, rgba(184, 148, 30, 0.4));
+      }
+      #lux-splash.light .divider-diamond {
+        background: #b8941e;
+      }
+
+      /* ─── Subtitle ───────────────────────────────── */
+      .sub-text {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-weight: 300;
+        font-size: 12px;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+        color: #888;
+        opacity: 0;
+        animation: text-reveal 0.7s ease forwards 0.85s;
+      }
+
+      #lux-splash.light .sub-text {
+        color: #999;
+      }
+
+      /* ─── Progress track ─────────────────────────── */
+      .progress-wrap {
+        margin-top: 40px;
+        width: 220px;
+        opacity: 0;
+        animation: text-reveal 0.6s ease forwards 1s;
+      }
+      .progress-track {
+        height: 1px;
+        background: rgba(212, 175, 55, 0.12);
+        position: relative;
+        overflow: hidden;
+      }
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: #d4af37;
+        animation: progress-fill 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.3s;
+        box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+      }
+      .progress-dots {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+      }
+      .dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: rgba(212, 175, 55, 0.2);
+      }
+      .dot.active {
+        background: rgba(212, 175, 55, 0.6);
+      }
+
+      #lux-splash.light .progress-track {
+        background: rgba(184, 148, 30, 0.12);
+      }
+      #lux-splash.light .progress-bar {
+        background: #b8941e;
+        box-shadow: 0 0 8px rgba(184, 148, 30, 0.4);
+      }
+      #lux-splash.light .dot {
+        background: rgba(184, 148, 30, 0.2);
+      }
+      #lux-splash.light .dot.active {
+        background: rgba(184, 148, 30, 0.6);
+      }
+
+      /* ─── Animations ─────────────────────────────── */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes spin-reverse {
+        to {
+          transform: rotate(-360deg);
+        }
+      }
+
+      @keyframes glow-breathe {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0.7;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.15);
+          opacity: 1;
+        }
+      }
+
+      @keyframes grid-fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 0.25;
+        }
+      }
+
+      #lux-splash.light .splash-grid {
+        animation: grid-fade-in-light 1.2s ease forwards 0.3s;
+      }
+      @keyframes grid-fade-in-light {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 0.6;
+        }
+      }
+
+      @keyframes corner-in {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .corner-tr {
+        transform-origin: right top;
+      }
+      .corner-bl {
+        transform-origin: left bottom;
+      }
+      .corner-br {
+        transform-origin: right bottom;
+      }
+
+      @keyframes logo-rise {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.92);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes text-reveal {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes progress-fill {
+        0% {
+          width: 0%;
+        }
+        30% {
+          width: 25%;
+        }
+        60% {
+          width: 65%;
+        }
+        85% {
+          width: 88%;
+        }
+        100% {
+          width: 100%;
+        }
+      }
+
+      /* ─── Fade out ───────────────────────────────── */
+      #lux-splash.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      @media (max-width: 768px) {
+        .logo-wrap {
+          width: 80px;
+          height: 80px;
+        }
+
+        .logo-img {
+          width: 50px;
+          height: 50px;
+        }
+
+        .brand-name {
+          font-size: 24px;
+          letter-spacing: 5px;
+        }
+
+        .divider {
+          width: 160px;
+        }
+
+        .sub-text {
+          font-size: 10px;
+          letter-spacing: 3px;
+        }
+
+        .progress-wrap {
+          width: 150px;
+          margin-top: 30px;
+        }
+
+        .corner {
+          width: 28px;
+          height: 28px;
+        }
+      }
+    </style>
+    <link rel="manifest" href="manifest.webmanifest">
+  <style>@font-face{font-family:Sora;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwWa-xsaQ.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Sora;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwV6-x.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Sora;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwWa-xsaQ.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Sora;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwV6-x.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Sora;font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwWa-xsaQ.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Sora;font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwV6-x.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Sora;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwWa-xsaQ.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Sora;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/sora/v17/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwV6-x.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Tajawal;font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l5qjHrRpiYlJ.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}@font-face{font-family:Tajawal;font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l5qjHrFpiQ.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Tajawal;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iura6YBj_oCad4k1nzSBC45I.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}@font-face{font-family:Tajawal;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iura6YBj_oCad4k1nzGBCw.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Tajawal;font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l8KiHrRpiYlJ.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}@font-face{font-family:Tajawal;font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l8KiHrFpiQ.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Tajawal;font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l4qkHrRpiYlJ.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}@font-face{font-family:Tajawal;font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l4qkHrFpiQ.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Tajawal;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l5anHrRpiYlJ.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}@font-face{font-family:Tajawal;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l5anHrFpiQ.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Tajawal;font-style:normal;font-weight:900;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l7KmHrRpiYlJ.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1}@font-face{font-family:Tajawal;font-style:normal;font-weight:900;font-display:swap;src:url(https://fonts.gstatic.com/s/tajawal/v12/Iurf6YBj_oCad4k1l7KmHrFpiQ.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}:root{--bs-blue:#0d6efd;--bs-indigo:#6610f2;--bs-purple:#6f42c1;--bs-pink:#d63384;--bs-red:#dc3545;--bs-orange:#fd7e14;--bs-yellow:#ffc107;--bs-green:#198754;--bs-teal:#20c997;--bs-cyan:#0dcaf0;--bs-black:#000;--bs-white:#fff;--bs-gray:#6c757d;--bs-gray-dark:#343a40;--bs-gray-100:#f8f9fa;--bs-gray-200:#e9ecef;--bs-gray-300:#dee2e6;--bs-gray-400:#ced4da;--bs-gray-500:#adb5bd;--bs-gray-600:#6c757d;--bs-gray-700:#495057;--bs-gray-800:#343a40;--bs-gray-900:#212529;--bs-primary:#0d6efd;--bs-secondary:#6c757d;--bs-success:#198754;--bs-info:#0dcaf0;--bs-warning:#ffc107;--bs-danger:#dc3545;--bs-light:#f8f9fa;--bs-dark:#212529;--bs-primary-rgb:13,110,253;--bs-secondary-rgb:108,117,125;--bs-success-rgb:25,135,84;--bs-info-rgb:13,202,240;--bs-warning-rgb:255,193,7;--bs-danger-rgb:220,53,69;--bs-light-rgb:248,249,250;--bs-dark-rgb:33,37,41;--bs-primary-text-emphasis:#052c65;--bs-secondary-text-emphasis:#2b2f32;--bs-success-text-emphasis:#0a3622;--bs-info-text-emphasis:#055160;--bs-warning-text-emphasis:#664d03;--bs-danger-text-emphasis:#58151c;--bs-light-text-emphasis:#495057;--bs-dark-text-emphasis:#495057;--bs-primary-bg-subtle:#cfe2ff;--bs-secondary-bg-subtle:#e2e3e5;--bs-success-bg-subtle:#d1e7dd;--bs-info-bg-subtle:#cff4fc;--bs-warning-bg-subtle:#fff3cd;--bs-danger-bg-subtle:#f8d7da;--bs-light-bg-subtle:#fcfcfd;--bs-dark-bg-subtle:#ced4da;--bs-primary-border-subtle:#9ec5fe;--bs-secondary-border-subtle:#c4c8cb;--bs-success-border-subtle:#a3cfbb;--bs-info-border-subtle:#9eeaf9;--bs-warning-border-subtle:#ffe69c;--bs-danger-border-subtle:#f1aeb5;--bs-light-border-subtle:#e9ecef;--bs-dark-border-subtle:#adb5bd;--bs-white-rgb:255,255,255;--bs-black-rgb:0,0,0;--bs-font-sans-serif:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans","Liberation Sans",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";--bs-font-monospace:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--bs-gradient:linear-gradient(180deg, rgba(255, 255, 255, .15), rgba(255, 255, 255, 0));--bs-body-font-family:var(--bs-font-sans-serif);--bs-body-font-size:1rem;--bs-body-font-weight:400;--bs-body-line-height:1.5;--bs-body-color:#212529;--bs-body-color-rgb:33,37,41;--bs-body-bg:#fff;--bs-body-bg-rgb:255,255,255;--bs-emphasis-color:#000;--bs-emphasis-color-rgb:0,0,0;--bs-secondary-color:rgba(33, 37, 41, .75);--bs-secondary-color-rgb:33,37,41;--bs-secondary-bg:#e9ecef;--bs-secondary-bg-rgb:233,236,239;--bs-tertiary-color:rgba(33, 37, 41, .5);--bs-tertiary-color-rgb:33,37,41;--bs-tertiary-bg:#f8f9fa;--bs-tertiary-bg-rgb:248,249,250;--bs-heading-color:inherit;--bs-link-color:#0d6efd;--bs-link-color-rgb:13,110,253;--bs-link-decoration:underline;--bs-link-hover-color:#0a58ca;--bs-link-hover-color-rgb:10,88,202;--bs-code-color:#d63384;--bs-highlight-color:#212529;--bs-highlight-bg:#fff3cd;--bs-border-width:1px;--bs-border-style:solid;--bs-border-color:#dee2e6;--bs-border-color-translucent:rgba(0, 0, 0, .175);--bs-border-radius:.375rem;--bs-border-radius-sm:.25rem;--bs-border-radius-lg:.5rem;--bs-border-radius-xl:1rem;--bs-border-radius-xxl:2rem;--bs-border-radius-2xl:var(--bs-border-radius-xxl);--bs-border-radius-pill:50rem;--bs-box-shadow:0 .5rem 1rem rgba(0, 0, 0, .15);--bs-box-shadow-sm:0 .125rem .25rem rgba(0, 0, 0, .075);--bs-box-shadow-lg:0 1rem 3rem rgba(0, 0, 0, .175);--bs-box-shadow-inset:inset 0 1px 2px rgba(0, 0, 0, .075);--bs-focus-ring-width:.25rem;--bs-focus-ring-opacity:.25;--bs-focus-ring-color:rgba(13, 110, 253, .25);--bs-form-valid-color:#198754;--bs-form-valid-border-color:#198754;--bs-form-invalid-color:#dc3545;--bs-form-invalid-border-color:#dc3545}*,:after,:before{box-sizing:border-box}@media(prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:var(--bs-body-font-family);font-size:var(--bs-body-font-size);font-weight:var(--bs-body-font-weight);line-height:var(--bs-body-line-height);color:var(--bs-body-color);text-align:var(--bs-body-text-align);background-color:var(--bs-body-bg);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}h1{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2;color:var(--bs-heading-color)}h1{font-size:calc(1.375rem + 1.5vw)}@media(min-width:1200px){h1{font-size:2.5rem}}img,svg{vertical-align:middle}:root{--bs-breakpoint-xs:0;--bs-breakpoint-sm:576px;--bs-breakpoint-md:768px;--bs-breakpoint-lg:992px;--bs-breakpoint-xl:1200px;--bs-breakpoint-xxl:1400px}.progress-bar{display:flex;flex-direction:column;justify-content:center;overflow:hidden;color:var(--bs-progress-bar-color);text-align:center;white-space:nowrap;background-color:var(--bs-progress-bar-bg);transition:var(--bs-progress-bar-transition)}@media(prefers-reduced-motion:reduce){.progress-bar{transition:none}}:root{--bs-btn-close-filter: }:root{--bs-carousel-indicator-active-bg:#fff;--bs-carousel-caption-color:#fff;--bs-carousel-control-icon-filter: }:root{--fa-family-brands:"Font Awesome 7 Brands";--fa-font-brands:normal 400 1em/1 var(--fa-family-brands)}:root{--fa-font-regular:normal 400 1em/1 var(--fa-family-classic)}:root{--fa-family-classic:"Font Awesome 7 Free";--fa-font-solid:normal 900 1em/1 var(--fa-family-classic);--fa-style-family-classic:var(--fa-family-classic)}:root{--gold:#d4af37;--gold-light:#e8c878;--gold-dark:#b8922a;--gold-glow:rgba(111, 63, 245, .18);--gold-glow-strong:rgba(111, 63, 245, .38);--primary:#6f3ff5;--primary-light:#b9a3ff;--primary-dark:#4e22d4;--primary-glow:rgba(111, 63, 245, .22);--primary-glow-strong:rgba(111, 63, 245, .42);--shadow-primary:0 8px 32px rgba(111, 63, 245, .18);--shadow-primary-hover:0 16px 48px rgba(111, 63, 245, .32);--shadow-gold:0 8px 32px rgba(111, 63, 245, .15);--shadow-gold-hover:0 16px 48px rgba(111, 63, 245, .25);--radius-sm:10px;--radius-md:16px;--radius-lg:24px;--radius-xl:36px;--transition:all .3s cubic-bezier(.4, 0, .2, 1);--font-display:"Sora", sans-serif;--font-body:"Tajawal", sans-serif;--bg-main:#0f0e18;--bg-secondary:#16152a;--bg-card:#1e1b30;--bg-subtle:#252040;--text-main:#ede8ff;--text-muted:#b9a3ff;--text-light:#8b7dc8;--navbar-bg:rgba(15, 10, 35, .45);--navbar-border:rgba(185, 163, 255, .2);--navbar-shadow:0 8px 40px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(185, 163, 255, .08);--border-color:#332d55;--border-subtle:#2a2448;--section-alt:#16152a;--badge-bg:rgba(185, 163, 255, .12);--card-shadow:0 2px 20px rgba(0, 0, 0, .4);--card-shadow-hover:0 12px 40px rgba(185, 163, 255, .1)}html{scroll-behavior:smooth;overflow-y:auto!important}body{background-color:var(--bg-main);color:var(--text-main);font-family:var(--font-body);font-size:16px;line-height:1.7;transition:background-color .4s ease,color .4s ease;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-y:auto;padding-top:80px}@media(max-width:1024px){body{padding-top:50px!important}}h1{font-family:var(--font-body);font-weight:800;line-height:1.25}:root{--wa-green-1:#25d366;--wa-green-2:#128c7e;--wa-green-3:#075e54;--wa-green-glow:rgba(37, 211, 102, .5);--wa-green-glow-soft:rgba(37, 211, 102, .2);--wa-gold-1:#f5c842;--wa-gold-2:#c9a227;--wa-size:80px;--wa-bottom:36px;--wa-side:36px}@media(max-width:768px)and (min-width:577px){:root{--wa-size:70px;--wa-bottom:28px;--wa-side:24px}}@media(max-width:576px){:root{--wa-size:66px;--wa-bottom:20px;--wa-side:16px}}*,*:before,*:after{box-sizing:border-box}html,body{overflow-x:hidden;-webkit-overflow-scrolling:touch}img{max-width:100%;height:auto}</style><link rel="stylesheet" href="styles-4QM7J5EA.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-4QM7J5EA.css"></noscript></head>
+
+  <body>
+    <!-- H1 مخفي للـ SEO بس مش هيأثر على الشكل -->
+    <h1 style="position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0">
+      اطبعلي للدعاية والإعلان - تسويق رقمي وتصميم مواقع في الاسكندرية
+    </h1>
+
+    <div id="lux-splash">
+      <!-- Grid lines (decorative) -->
+      <svg class="splash-grid" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- vertical lines -->
+        <line x1="20%" y1="0" x2="20%" y2="100%"/>
+        <line x1="50%" y1="0" x2="50%" y2="100%"/>
+        <line x1="80%" y1="0" x2="80%" y2="100%"/>
+        <!-- horizontal lines -->
+        <line x1="0" y1="25%" x2="100%" y2="25%"/>
+        <line x1="0" y1="75%" x2="100%" y2="75%"/>
+      </svg>
+
+      <!-- Corner ornaments -->
+      <div class="corner corner-tl">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <polyline points="0,20 0,0 20,0" class="corner-stroke"/>
+          <circle cx="0" cy="0" r="2.5" fill="#d4af37" class="corner-dot"/>
+        </svg>
+      </div>
+      <div class="corner corner-tr">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <polyline points="0,20 0,0 20,0" class="corner-stroke"/>
+          <circle cx="0" cy="0" r="2.5" fill="#d4af37" class="corner-dot"/>
+        </svg>
+      </div>
+      <div class="corner corner-bl">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <polyline points="0,20 0,0 20,0" class="corner-stroke"/>
+          <circle cx="0" cy="0" r="2.5" fill="#d4af37" class="corner-dot"/>
+        </svg>
+      </div>
+      <div class="corner corner-br">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <polyline points="0,20 0,0 20,0" class="corner-stroke"/>
+          <circle cx="0" cy="0" r="2.5" fill="#d4af37" class="corner-dot"/>
+        </svg>
+      </div>
+
+      <!-- Main Loader -->
+      <div class="lux-loader">
+        <div class="logo-wrap">
+          <div class="ring-outer"></div>
+          <div class="ring-inner"></div>
+          <img src="/logo.png" class="logo-img" alt="Etbaly" onerror="this.style.display = 'none'">
+        </div>
+
+        <div class="brand-name" id="brandName">اطْبَعَلِيٌّ</div>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-diamond"></div>
+          <div class="divider-line right"></div>
+        </div>
+
+        <div class="sub-text" id="subText">جاري التحميل</div>
+
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div class="progress-bar"></div>
+          </div>
+          <div class="progress-dots">
+            <div class="dot active"></div>
+            <div class="dot active"></div>
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Pages For Angular Router to Render Into -->
+    <app-root></app-root>
+
+    <script>
+      // ── Apply theme & lang BEFORE first paint ──────────
+      (function () {
+        const theme = localStorage.getItem('theme') || 'dark';
+        const lang = localStorage.getItem('lang') || 'ar';
+        const splash = document.getElementById('lux-splash');
+        const brandEl = document.getElementById('brandName');
+        const subEl = document.getElementById('subText');
+
+        if (theme === 'light') {
+          splash.classList.add('light');
+        }
+
+        if (lang === 'en') {
+          brandEl.textContent = '𝗘𝘁𝗯𝗮𝗹𝘆';
+          subEl.textContent = 'Loading';
+          document.documentElement.dir = 'ltr';
+          document.documentElement.lang = 'en';
+        } else {
+          document.documentElement.dir = 'rtl';
+          document.documentElement.lang = 'ar';
+        }
+      })();
+
+      // ── Dismiss after app load ─────────────────────────
+      window.addEventListener('load', function () {
+        var splash = document.getElementById('lux-splash');
+        // 600ms instead of 1200ms — app is ready, no need to wait longer
+        setTimeout(function () {
+          splash.classList.add('fade-out');
+          setTimeout(function () {
+            splash.style.display = 'none';
+          }, 600); // fade transition reduced from 700 → 600ms
+        }, 600);
+      });
+    </script>
+    <noscript>Please enable JavaScript to continue using this application.</noscript>
+  <link rel="modulepreload" href="chunk-XOGOWMGD.js"><link rel="modulepreload" href="chunk-44JIRCWO.js"><link rel="modulepreload" href="chunk-2ZHU5P6F.js"><link rel="modulepreload" href="chunk-P3HVX5GL.js"><link rel="modulepreload" href="chunk-KAT7YFEL.js"><script src="main-RQQDSOEY.js" type="module"></script></body>
+</html>

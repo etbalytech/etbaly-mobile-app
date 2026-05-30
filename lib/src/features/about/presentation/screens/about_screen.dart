@@ -2544,7 +2544,7 @@ class _TeamCard extends StatelessWidget {
               alignment: Alignment.topCenter,
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 12),
           Text(
             name,
             maxLines: 1,
@@ -2737,131 +2737,160 @@ class _CeoVideoWidget extends StatefulWidget {
   State<_CeoVideoWidget> createState() => _CeoVideoWidgetState();
 }
 
-class _CeoVideoWidgetState extends State<_CeoVideoWidget>
-    with SingleTickerProviderStateMixin {
-  VideoPlayerController? _ctrl;
-  bool _started = false;
-  bool _loading = false;
-  late final AnimationController _pulse;
+class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
+  late final VideoPlayerController _ctrl;
+  bool _showOverlay = true;
+  bool _isMuted = false;
 
   @override
   void initState() {
     super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+    _ctrl = VideoPlayerController.asset(AppAssets.aboutVideo)
+      ..initialize().then((_) {
+        if (mounted) setState(() {});
+      })
+      ..addListener(_handleVideoState);
   }
 
   @override
   void dispose() {
-    _ctrl?.dispose();
-    _pulse.dispose();
+    _ctrl
+      ..removeListener(_handleVideoState)
+      ..dispose();
     super.dispose();
   }
 
-  Future<void> _toggleMute() async {
-    final ctrl = _ctrl;
-    if (ctrl == null) return;
-    await ctrl.setVolume(ctrl.value.volume > 0 ? 0 : 1);
+  void _handleVideoState() {
+    if (!mounted || !_ctrl.value.isInitialized) return;
+    final value = _ctrl.value;
+    if (value.position >= value.duration && value.duration > Duration.zero) {
+      setState(() => _showOverlay = true);
+    }
   }
 
   Future<void> _onTap() async {
-    final ctrl = _ctrl;
-    if (ctrl != null) {
-      ctrl.value.isPlaying ? await ctrl.pause() : await ctrl.play();
+    if (!_ctrl.value.isInitialized) return;
+
+    if (_ctrl.value.isPlaying) {
+      await _ctrl.pause();
+      if (mounted) setState(() => _showOverlay = true);
       return;
     }
-    if (_loading) return;
-    setState(() => _loading = true);
-    final c = VideoPlayerController.asset(AppAssets.aboutVideo);
-    await c.initialize();
-    c.addListener(() {
-      if (mounted) setState(() {});
-    });
-    if (!mounted) {
-      c.dispose();
-      return;
+
+    if (_ctrl.value.position >= _ctrl.value.duration) {
+      await _ctrl.seekTo(Duration.zero);
     }
-    setState(() {
-      _ctrl = c;
-      _started = true;
-      _loading = false;
-    });
-    await c.play();
+    await _ctrl.play();
+    if (mounted) setState(() => _showOverlay = false);
+  }
+
+  Future<void> _toggleMute() async {
+    if (!_ctrl.value.isInitialized) return;
+    final muted = !_isMuted;
+    await _ctrl.setVolume(muted ? 0 : 1);
+    if (mounted) setState(() => _isMuted = muted);
   }
 
   String _fmt(Duration d) {
-    final m = d.inMinutes;
-    final s = d.inSeconds % 60;
+    final m = d.inMinutes.remainder(60);
+    final s = d.inSeconds.remainder(60);
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
-    final ctrl = _ctrl;
-    final isInit = ctrl != null && ctrl.value.isInitialized;
-    final aspectRatio = isInit ? ctrl.value.aspectRatio : (9.0 / 16.0);
+    final isReady = _ctrl.value.isInitialized;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
-            boxShadow: [
-              BoxShadow(
-                color: colors.gold.withValues(alpha: 0.08),
-                blurRadius: 28,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: AspectRatio(
-            aspectRatio: aspectRatio,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (_started && isInit)
-                  VideoPlayer(ctrl)
-                else
-                  Image.asset(AppAssets.aboutVideoPoster, fit: BoxFit.cover),
-                if (!_started)
-                  GestureDetector(
-                    onTap: _onTap,
-                    child: _VideoPlayOverlay(pulse: _pulse, loading: _loading),
-                  )
-                else if (isInit)
+        GestureDetector(
+          onTap: _onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.gold.withValues(alpha: 0.08),
+                  blurRadius: 28,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: AspectRatio(
+              aspectRatio: 0.86,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned.fill(
+                      child: CustomPaint(painter: _CeoVideoPainter())),
+                  if (isReady)
+                    FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: _ctrl.value.size.width,
+                        height: _ctrl.value.size.height,
+                        child: VideoPlayer(_ctrl),
+                      ),
+                    )
+                  else
+                    Image.asset(
+                      AppAssets.aboutVideoPoster,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                    ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.18),
+                            Colors.black.withValues(alpha: 0.56),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_showOverlay) _VideoPlayOverlay(isReady: isReady),
                   Positioned(
                     bottom: 0,
                     left: 0,
                     right: 0,
                     child: _VideoBar(
-                      ctrl: ctrl,
+                      ctrl: _ctrl,
                       onPlayPause: _onTap,
                       onToggleMute: _toggleMute,
                       fmt: _fmt,
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            _VideoBadge(icon: Icons.movie_rounded, label: 'فيديو حصري'),
-            if (isInit) ...[
+        const SizedBox(height: 12),
+        Directionality(
+          textDirection: TextDirection.rtl,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const _VideoBadge(
+                icon: Icons.movie_creation_rounded,
+                label: 'فيديو حصري',
+              ),
               const SizedBox(width: 8),
               _VideoBadge(
                 icon: Icons.access_time_rounded,
-                label: _fmt(ctrl.value.duration),
+                label: isReady ? _fmt(_ctrl.value.duration) : '1:15',
               ),
             ],
-          ],
+          ),
         ),
       ],
     );
@@ -2869,81 +2898,72 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget>
 }
 
 class _VideoPlayOverlay extends StatelessWidget {
-  const _VideoPlayOverlay({required this.pulse, this.loading = false});
+  const _VideoPlayOverlay({required this.isReady});
 
-  final Animation<double> pulse;
-  final bool loading;
+  final bool isReady;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Color(0x22000000)),
-      child: Center(
-        child: loading
-            ? SizedBox(
-                width: 64,
-                height: 64,
-                child: CircularProgressIndicator(
-                  color: colors.gold,
-                  strokeWidth: 3,
-                ),
-              )
-            : AnimatedBuilder(
-                animation: pulse,
-                builder: (_, __) => Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Transform.scale(
-                      scale: 1.0 + pulse.value * 0.8,
-                      child: Opacity(
-                        opacity: (1.0 - pulse.value) * 0.12,
-                        child: Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colors.gold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Transform.scale(
-                      scale: 1.0 + pulse.value * 0.4,
-                      child: Opacity(
-                        opacity: (1.0 - pulse.value) * 0.22,
-                        child: Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colors.gold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colors.gold,
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.gold.withValues(alpha: 0.45),
-                            blurRadius: 22,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.black,
-                        size: 34,
-                      ),
-                    ),
-                  ],
-                ),
+
+    return Center(
+      child: Transform.translate(
+        offset: const Offset(0, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              decoration: BoxDecoration(
+                color: colors.gold,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.gold.withValues(alpha: 0.35),
+                    blurRadius: 24,
+                  ),
+                ],
               ),
+              child: Icon(
+                isReady ? Icons.play_arrow_rounded : Icons.hourglass_top,
+                color: Colors.white,
+                size: isReady ? 38 : 28,
+              ),
+            ),
+            const SizedBox(height: 36),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Text(
+                    'مشاهدة رسالة المدير',
+                    style: context.textTheme.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: colors.gold,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2965,11 +2985,6 @@ class _VideoBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
-    final pos = ctrl.value.position;
-    final dur = ctrl.value.duration;
-    final frac = dur.inMilliseconds > 0
-        ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
-        : 0.0;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
@@ -2980,60 +2995,73 @@ class _VideoBar extends StatelessWidget {
           colors: [Color(0xDD000000), Colors.transparent],
         ),
       ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: onPlayPause,
-            child: Icon(
-              ctrl.value.isPlaying
-                  ? Icons.pause_rounded
-                  : Icons.play_arrow_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 3,
-                thumbShape:
-                    const RoundSliderThumbShape(enabledThumbRadius: 5),
-                overlayShape: SliderComponentShape.noOverlay,
-                activeTrackColor: colors.gold,
-                inactiveTrackColor: Colors.white24,
-                thumbColor: colors.gold,
+      child: ValueListenableBuilder<VideoPlayerValue>(
+        valueListenable: ctrl,
+        builder: (context, value, _) {
+          final pos = value.position;
+          final dur = value.duration;
+          final frac = dur.inMilliseconds > 0
+              ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
+              : 0.0;
+
+          return Row(
+            children: [
+              GestureDetector(
+                onTap: onPlayPause,
+                child: Icon(
+                  value.isPlaying
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
-              child: Slider(
-                value: frac,
-                onChanged: (v) => ctrl.seekTo(dur * v),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderThemeData(
+                    trackHeight: 3,
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 5),
+                    overlayShape: SliderComponentShape.noOverlay,
+                    activeTrackColor: colors.gold,
+                    inactiveTrackColor: Colors.white24,
+                    thumbColor: colors.gold,
+                  ),
+                  child: Slider(
+                    value: frac,
+                    onChanged: dur == Duration.zero
+                        ? null
+                        : (v) => ctrl.seekTo(dur * v),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: Text(
-              '${fmt(pos)} / ${fmt(dur)}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+              const SizedBox(width: 8),
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Text(
+                  '${fmt(pos)} / ${fmt(dur)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onToggleMute,
-            child: Icon(
-              ctrl.value.volume > 0
-                  ? Icons.volume_up_rounded
-                  : Icons.volume_off_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
-          ),
-        ],
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onToggleMute,
+                child: Icon(
+                  value.volume > 0
+                      ? Icons.volume_up_rounded
+                      : Icons.volume_off_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -3071,6 +3099,40 @@ class _VideoBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CeoVideoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bg = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF0E0A16), Color(0xFF21123B), Color(0xFF080611)],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, bg);
+
+    final glow = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFD4AF37).withValues(alpha: 0.16),
+          Colors.transparent,
+        ],
+      ).createShader(
+        Rect.fromCircle(
+          center: Offset(size.width * 0.68, size.height * 0.22),
+          radius: size.width * 0.72,
+        ),
+      );
+    canvas.drawCircle(
+      Offset(size.width * 0.68, size.height * 0.22),
+      size.width * 0.72,
+      glow,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

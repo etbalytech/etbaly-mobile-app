@@ -652,7 +652,7 @@ class _ContactInfoColumn extends StatelessWidget {
           icon: FontAwesomeIcons.whatsapp,
           color: const Color(0xFF25D366),
           pulse: true,
-          onTap: () => _open('https://wa.me/+201010285020'),
+          onTap: () => _open('https://wa.me/01010285020'),
         ),
         _ContactChannelCard(
           label: 'فيسبوك',
@@ -660,8 +660,7 @@ class _ContactInfoColumn extends StatelessWidget {
           subtitle: 'تابعنا على فيسبوك',
           icon: FontAwesomeIcons.facebookF,
           color: const Color(0xFF1877F2),
-          onTap: () =>
-              _open('https://www.facebook.com/etba3lydigitalmarketing'),
+          onTap: () => _open('https://www.facebook.com/share/1Gw1i4iuXq'),
         ),
         _ContactChannelCard(
           label: 'البريد الإلكتروني',
@@ -1131,7 +1130,7 @@ class _MapSection extends StatelessWidget {
                   label: 'تواصل قبل الزيارة',
                   icon: FontAwesomeIcons.whatsapp,
                   color: const Color(0xFF25D366),
-                  onTap: () => _open('https://wa.me/+201010285020'),
+                  onTap: () => _open('https://wa.me/01010285020'),
                 ),
               ],
             ),
@@ -1815,7 +1814,8 @@ class _MapPreviewPainter extends CustomPainter {
 
 Future<void> _open(String url) async {
   final uri = Uri.parse(url);
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+  if (!opened) {
+    await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 }

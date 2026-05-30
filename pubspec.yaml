@@ -75,6 +75,7 @@ dependencies:
   easy_localization: ^3.0.8
 
   flutter_native_splash: ^2.4.7
+  open_filex: ^4.7.0
 
 dev_dependencies:
   flutter_test:
@@ -116,6 +117,10 @@ flutter:
     - assets/images/about/
     - assets/images/about/team/
     - assets/images/about/contract/
+    - assets/images/portfolio/
+    - assets/images/portfolio/industries/
+    - assets/images/portfolio/media/
+    - assets/files/portfolio/
     - assets/videos/about/
     - assets/icons/
     - assets/translations/
