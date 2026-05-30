@@ -41,6 +41,8 @@ class _ContactScreenState extends State<ContactScreen> {
     ),
   );
 
+  bool get _isArabic => context.locale.languageCode == 'ar';
+
   bool _isSubmitting = false;
   String? _successMessage;
   String? _errorMessage;
@@ -64,7 +66,7 @@ class _ContactScreenState extends State<ContactScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: EtbalyWebColors.sectionBlack,
         body: SafeArea(

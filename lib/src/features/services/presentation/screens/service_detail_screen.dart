@@ -21,6 +21,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   late final _ServiceDetail _detail;
   late final Map<String, int> _quantities;
 
+  bool get _isArabic => context.locale.languageCode == 'ar';
+
   static String _assetImage(String slug) {
     final map = {'mobile-app': 'mobile'};
     return 'assets/images/services/${map[slug] ?? slug}.webp';
@@ -43,7 +45,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: Color(0xFF070511),
         body: CustomScrollView(
@@ -136,7 +138,8 @@ class _HeroSection extends StatelessWidget {
           ),
           Positioned(
             top: 52.h,
-            right: 16.w,
+            right: Directionality.of(context) == TextDirection.rtl ? 16.w : null,
+            left: Directionality.of(context) == TextDirection.ltr ? 16.w : null,
             child: GestureDetector(
               onTap: onBack,
               child: Container(
@@ -150,8 +153,13 @@ class _HeroSection extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.arrow_forward_rounded,
-                        color: Colors.white, size: 15.sp),
+                    Icon(
+                      Directionality.of(context) == TextDirection.rtl
+                          ? Icons.arrow_forward_rounded
+                          : Icons.arrow_back_rounded,
+                      color: Colors.white,
+                      size: 15.sp,
+                    ),
                     SizedBox(width: 6.w),
                     Text(
                       'auto.t_4561404281'.tr(),

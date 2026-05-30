@@ -20,6 +20,8 @@ class _AboutScreenState extends State<AboutScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _floatController;
 
+  bool get _isArabic => context.locale.languageCode == 'ar';
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +40,7 @@ class _AboutScreenState extends State<AboutScreen>
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: Color(0xFF070511),
         body: SafeArea(
