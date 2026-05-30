@@ -5,6 +5,7 @@ import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ServiceDetailScreen extends StatefulWidget {
   ServiceDetailScreen({super.key, required this.slug});
@@ -17,9 +18,16 @@ class ServiceDetailScreen extends StatefulWidget {
 
 class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   static const _baseUrl = 'https://etba3ly-dm.com/';
+  static const _waNumber = '201010285020';
 
   late final _ServiceDetail _detail;
   late final Map<String, int> _quantities;
+
+  String? _selectedPackageId;
+  final _nameCtrl = TextEditingController();
+  final _waCtrl = TextEditingController();
+  final _notesCtrl = TextEditingController();
+  bool _isSubmitting = false;
 
   bool get _isArabic => context.locale.languageCode == 'ar';
 
@@ -37,13 +45,55 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     _quantities = {for (final p in _detail.packages) p.id: p.minQty};
   }
 
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _waCtrl.dispose();
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
   void _changeQty(String id, int minQty, int delta) {
     final next = (_quantities[id] ?? minQty) + delta;
     if (next >= minQty) setState(() => _quantities[id] = next);
   }
 
+  void _toggleOrderForm(String pkgId) {
+    setState(() => _selectedPackageId = _selectedPackageId == pkgId ? null : pkgId);
+  }
+
+  Future<void> _submitOrder(_ServicePackage pkg) async {
+    final name = _nameCtrl.text.trim();
+    final wa = _waCtrl.text.trim();
+    if (name.isEmpty || wa.isEmpty) return;
+    setState(() => _isSubmitting = true);
+    final qty = _quantities[pkg.id] ?? 1;
+    final total = pkg.price * qty;
+    final msg = _isArabic
+        ? 'طلب خدمة جديد:\n'
+            'الخدمة: ${_detail.title}\n'
+            'الباكدج: ${pkg.nameAr}\n'
+            'الكمية: $qty\n'
+            'الإجمالي: $total جنيه\n'
+            'الاسم: $name\n'
+            'واتساب: $wa'
+            '${_notesCtrl.text.trim().isNotEmpty ? '\nملاحظات: ${_notesCtrl.text.trim()}' : ''}'
+        : 'New Service Order:\n'
+            'Service: ${_detail.title}\n'
+            'Package: ${pkg.nameAr}\n'
+            'Quantity: $qty\n'
+            'Total: $total EGP\n'
+            'Name: $name\n'
+            'WhatsApp: $wa'
+            '${_notesCtrl.text.trim().isNotEmpty ? '\nNotes: ${_notesCtrl.text.trim()}' : ''}';
+    final uri = Uri.parse('https://wa.me/$_waNumber?text=${Uri.encodeComponent(msg)}');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    setState(() => _isSubmitting = false);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasPackages = _detail.packages.isNotEmpty;
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -64,33 +114,51 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                 children: [
                   _InfoSection(
                     detail: _detail,
+                    showOrderButton: !hasPackages,
                     onOrder: () => context.go(AppRoutes.contact),
                   ),
-                  if (_detail.packages.isNotEmpty) ...[
+                  // ① سياسة التعديلات أول
+                  if (_detail.editPolicyImage != null) ...[
+                    SizedBox(height: 28.h),
+                    _EditPolicyCard(imageUrl: _netImg(_detail.editPolicyImage!)),
+                  ],
+                  // ② الباقات مع فورم الطلب الـ inline
+                  if (hasPackages) ...[
                     SizedBox(height: 32.h),
                     _PackagesSectionHeader(detail: _detail),
                     SizedBox(height: 14.h),
-                    for (final pkg in _detail.packages)
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 14.h),
-                        child: _PackageCard(
-                          pkg: pkg,
-                          imageUrl: _netImg(pkg.image),
-                          qty: _quantities[pkg.id] ?? pkg.minQty,
-                          onIncrement: () => _changeQty(pkg.id, pkg.minQty, 1),
-                          onDecrement: () => _changeQty(pkg.id, pkg.minQty, -1),
-                        ),
+                    for (final pkg in _detail.packages) ...[
+                      _PackageCard(
+                        pkg: pkg,
+                        imageUrl: _netImg(pkg.image),
+                        qty: _quantities[pkg.id] ?? pkg.minQty,
+                        onIncrement: () => _changeQty(pkg.id, pkg.minQty, 1),
+                        onDecrement: () => _changeQty(pkg.id, pkg.minQty, -1),
+                        isSelected: _selectedPackageId == pkg.id,
+                        onOrder: () => _toggleOrderForm(pkg.id),
                       ),
+                      if (_selectedPackageId == pkg.id)
+                        Padding(
+                          padding: EdgeInsets.only(top: 10.h, bottom: 4.h),
+                          child: _InlineOrderForm(
+                            pkg: pkg,
+                            qty: _quantities[pkg.id] ?? 1,
+                            nameCtrl: _nameCtrl,
+                            waCtrl: _waCtrl,
+                            notesCtrl: _notesCtrl,
+                            isSubmitting: _isSubmitting,
+                            onSubmit: () => _submitOrder(pkg),
+                            onClose: () => setState(() => _selectedPackageId = null),
+                          ),
+                        ),
+                      SizedBox(height: 14.h),
+                    ],
                   ],
-                  if (_detail.editPolicyImage != null) ...[
-                    SizedBox(height: 32.h),
-                    _EditPolicyCard(
-                        imageUrl: _netImg(_detail.editPolicyImage!)),
+                  // ③ لو مفيش باقات: زرار طلب عام في الأسفل
+                  if (!hasPackages) ...[
+                    SizedBox(height: 28.h),
+                    _OrderCtaCard(onTap: () => context.go(AppRoutes.contact)),
                   ],
-                  SizedBox(height: 32.h),
-                  _WhatIncludedSection(detail: _detail),
-                  SizedBox(height: 28.h),
-                  _OrderCtaCard(onTap: () => context.go(AppRoutes.contact)),
                 ],
               ),
             ),
@@ -183,9 +251,14 @@ class _HeroSection extends StatelessWidget {
 // ─── Info Section ─────────────────────────────────────────────────────────────
 
 class _InfoSection extends StatelessWidget {
-  _InfoSection({required this.detail, required this.onOrder});
+  _InfoSection({
+    required this.detail,
+    required this.showOrderButton,
+    required this.onOrder,
+  });
 
   final _ServiceDetail detail;
+  final bool showOrderButton;
   final VoidCallback onOrder;
 
   @override
@@ -238,25 +311,27 @@ class _InfoSection extends StatelessWidget {
             height: 1.75,
           ),
         ),
-        SizedBox(height: 20.h),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onOrder,
-            icon: Icon(Icons.send_rounded, size: 17.sp),
-            label: Text(
-              'auto.t_af67816c17'.tr(),
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.sp),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFD4AF37),
-              foregroundColor: Colors.black,
-              padding: EdgeInsets.symmetric(vertical: 14.h),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r)),
+        if (showOrderButton) ...[
+          SizedBox(height: 20.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onOrder,
+              icon: Icon(Icons.send_rounded, size: 17.sp),
+              label: Text(
+                'auto.t_af67816c17'.tr(),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.sp),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFD4AF37),
+                foregroundColor: Colors.black,
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r)),
+              ),
             ),
           ),
-        ),
+        ],
       ],
     )
         .animate()
@@ -336,20 +411,36 @@ class _PackageCard extends StatelessWidget {
     required this.qty,
     required this.onIncrement,
     required this.onDecrement,
+    required this.isSelected,
+    required this.onOrder,
   });
 
   final _ServicePackage pkg;
   final String imageUrl;
   final int qty;
-  final VoidCallback onIncrement, onDecrement;
+  final VoidCallback onIncrement, onDecrement, onOrder;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 220),
       decoration: BoxDecoration(
         color: Color(0xFF0F0A1E),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(
+          color: isSelected
+              ? Color(0xFFD4AF37).withValues(alpha: 0.7)
+              : Colors.white.withValues(alpha: 0.07),
+          width: isSelected ? 1.5 : 1,
+        ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                    color: Color(0xFFD4AF37).withValues(alpha: 0.12),
+                    blurRadius: 18.r)
+              ]
+            : null,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -414,19 +505,6 @@ class _PackageCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 14.h),
-                Row(
-                  children: [
-                    Text(
-                      'auto.t_a95134401a'.tr(),
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
                     Spacer(),
                     _QtyControl(
                       qty: qty,
@@ -436,13 +514,31 @@ class _PackageCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 8.h),
-                Text(
-                  'auto.t_7111ba03cc'.tr(args: [pkg.minQty.toString()]),
-                  style: TextStyle(
-                    color: Color(0xFFD4AF37).withValues(alpha: 0.65),
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w600,
+                SizedBox(height: 14.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: onOrder,
+                    icon: Icon(
+                      isSelected ? Icons.close_rounded : Icons.add_shopping_cart_rounded,
+                      size: 17.sp,
+                    ),
+                    label: Text(
+                      isSelected ? 'auto.t_c10e1d96c4'.tr() : 'auto.t_af67816c17'.tr(),
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.sp),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isSelected
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Color(0xFFD4AF37),
+                      foregroundColor: isSelected ? Colors.white70 : Colors.black,
+                      padding: EdgeInsets.symmetric(vertical: 13.h),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r)),
+                      side: isSelected
+                          ? BorderSide(color: Colors.white.withValues(alpha: 0.15))
+                          : BorderSide.none,
+                    ),
                   ),
                 ),
               ],
@@ -797,6 +893,257 @@ class _OrderCtaCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Inline Order Form ────────────────────────────────────────────────────────
+
+class _InlineOrderForm extends StatelessWidget {
+  _InlineOrderForm({
+    required this.pkg,
+    required this.qty,
+    required this.nameCtrl,
+    required this.waCtrl,
+    required this.notesCtrl,
+    required this.isSubmitting,
+    required this.onSubmit,
+    required this.onClose,
+  });
+
+  final _ServicePackage pkg;
+  final int qty;
+  final TextEditingController nameCtrl, waCtrl, notesCtrl;
+  final bool isSubmitting;
+  final VoidCallback onSubmit, onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = pkg.price * qty;
+    return Container(
+      padding: EdgeInsets.all(18.r),
+      decoration: BoxDecoration(
+        color: Color(0xFF0D0820),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFFD4AF37).withValues(alpha: 0.07),
+            blurRadius: 20.r,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(9.r),
+                decoration: BoxDecoration(
+                  color: Color(0xFFD4AF37).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(Icons.receipt_long_rounded,
+                    color: Color(0xFFD4AF37), size: 18.sp),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'auto.t_c9e3b5d812'.tr(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      pkg.nameAr,
+                      style: TextStyle(
+                        color: Color(0xFFD4AF37),
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Total
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$total',
+                    style: TextStyle(
+                      color: Color(0xFFD4AF37),
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    'auto.t_fb0989a821'.tr(),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 18.h),
+          // Divider
+          Container(height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+          SizedBox(height: 18.h),
+          // Name field
+          _FormField(
+            controller: nameCtrl,
+            label: 'auto.t_1aff77e1a4'.tr(),
+            hint: 'auto.t_f82d4f8a9c'.tr(),
+            icon: Icons.person_outline_rounded,
+            keyboardType: TextInputType.name,
+          ),
+          SizedBox(height: 12.h),
+          // WhatsApp field
+          _FormField(
+            controller: waCtrl,
+            label: 'auto.t_f08db9baab'.tr(),
+            hint: '01xxxxxxxxx',
+            icon: Icons.phone_outlined,
+            keyboardType: TextInputType.phone,
+            isLtr: true,
+          ),
+          SizedBox(height: 12.h),
+          // Notes field
+          _FormField(
+            controller: notesCtrl,
+            label: 'auto.t_d6f9c8b7a1'.tr(),
+            hint: 'auto.t_e4c7d9b8f2'.tr(),
+            icon: Icons.notes_rounded,
+            maxLines: 3,
+          ),
+          SizedBox(height: 18.h),
+          // Submit button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: isSubmitting ? null : onSubmit,
+              icon: isSubmitting
+                  ? SizedBox(
+                      width: 18.w,
+                      height: 18.h,
+                      child: CircularProgressIndicator(
+                          color: Colors.black, strokeWidth: 2),
+                    )
+                  : Icon(Icons.send_rounded, size: 17.sp),
+              label: Text(
+                'auto.t_b2e8f4c9d7'.tr(),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.sp),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFD4AF37),
+                foregroundColor: Colors.black,
+                disabledBackgroundColor: Color(0xFFD4AF37).withValues(alpha: 0.5),
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.r)),
+              ),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Center(
+            child: Text(
+              'auto.t_a3d7e5c912'.tr(),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.38),
+                fontSize: 11.sp,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: Duration(milliseconds: 280)).slideY(begin: -0.06);
+  }
+}
+
+class _FormField extends StatelessWidget {
+  _FormField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    required this.icon,
+    this.keyboardType,
+    this.maxLines = 1,
+    this.isLtr = false,
+  });
+
+  final TextEditingController controller;
+  final String label, hint;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final int maxLines;
+  final bool isLtr;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Color(0xFFD4AF37), size: 13.sp),
+            SizedBox(width: 6.w),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 7.h),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          textDirection: isLtr ? TextDirection.ltr : null,
+          style: TextStyle(color: Colors.white, fontSize: 14.sp),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3),
+              fontSize: 13.sp,
+            ),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.05),
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.r),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.r),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.r),
+              borderSide: BorderSide(
+                  color: Color(0xFFD4AF37).withValues(alpha: 0.6), width: 1.5),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
