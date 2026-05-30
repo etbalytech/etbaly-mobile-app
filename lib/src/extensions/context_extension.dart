@@ -111,8 +111,8 @@ extension ContextExtension on BuildContext {
     final bg = switch (type) {
       SnackBarType.success => etbalyColors.success,
       SnackBarType.warning => etbalyColors.warning,
-      SnackBarType.error   => colors.error,
-      SnackBarType.info    => colors.inverseSurface,
+      SnackBarType.error => colors.error,
+      SnackBarType.info => colors.inverseSurface,
     };
     ScaffoldMessenger.of(this)
       ..clearSnackBars()
@@ -128,11 +128,11 @@ extension ContextExtension on BuildContext {
   // ── Routing shortcuts ────────────────────────────────────────────────────
   String get currentRoute {
     final router = GoRouter.of(this);
-    final RouteMatch lastMatch = router.routerDelegate.currentConfiguration.last;
+    final RouteMatch lastMatch =
+        router.routerDelegate.currentConfiguration.last;
     final RouteMatchList matchList = lastMatch is ImperativeRouteMatch
         ? lastMatch.matches
         : router.routerDelegate.currentConfiguration;
     return matchList.uri.toString();
   }
-
 }

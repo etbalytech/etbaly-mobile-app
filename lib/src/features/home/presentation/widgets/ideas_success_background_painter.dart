@@ -18,26 +18,6 @@ class _IdeasSuccessBackgroundPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    final horizonY = size.height * 0.66;
-    for (var i = 0; i < 22; i++) {
-      final t = i / 21;
-      final wavePaint = Paint()
-        ..color = Color.lerp(
-          const Color(0x995B21B6),
-          const Color(0x887C3AED),
-          t,
-        )!
-        ..strokeWidth = 1.1;
-      final path = Path()..moveTo(-20, horizonY + (i - 11) * 6);
-      for (double x = -20; x <= size.width + 20; x += 18) {
-        final y = horizonY +
-            (i - 11) * 6 +
-            math.sin((x / 54) + progress * math.pi * 2 + i * 0.35) * 13;
-        path.lineTo(x, y);
-      }
-      canvas.drawPath(path, wavePaint);
-    }
-
     final sparklePaint = Paint()
       ..color = const Color(0x88D4AF37)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
@@ -67,6 +47,53 @@ class _IdeasSuccessBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _IdeasSuccessBackgroundPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _IdeasSuccessWaveBackdropPainter extends CustomPainter {
+  _IdeasSuccessWaveBackdropPainter(this.progress);
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fillPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Color(0x007C3AED),
+          Color(0x665B21B6),
+          Color(0x887C3AED),
+          Color(0x005B21B6),
+        ],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, fillPaint);
+
+    final horizonY = size.height * 0.48;
+    for (var i = 0; i < 24; i++) {
+      final t = i / 23;
+      final wavePaint = Paint()
+        ..color = Color.lerp(
+          const Color(0xAA5B21B6),
+          const Color(0x997C3AED),
+          t,
+        )!
+        ..strokeWidth = 1.3;
+      final path = Path()..moveTo(-24, horizonY + (i - 12) * 5.6);
+      for (double x = -24; x <= size.width + 24; x += 16) {
+        final y = horizonY +
+            (i - 12) * 5.6 +
+            math.sin((x / 48) + progress * math.pi * 2 + i * 0.35) * 11;
+        path.lineTo(x, y);
+      }
+      canvas.drawPath(path, wavePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _IdeasSuccessWaveBackdropPainter oldDelegate) {
     return oldDelegate.progress != progress;
   }
 }

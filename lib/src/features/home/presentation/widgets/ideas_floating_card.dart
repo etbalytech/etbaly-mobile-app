@@ -14,21 +14,21 @@ class _IdeasFloatingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 132,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      width: 132.w,
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: const Color(0xD6232036),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: const Color(0x553D365C)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x66000000), blurRadius: 20),
+        boxShadow: [
+          BoxShadow(color: const Color(0x66000000), blurRadius: 20.r),
         ],
       ),
       child: Row(
         textDirection: TextDirection.ltr,
         children: [
-          Icon(icon, color: const Color(0xFFD4AF37), size: 30),
-          const SizedBox(width: 10),
+          Icon(icon, color: const Color(0xFFD4AF37), size: 30.sp),
+          SizedBox(width: 10.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,

@@ -13,22 +13,22 @@ class _WorkStepCard extends StatelessWidget {
 
     return Container(
       constraints: BoxConstraints(minHeight: isMobile ? 176 : 280),
-      padding: EdgeInsets.all(isMobile ? (isNarrow ? 14 : 16) : 24),
+      padding: EdgeInsets.all(isMobile ? (isNarrow ? 14.r : 16.r) : 24.r),
       decoration: BoxDecoration(
         color: EtbalyWebColors.card.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: accent.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
             color: accent.withValues(alpha: 0.06),
-            blurRadius: 34,
-            spreadRadius: -6,
-            offset: const Offset(0, 16),
+            blurRadius: 34.r,
+            spreadRadius: -6.r,
+            offset: Offset(0.w, 16.h),
           ),
-          const BoxShadow(
+          BoxShadow(
             color: EtbalyWebColors.shadow,
-            blurRadius: 20,
-            offset: Offset(0, 12),
+            blurRadius: 20.r,
+            offset: Offset(0.w, 12.h),
           ),
         ],
       ),
@@ -36,11 +36,11 @@ class _WorkStepCard extends StatelessWidget {
       child: Stack(
         children: [
           PositionedDirectional(
-            top: -62,
+            top: -62.h,
             end: -46,
             child: Container(
-              width: 180,
-              height: 180,
+              width: 180.w,
+              height: 180.h,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -50,11 +50,11 @@ class _WorkStepCard extends StatelessWidget {
             ),
           ),
           PositionedDirectional(
-            bottom: -80,
+            bottom: -80.h,
             start: -60,
             child: Container(
-              width: 180,
-              height: 180,
+              width: 180.w,
+              height: 180.h,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -92,7 +92,7 @@ class _WorkStepCard extends StatelessWidget {
                         )
                       else ...[
                         _WorkStepIcon(icon: step.icon, accent: accent),
-                        const SizedBox(height: 14),
+                        SizedBox(height: 14.h),
                         _WorkStepNumber(number: step.number, accent: accent),
                       ],
                     ],

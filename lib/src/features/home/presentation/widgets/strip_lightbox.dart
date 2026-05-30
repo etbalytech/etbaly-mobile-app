@@ -9,27 +9,27 @@ class _StripLightbox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 40.h),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20.r),
               border: Border.all(
                 color: const Color(0xFFD4AF37),
-                width: 1.5,
+                width: 1.5.w,
               ),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x998B5CF6),
-                  blurRadius: 48,
-                  spreadRadius: 4,
+                  color: const Color(0x998B5CF6),
+                  blurRadius: 48.r,
+                  spreadRadius: 4.r,
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(19),
+              borderRadius: BorderRadius.circular(19.r),
               child: InteractiveViewer(
                 minScale: 1,
                 maxScale: 4,
@@ -42,43 +42,40 @@ class _StripLightbox extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -18,
-            right: -18,
+            top: -18.h,
+            right: -18.w,
             child: GestureDetector(
               onTap: () => Navigator.of(context).pop(),
               child: Container(
-                width: 42,
-                height: 42,
+                width: 42.w,
+                height: 42.h,
                 decoration: BoxDecoration(
                   color: const Color(0xFF1B102B),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: const Color(0xFFD4AF37),
-                    width: 1.5,
+                    width: 1.5.w,
                   ),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x88000000),
-                      blurRadius: 12,
+                      color: const Color(0x88000000),
+                      blurRadius: 12.r,
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.close_rounded,
-                  color: Color(0xFFD4AF37),
-                  size: 22,
+                  color: const Color(0xFFD4AF37),
+                  size: 22.sp,
                 ),
               ),
             ),
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: const Duration(milliseconds: 200))
-        .scale(
-          begin: const Offset(0.92, 0.92),
-          end: const Offset(1, 1),
+    ).animate().fadeIn(duration: const Duration(milliseconds: 200)).scale(
+          begin: Offset(0.92.w, 0.92.h),
+          end: Offset(1.w, 1.h),
           duration: const Duration(milliseconds: 240),
           curve: Curves.easeOutCubic,
         );

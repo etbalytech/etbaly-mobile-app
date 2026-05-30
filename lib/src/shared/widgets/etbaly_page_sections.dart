@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../extensions/context_extension.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EtbalyPage extends StatelessWidget {
-  const EtbalyPage({
+  EtbalyPage({
     super.key,
     required this.children,
-    this.padding = const EdgeInsets.fromLTRB(20, 18, 20, 28),
+    EdgeInsets? padding,
     this.separatorHeight = 18,
-  });
+  }) : padding = padding ?? EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 28.h);
 
   final List<Widget> children;
   final EdgeInsets padding;
@@ -65,9 +66,9 @@ class EtbalyHero extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(22.r),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -81,8 +82,8 @@ class EtbalyHero extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: colors.primaryGlow,
-            blurRadius: 36,
-            offset: const Offset(0, 16),
+            blurRadius: 36.r,
+            offset: Offset(0.w, 16.h),
           ),
         ],
       ),
@@ -92,11 +93,11 @@ class EtbalyHero extends StatelessWidget {
           Row(
             children: [
               _IconTile(icon: icon),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(child: EtbalyPillBadge(label: badge)),
             ],
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: 22.h),
           Text(
             title,
             style: context.textTheme.headlineMedium?.copyWith(
@@ -105,7 +106,7 @@ class EtbalyHero extends StatelessWidget {
               height: 1.08,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             description,
             style: context.textTheme.bodyMedium?.copyWith(
@@ -114,14 +115,14 @@ class EtbalyHero extends StatelessWidget {
             ),
           ),
           if (actions.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            Wrap(spacing: 10, runSpacing: 10, children: actions),
+            SizedBox(height: 20.h),
+            Wrap(spacing: 10.r, runSpacing: 10.r, children: actions),
           ],
           if (stats.isNotEmpty) ...[
-            const SizedBox(height: 22),
+            SizedBox(height: 22.h),
             Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: 10.r,
+              runSpacing: 10.r,
               children: stats.map((stat) => _StatChip(stat: stat)).toList(),
             ),
           ],
@@ -151,7 +152,7 @@ class EtbalyPageSectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         EtbalyPillBadge(label: badge),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
         Text(
           title,
           style: context.textTheme.titleLarge?.copyWith(
@@ -160,7 +161,7 @@ class EtbalyPageSectionHeader extends StatelessWidget {
           ),
         ),
         if (description != null) ...[
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             description!,
             style: context.textTheme.bodySmall?.copyWith(
@@ -184,10 +185,10 @@ class EtbalyPillBadge extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
       decoration: BoxDecoration(
         color: colors.badgeBg,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.22)),
       ),
       child: Text(
@@ -223,14 +224,14 @@ class EtbalyActionButton extends StatelessWidget {
 
     return Material(
       color: outlined ? Colors.transparent : colors.gold,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(999.r),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             border: outlined
                 ? Border.all(color: colors.gold.withValues(alpha: 0.65))
                 : null,
@@ -239,8 +240,8 @@ class EtbalyActionButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon,
-                  size: 17, color: outlined ? colors.gold : Colors.black),
-              const SizedBox(width: 8),
+                  size: 17.sp, color: outlined ? colors.gold : Colors.black),
+              SizedBox(width: 8.w),
               Text(
                 label,
                 style: context.textTheme.labelLarge?.copyWith(
@@ -283,19 +284,19 @@ class EtbalyInfoCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(
             color: colors.bgCard,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
             border:
                 Border.all(color: colors.borderColor.withValues(alpha: 0.34)),
             boxShadow: [
               BoxShadow(
                 color: colors.cardShadow,
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                blurRadius: 20.r,
+                offset: Offset(0.w, 10.h),
               ),
             ],
           ),
@@ -303,7 +304,7 @@ class EtbalyInfoCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _IconTile(icon: icon, color: resolvedAccent),
-              const SizedBox(width: 14),
+              SizedBox(width: 14.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,7 +316,7 @@ class EtbalyInfoCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6.h),
                     Text(
                       description,
                       style: context.textTheme.bodySmall?.copyWith(
@@ -327,7 +328,7 @@ class EtbalyInfoCard extends StatelessWidget {
                 ),
               ),
               if (trailing != null) ...[
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 trailing!,
               ],
             ],
@@ -339,7 +340,7 @@ class EtbalyInfoCard extends StatelessWidget {
 }
 
 class EtbalyStat {
-  const EtbalyStat({required this.value, required this.label});
+  EtbalyStat({required this.value, required this.label});
 
   final String value;
   final String label;
@@ -355,11 +356,11 @@ class _StatChip extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      width: 96,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      width: 96.w,
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: colors.bgMain.withValues(alpha: 0.52),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: colors.borderColor.withValues(alpha: 0.34)),
       ),
       child: Column(
@@ -372,7 +373,7 @@ class _StatChip extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2.h),
           Text(
             stat.label,
             maxLines: 2,
@@ -398,14 +399,14 @@ class _IconTile extends StatelessWidget {
     final resolvedColor = color ?? colors.primary;
 
     return Container(
-      width: 48,
-      height: 48,
+      width: 48.w,
+      height: 48.h,
       decoration: BoxDecoration(
         color: resolvedColor.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: resolvedColor.withValues(alpha: 0.24)),
       ),
-      child: Icon(icon, color: resolvedColor, size: 24),
+      child: Icon(icon, color: resolvedColor, size: 24.sp),
     );
   }
 }

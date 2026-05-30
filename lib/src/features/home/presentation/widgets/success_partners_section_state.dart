@@ -65,7 +65,7 @@ class _SuccessPartnersSectionState extends State<_SuccessPartnersSection> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         child: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -94,7 +94,7 @@ class _SuccessPartnersSectionState extends State<_SuccessPartnersSection> {
                         .animate()
                         .fadeIn(duration: const Duration(milliseconds: 450))
                         .slideY(begin: -0.14),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28.h),
                     RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
@@ -105,13 +105,13 @@ class _SuccessPartnersSectionState extends State<_SuccessPartnersSection> {
                           height: 1.35,
                           letterSpacing: 0,
                         ),
-                        children: const [
-                          TextSpan(text: 'يثق بنا '),
+                        children: [
+                          TextSpan(text: 'auto.t_b9fd26d1cd'.tr()),
                           TextSpan(
-                            text: 'أكثر من 5000+ علامة',
-                            style: TextStyle(color: Color(0xFFD879F9)),
+                            text: 'auto.t_387648f9e4'.tr(),
+                            style: const TextStyle(color: Color(0xFFD879F9)),
                           ),
-                          TextSpan(text: ' تجارية'),
+                          TextSpan(text: 'auto.t_880033d8fc'.tr()),
                         ],
                       ),
                     )

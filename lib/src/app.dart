@@ -6,8 +6,9 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final current = _buildMaterialApp(context);
-    return ScreenUtilWrapper(child: current);
+    return ScreenUtilWrapper(
+      child: Builder(builder: _buildMaterialApp),
+    );
   }
 
   Widget _buildMaterialApp(BuildContext context) {

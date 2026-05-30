@@ -3,12 +3,14 @@ import '../imports/imports.dart';
 extension WidgetExtension on Widget {
   /// Wrap the widget with Padding
   Widget paddingAll(double value) => Padding(
-        padding: EdgeInsets.all(value),
+        padding: EdgeInsets.all(value.r),
         child: this,
       );
 
-  Widget paddingSymmetric({double horizontal = 0, double vertical = 0}) => Padding(
-        padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical),
+  Widget paddingSymmetric({double horizontal = 0, double vertical = 0}) =>
+      Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: horizontal.w, vertical: vertical.h),
         child: this,
       );
 
@@ -19,7 +21,12 @@ extension WidgetExtension on Widget {
     double bottom = 0,
   }) =>
       Padding(
-        padding: EdgeInsets.only(left: left, top: top, right: right, bottom: bottom),
+        padding: EdgeInsets.only(
+          left: left.w,
+          top: top.h,
+          right: right.w,
+          bottom: bottom.h,
+        ),
         child: this,
       );
 

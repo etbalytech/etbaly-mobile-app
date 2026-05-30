@@ -6,9 +6,9 @@ class _AirplaneStatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 1,
-      height: 92,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      width: 1.w,
+      height: 92.h,
+      margin: EdgeInsets.symmetric(horizontal: 8.w),
       color: const Color(0x553D236C),
     );
   }

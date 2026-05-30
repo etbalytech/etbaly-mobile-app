@@ -24,7 +24,7 @@ class _WorkStepNumber extends StatelessWidget {
       decoration: BoxDecoration(
         color: accent.withValues(alpha: large ? 0.12 : 0.1),
         shape: large ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: large ? null : BorderRadius.circular(7),
+        borderRadius: large ? null : BorderRadius.circular(7.r),
         border: Border.all(
           color: accent.withValues(alpha: large ? 0.48 : 0.34),
           width: large ? 1.7 : 1.1,

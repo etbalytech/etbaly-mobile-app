@@ -44,41 +44,55 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final appColors = context.theme.extension<AppColorsExtension>() ??
-        (cs.brightness == Brightness.dark ? AppPalettes.dark : AppPalettes.light);
+        (cs.brightness == Brightness.dark
+            ? AppPalettes.dark
+            : AppPalettes.light);
     final isDisabled = onPressed == null || isLoading;
 
     final double buttonHeight = switch (height) {
-      ButtonSize.small  => 36.h,
+      ButtonSize.small => 36.h,
       ButtonSize.medium => 48.h,
-      ButtonSize.large  => 56.h,
+      ButtonSize.large => 56.h,
     };
 
     final double? buttonWidth = switch (width) {
-      ButtonSize.small  => 100.w,
+      ButtonSize.small => 100.w,
       ButtonSize.medium => 150.w,
-      ButtonSize.large  => 200.w,
-      null              => null,
+      ButtonSize.large => 200.w,
+      null => null,
     };
 
     final double horizontalPadding = switch (height) {
-      ButtonSize.small  => 12.w,
+      ButtonSize.small => 12.w,
       ButtonSize.medium => 20.w,
-      ButtonSize.large  => 28.w,
+      ButtonSize.large => 28.w,
     };
 
     final double fontSize = switch (height) {
-      ButtonSize.small  => 12.sp,
+      ButtonSize.small => 12.sp,
       ButtonSize.medium => 14.sp,
-      ButtonSize.large  => 16.sp,
+      ButtonSize.large => 16.sp,
     };
 
     final (bg, fg, border) = switch (variant) {
-      ButtonVariant.primary   => (color ?? cs.primary, color ?? cs.onPrimary, null),
-      ButtonVariant.secondary => (cs.secondaryContainer, cs.onSecondaryContainer, null),
-      ButtonVariant.outline   => (Colors.transparent, cs.primary, BorderSide(color: cs.outline, width: 1.5)),
-      ButtonVariant.ghost     => (Colors.transparent, cs.primary, null),
-      ButtonVariant.danger    => (cs.error, cs.onError, null),
-      ButtonVariant.success   => (appColors.success, appColors.onSuccess, null),
+      ButtonVariant.primary => (
+          color ?? cs.primary,
+          color ?? cs.onPrimary,
+          null
+        ),
+      ButtonVariant.secondary => (
+          cs.secondaryContainer,
+          cs.onSecondaryContainer,
+          null
+        ),
+      ButtonVariant.outline => (
+          Colors.transparent,
+          cs.primary,
+          BorderSide(color: cs.outline, width: 1.5.w)
+        ),
+      ButtonVariant.ghost => (Colors.transparent, cs.primary, null),
+      ButtonVariant.danger => (cs.error, cs.onError, null),
+      ButtonVariant.success => (appColors.success, appColors.onSuccess, null),
     };
 
     final child = AnimatedSwitcher(
@@ -90,7 +104,7 @@ class AppButton extends StatelessWidget {
               width: 20.w,
               height: 20.h,
               child: CircularProgressIndicator(
-                strokeWidth: 2,
+                strokeWidth: 2.r,
                 color: fg,
               ),
             )
@@ -107,7 +121,9 @@ class AppButton extends StatelessWidget {
                   style: TextStyle(
                     fontSize: fontSize,
                     fontWeight: FontWeight.w600,
-                    color: isDisabled ?  fg.withValues(alpha: 0.5) : textColor ?? fg,
+                    color: isDisabled
+                        ? fg.withValues(alpha: 0.5)
+                        : textColor ?? fg,
                   ),
                 ),
                 if (suffixIcon != null) ...[
@@ -135,7 +151,7 @@ class AppButton extends StatelessWidget {
                     borderRadius: AppBorders.button,
                     side: border,
                   )
-                : const RoundedRectangleBorder(borderRadius: AppBorders.button),
+                : RoundedRectangleBorder(borderRadius: AppBorders.button),
           ),
           child: child,
         ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 /// A wrapper widget that provides skeleton loading effects.
-/// 
+///
 /// Uses [Skeletonizer] if enabled.
 class SkeletonWrapper extends StatelessWidget {
   final Widget child;

@@ -1,6 +1,7 @@
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({super.key});
@@ -16,105 +17,113 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   bool get _isArabic => context.locale.languageCode == 'ar';
 
-  static const _methods = <_PaymentMethod>[
+  static final _methods = <_PaymentMethod>[
     _PaymentMethod(
       key: 'vodafone',
-      titleAr: 'فودافون كاش',
+      titleAr: 'auto.t_7a1f9b12ae'.tr(),
       titleEn: 'Vodafone Cash',
-      tagAr: 'متاح الآن',
+      tagAr: 'auto.t_fc4453ad89'.tr(),
       tagEn: 'Available Now',
-      accent: Color(0xFFE60000),
+      accent: const Color(0xFFE60000),
       icon: FontAwesomeIcons.mobileScreenButton,
       fields: [
         _PaymentField(
-            labelAr: 'رقم الهاتف', labelEn: 'Number 1', value: '01010285020'),
+            labelAr: 'auto.t_211cce4ca4'.tr(),
+            labelEn: 'Number 1',
+            value: '01010285020'),
         _PaymentField(
-            labelAr: 'رقم الهاتف الثاني',
+            labelAr: 'auto.t_dcc5197735'.tr(),
             labelEn: 'Number 2',
             value: '01003628888'),
       ],
     ),
     _PaymentMethod(
       key: 'orange',
-      titleAr: 'اورنج كاش',
+      titleAr: 'auto.t_83b4639371'.tr(),
       titleEn: 'Orange Cash',
-      tagAr: 'متاح الآن',
+      tagAr: 'auto.t_fc4453ad89'.tr(),
       tagEn: 'Available Now',
-      accent: Color(0xFFFF7F00),
+      accent: const Color(0xFFFF7F00),
       icon: FontAwesomeIcons.mobileScreenButton,
       fields: [
         _PaymentField(
-            labelAr: 'رقم المحفظة', labelEn: 'Number', value: '01278696383'),
+            labelAr: 'auto.t_467a9738a3'.tr(),
+            labelEn: 'Number',
+            value: '01278696383'),
       ],
     ),
     _PaymentMethod(
       key: 'instapay',
-      titleAr: 'انستا باي',
+      titleAr: 'auto.t_d1ac318944'.tr(),
       titleEn: 'InstaPay',
-      tagAr: 'متاح الآن',
+      tagAr: 'auto.t_fc4453ad89'.tr(),
       tagEn: 'Available Now',
-      accent: Color(0xFF00B074),
+      accent: const Color(0xFF00B074),
       icon: FontAwesomeIcons.bolt,
       fields: [
         _PaymentField(
-            labelAr: 'رقم الهاتف', labelEn: 'Number 1', value: '01010285020'),
+            labelAr: 'auto.t_211cce4ca4'.tr(),
+            labelEn: 'Number 1',
+            value: '01010285020'),
         _PaymentField(
-            labelAr: 'رقم الهاتف الثاني',
+            labelAr: 'auto.t_dcc5197735'.tr(),
             labelEn: 'Number 2',
             value: '01003628888'),
       ],
     ),
     _PaymentMethod(
       key: 'fawry',
-      titleAr: 'فوري',
+      titleAr: 'auto.t_298df67750'.tr(),
       titleEn: 'Fawry Pay',
-      tagAr: 'متاح الآن',
+      tagAr: 'auto.t_fc4453ad89'.tr(),
       tagEn: 'Available Now',
-      accent: Color(0xFFF5A623),
+      accent: const Color(0xFFF5A623),
       icon: FontAwesomeIcons.receipt,
-      noteAr: 'قم بإرسال كود لك حسب المبلغ - يتم الدفع من أي ماكينة فوري',
+      noteAr: 'auto.t_18bb28842c'.tr(),
       noteEn:
           'A code will be sent based on your amount - pay at any Fawry machine.',
     ),
     _PaymentMethod(
       key: 'telda',
-      titleAr: 'تيلدا',
+      titleAr: 'auto.t_f1b710f681'.tr(),
       titleEn: 'Telda',
-      tagAr: 'متاح الآن',
+      tagAr: 'auto.t_fc4453ad89'.tr(),
       tagEn: 'Available Now',
-      accent: Color(0xFF6C47FF),
+      accent: const Color(0xFF6C47FF),
       icon: FontAwesomeIcons.creditCard,
       fields: [
         _PaymentField(
-            labelAr: 'رقم تيلدا',
+            labelAr: 'auto.t_c3acd581a5'.tr(),
             labelEn: 'Telda Number',
             value: '01010285020'),
       ],
     ),
     _PaymentMethod(
       key: 'binance',
-      titleAr: 'باينانس',
+      titleAr: 'auto.t_9df124773a'.tr(),
       titleEn: 'Binance USDT',
       tagAr: 'USDT',
       tagEn: 'USDT',
-      accent: Color(0xFFF0B90B),
+      accent: const Color(0xFFF0B90B),
       icon: FontAwesomeIcons.bitcoin,
       fields: [
         _PaymentField(
-            labelAr: 'المعرف', labelEn: 'Binance ID', value: '740502271'),
+            labelAr: 'auto.t_d72110a8e9'.tr(),
+            labelEn: 'Binance ID',
+            value: '740502271'),
       ],
     ),
     _PaymentMethod(
       key: 'bank',
-      titleAr: 'تحويل بنكي',
+      titleAr: 'auto.t_f7d07c2a41'.tr(),
       titleEn: 'Bank Transfer',
-      tagAr: 'البنك المصري',
+      tagAr: 'auto.t_d435bc4712'.tr(),
       tagEn: 'National Bank of Egypt',
-      accent: Color(0xFFD4AF37),
+      accent: const Color(0xFFD4AF37),
       icon: FontAwesomeIcons.buildingColumns,
       fields: [
         _PaymentField(
-            labelAr: 'رقم الحساب',
+            labelAr: 'auto.t_d249c7b6df'.tr(),
             labelEn: 'Account Number',
             value: '2305000886592101011'),
         _PaymentField(
@@ -130,23 +139,19 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
     setState(() => _copiedKey = key);
-    context.showSuccessSnackBar(
-        _isArabic ? 'تم النسخ بنجاح' : 'Copied successfully');
+    context.showSuccessSnackBar('auto.t_fc22e4e579'.tr());
     await Future<void>.delayed(const Duration(milliseconds: 1300));
     if (mounted && _copiedKey == key) setState(() => _copiedKey = null);
   }
 
   Future<void> _openContact() async {
-    final message = _isArabic
-        ? 'مرحباً، أحتاج مساعدة في عملية الدفع.'
-        : 'Hello, I need help with my payment.';
+    final message = 'auto.t_95ce8c58a6'.tr();
     final uri = Uri.parse(
       'https://wa.me/${_supportWhatsapp.replaceAll('+', '')}?text=${Uri.encodeComponent(message)}',
     );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
         mounted) {
-      context.showErrorSnackBar(
-          _isArabic ? 'تعذر فتح واتساب' : 'Could not open WhatsApp');
+      context.showErrorSnackBar('auto.t_bd30dcd40b'.tr());
     }
   }
 
@@ -171,18 +176,18 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 sliver: SliverList.list(
                   children: [
                     _StepsSection(isArabic: _isArabic),
-                    const SizedBox(height: 18),
+                    SizedBox(height: 18.h),
                     _MethodsGrid(
                       methods: _methods,
                       copiedKey: _copiedKey,
                       isArabic: _isArabic,
                       onCopy: _copy,
                     ),
-                    const SizedBox(height: 18),
+                    SizedBox(height: 18.h),
                     _SecureNote(isArabic: _isArabic),
-                    const SizedBox(height: 18),
+                    SizedBox(height: 18.h),
                     _FraudAlert(methods: _methods, isArabic: _isArabic),
-                    const SizedBox(height: 18),
+                    SizedBox(height: 18.h),
                     _NeedHelpCard(isArabic: _isArabic, onTap: _openContact),
                   ],
                 ),
@@ -204,41 +209,41 @@ class _PaymentHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final isTablet = context.width >= 700;
     return SizedBox(
-      height: isTablet ? 330 : 360,
+      height: isTablet ? 380.h : 480.h,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const CustomPaint(painter: _PaymentBackgroundPainter()),
+          CustomPaint(painter: _PaymentBackgroundPainter()),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 42, 18, 28),
+            padding: EdgeInsets.fromLTRB(18.w, 42.h, 18.w, 28.h),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _Badge(
                   label: isArabic
-                      ? 'بوابة الدفع الآمنة'
+                      ? 'auto.t_358c3df2ee'.tr()
                       : 'Secure Payment Gateway',
                   icon: FontAwesomeIcons.shieldHalved,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
                 Text(
                   isArabic
-                      ? 'اختر وسيلة الدفع المناسبة'
+                      ? 'auto.t_dc5c5cd5b3'.tr()
                       : 'Choose the Right Payment Method',
                   textAlign: TextAlign.center,
                   style: context.textTheme.displaySmall?.copyWith(
                     color: EtbalyWebColors.heading,
-                    fontSize: isTablet ? 42 : 34,
+                    fontSize: isTablet ? 42.sp : 32.sp,
                     fontWeight: FontWeight.w900,
                     height: 1.12,
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14.h),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 720),
+                  constraints: BoxConstraints(maxWidth: 720.w),
                   child: Text(
                     isArabic
-                        ? 'نوفر لك أسرع وأسهل وسائل الدفع الإلكتروني - حوّل المبلغ وابدأ رحلتك معنا فوراً'
+                        ? 'auto.t_31e8a10add'.tr()
                         : 'We provide the fastest and easiest e-payment methods - transfer the amount and start with us instantly.',
                     textAlign: TextAlign.center,
                     style: context.textTheme.bodyLarge?.copyWith(
@@ -247,7 +252,7 @@ class _PaymentHero extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
                 _TrustRow(isArabic: isArabic),
               ],
             ),
@@ -266,32 +271,29 @@ class _TrustRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      (
-        FontAwesomeIcons.lock,
-        isArabic ? 'مدفوعات مشفرة' : 'Encrypted Payments'
-      ),
-      (FontAwesomeIcons.bolt, isArabic ? 'تفعيل فوري' : 'Instant Activation'),
-      (FontAwesomeIcons.headset, isArabic ? 'دعم 24/7' : '24/7 Support'),
+      (FontAwesomeIcons.lock, 'auto.t_8995b8ebd5'.tr()),
+      (FontAwesomeIcons.bolt, 'auto.t_cff72a0737'.tr()),
+      (FontAwesomeIcons.headset, 'auto.t_a434f8e8f8'.tr()),
     ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: const Color(0x331D1830),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: EtbalyWebColors.border),
       ),
       child: Wrap(
         alignment: WrapAlignment.center,
-        spacing: 14,
-        runSpacing: 8,
+        spacing: 14.r,
+        runSpacing: 8.r,
         children: [
           for (final item in items)
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(item.$1, color: EtbalyWebColors.gold, size: 14),
-                const SizedBox(width: 8),
+                Icon(item.$1, color: EtbalyWebColors.gold, size: 14.sp),
+                SizedBox(width: 8.w),
                 Text(
                   item.$2,
                   style: context.textTheme.labelMedium?.copyWith(
@@ -316,35 +318,29 @@ class _StepsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final steps = [
       (
-        isArabic ? 'اختر الباقة' : 'Choose Package',
-        isArabic
-            ? 'حدد الباقة المناسبة لاحتياجاتك من صفحة خدماتنا'
-            : 'Select the package that fits your needs.',
+        'auto.t_2e36840ad3'.tr(),
+        'auto.t_f878fe284d'.tr(),
       ),
       (
-        isArabic ? 'حوّل المبلغ' : 'Transfer Amount',
-        isArabic
-            ? 'أرسل المبلغ عبر إحدى وسائل الدفع المتاحة أدناه'
-            : 'Send the amount through any available method below.',
+        'auto.t_7f3fbae712'.tr(),
+        'auto.t_937be694c8'.tr(),
       ),
       (
-        isArabic ? 'أرسل الإيصال' : 'Send Receipt',
-        isArabic
-            ? 'أرسل لقطة الإيصال على واتساب ويتمنا خلال 24 ساعة'
-            : 'Send the receipt screenshot on WhatsApp within 24 hours.',
+        'auto.t_fb80dfb452'.tr(),
+        'auto.t_65b3e018f2'.tr(),
       ),
     ];
 
     return Column(
       children: [
         Text(
-          isArabic ? 'كيف تدفع في 3 خطوات؟' : 'How to pay in 3 steps?',
+          'auto.t_74f77b5efa'.tr(),
           style: context.textTheme.labelLarge?.copyWith(
             color: EtbalyWebColors.body,
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         LayoutBuilder(
           builder: (context, constraints) {
             final columns = constraints.maxWidth >= 820 ? 3 : 1;
@@ -390,18 +386,18 @@ class _StepCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 76),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      constraints: BoxConstraints(minHeight: 76.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: const Color(0xBB0D0A17),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: EtbalyWebColors.border),
       ),
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 38.w,
+            height: 38.h,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -415,7 +411,7 @@ class _StepCard extends StatelessWidget {
                   ? [
                       BoxShadow(
                           color: EtbalyWebColors.gold.withValues(alpha: 0.35),
-                          blurRadius: 16)
+                          blurRadius: 16.r)
                     ]
                   : null,
             ),
@@ -427,7 +423,7 @@ class _StepCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,7 +436,7 @@ class _StepCard extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   subtitle,
                   style: context.textTheme.bodySmall?.copyWith(
@@ -523,10 +519,10 @@ class _PaymentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(minHeight: method.key == 'bank' ? 208 : 176),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: const Color(0xEE0E0A16),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: method.accent.withValues(alpha: 0.82)),
       ),
       child: Stack(
@@ -551,7 +547,7 @@ class _PaymentCard extends StatelessWidget {
               Row(
                 children: [
                   _MethodMark(method: method),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,13 +559,13 @@ class _PaymentCard extends StatelessWidget {
                             fontWeight: FontWeight.w900,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.circle,
-                                color: Color(0xFF22C55E), size: 7),
-                            const SizedBox(width: 6),
+                            Icon(Icons.circle,
+                                color: const Color(0xFF22C55E), size: 7.sp),
+                            SizedBox(width: 6.w),
                             Text(
                               isArabic ? method.tagAr : method.tagEn,
                               style: context.textTheme.labelSmall?.copyWith(
@@ -584,7 +580,7 @@ class _PaymentCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18.h),
               if (method.noteAr != null)
                 _InfoField(text: isArabic ? method.noteAr! : method.noteEn!)
               else
@@ -592,7 +588,7 @@ class _PaymentCard extends StatelessWidget {
                   (field) {
                     final key = '${method.key}-${field.value}';
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: EdgeInsets.only(bottom: 10.h),
                       child: _CopyField(
                         label: isArabic ? field.labelAr : field.labelEn,
                         value: field.value,
@@ -629,53 +625,79 @@ class _CopyField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment:
+          isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              label,
-              style: context.textTheme.labelSmall?.copyWith(
-                color: EtbalyWebColors.body,
-                fontWeight: FontWeight.w900,
+        Align(
+          alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+            children: [
+              Icon(FontAwesomeIcons.mobileScreenButton,
+                  color: EtbalyWebColors.gold, size: 11.sp),
+              SizedBox(width: 6.w),
+              Text(
+                label,
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: EtbalyWebColors.body,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(FontAwesomeIcons.mobileScreenButton,
-                color: EtbalyWebColors.gold, size: 11),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 7),
+        SizedBox(height: 7.h),
         Container(
-          height: 44,
+          height: 44.h,
           decoration: BoxDecoration(
             color: const Color(0xFF281F43),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
             border: Border.all(color: EtbalyWebColors.border),
           ),
           child: Row(
-            textDirection: isArabic ? TextDirection.ltr : TextDirection.rtl,
-            children: [
-              _CopyButton(copied: copied, onTap: onTap),
-              Expanded(
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Text(
-                    value,
-                    textAlign: isArabic ? TextAlign.right : TextAlign.left,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.labelMedium?.copyWith(
-                      color: EtbalyWebColors.heading,
-                      fontWeight: FontWeight.w900,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+            textDirection: TextDirection.ltr,
+            children: isArabic
+                ? [
+                    _CopyButton(copied: copied, onTap: onTap),
+                    Expanded(
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          value,
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.labelMedium?.copyWith(
+                            color: EtbalyWebColors.heading,
+                            fontWeight: FontWeight.w900,
+                            fontFeatures: [const FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-            ],
+                    SizedBox(width: 12.w),
+                  ]
+                : [
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          value,
+                          textAlign: TextAlign.left,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.labelMedium?.copyWith(
+                            color: EtbalyWebColors.heading,
+                            fontWeight: FontWeight.w900,
+                            fontFeatures: [const FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                    ),
+                    _CopyButton(copied: copied, onTap: onTap),
+                  ],
           ),
         ),
       ],
@@ -693,12 +715,12 @@ class _CopyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onTap,
-      icon: Icon(copied ? Icons.check : Icons.copy, size: 16),
+      icon: Icon(copied ? Icons.check : Icons.copy, size: 16.sp),
       color: copied ? const Color(0xFF22C55E) : EtbalyWebColors.body,
       style: IconButton.styleFrom(
         backgroundColor: const Color(0xFF332757),
-        fixedSize: const Size(34, 34),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        fixedSize: Size(34.w, 34.h),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
       ),
     );
   }
@@ -712,18 +734,18 @@ class _InfoField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: const Color(0xFF281F43),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: EtbalyWebColors.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(FontAwesomeIcons.receipt,
-              color: EtbalyWebColors.gold, size: 13),
-          const SizedBox(width: 8),
+          Icon(FontAwesomeIcons.receipt,
+              color: EtbalyWebColors.gold, size: 13.sp),
+          SizedBox(width: 8.w),
           Expanded(
             child: Text(
               text,
@@ -750,13 +772,13 @@ class _SecureNote extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(FontAwesomeIcons.shieldHalved,
-              color: Color(0xFF22C55E), size: 14),
-          const SizedBox(width: 8),
+          Icon(FontAwesomeIcons.shieldHalved,
+              color: const Color(0xFF22C55E), size: 14.sp),
+          SizedBox(width: 8.w),
           Flexible(
             child: Text(
               isArabic
-                  ? 'جميع التحويلات آمنة ومشفرة - بياناتك في أمان تام'
+                  ? 'auto.t_a16b15d445'.tr()
                   : 'All transfers are secure and encrypted - your data is safe.',
               textAlign: TextAlign.center,
               style: context.textTheme.bodySmall
@@ -786,10 +808,10 @@ class _FraudAlert extends StatelessWidget {
         .toList();
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
         color: const Color(0xF4070103),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: const Color(0xAA7F1D1D)),
       ),
       child: Column(
@@ -798,8 +820,8 @@ class _FraudAlert extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 56.w,
+                height: 56.h,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0x22EF4444),
@@ -807,32 +829,29 @@ class _FraudAlert extends StatelessWidget {
                   boxShadow: [
                     BoxShadow(
                         color: const Color(0xFFEF4444).withValues(alpha: 0.25),
-                        blurRadius: 22),
+                        blurRadius: 22.r),
                   ],
                 ),
-                child: const Icon(FontAwesomeIcons.shieldHalved,
-                    color: Color(0xFFEF4444), size: 24),
+                child: Icon(FontAwesomeIcons.shieldHalved,
+                    color: const Color(0xFFEF4444), size: 24.sp),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _AlertBadge(
-                        label: isArabic ? 'تنبيه هام' : 'Important Alert'),
-                    const SizedBox(height: 8),
+                    _AlertBadge(label: 'auto.t_57c4dee83f'.tr()),
+                    SizedBox(height: 8.h),
                     Text(
-                      isArabic ? 'احذر من المحتالين' : 'Beware of scammers',
+                      'auto.t_205d3abc78'.tr(),
                       style: context.textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6.h),
                     Text(
-                      isArabic
-                          ? 'نوفر لك قنوات عملائنا الكرام إلى أنه قد تم رصد بعض المحاولات لانتحال صفة المتحدثين باسم شركتنا.'
-                          : 'We warn our clients that attempts to impersonate our company representatives have been detected.',
+                      'auto.t_293f720408'.tr(),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.62),
                         height: 1.65,
@@ -843,16 +862,14 @@ class _FraudAlert extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           Row(
             children: [
               const Expanded(child: Divider(color: Color(0x335B4B1D))),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
                 child: Text(
-                  isArabic
-                      ? 'وسائل الدفع والتواصل الرسمية الوحيدة'
-                      : 'Only official payment channels',
+                  'auto.t_c496311c70'.tr(),
                   style: context.textTheme.labelSmall?.copyWith(
                     color: EtbalyWebColors.gold,
                     fontWeight: FontWeight.w900,
@@ -862,7 +879,7 @@ class _FraudAlert extends StatelessWidget {
               const Expanded(child: Divider(color: Color(0x335B4B1D))),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           LayoutBuilder(
             builder: (context, constraints) {
               final columns = constraints.maxWidth >= 700 ? 2 : 1;
@@ -882,29 +899,23 @@ class _FraudAlert extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           _WarningBox(
             icon: FontAwesomeIcons.triangleExclamation,
             color: const Color(0xFFF59E0B),
-            title: isArabic ? 'تحذير مهم' : 'Important Warning',
-            text: isArabic
-                ? 'نهيب بجميع عملائنا عدم التعامل مع أي جهات أو أشخاص يدّعون تمثيل الشركة دون الرجوع إلى الأرقام الرسمية المذكورة أعلاه.'
-                : 'Please do not deal with any party claiming to represent the company without checking the official numbers above.',
+            title: 'auto.t_b440709acf'.tr(),
+            text: 'auto.t_c06d241c7f'.tr(),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _WarningBox(
             icon: FontAwesomeIcons.scaleBalanced,
             color: const Color(0xFF818CF8),
-            title: isArabic ? 'إجراء قانوني' : 'Legal Action',
-            text: isArabic
-                ? 'ستتخذ الإجراءات القانونية اللازمة بحق كل من يثبت تورطه في انتحال شخصية الشركة أو التواصل مع عملائنا بشكل غير قانوني.'
-                : 'Legal action will be taken against anyone impersonating the company or contacting our clients illegally.',
+            title: 'auto.t_7ce1febc0d'.tr(),
+            text: 'auto.t_82611d9baa'.tr(),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Text(
-            isArabic
-                ? 'شاكرين لكم تعاونكم وثقتكم الدائمة - إدارة الشركة'
-                : 'Thank you for your cooperation and trust - Company Management',
+            'auto.t_188c48f51d'.tr(),
             textAlign: TextAlign.center,
             style: context.textTheme.bodySmall?.copyWith(
               color: Colors.white.withValues(alpha: 0.42),
@@ -925,68 +936,109 @@ class _OfficialTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final values = method.fields.map((field) => field.value).take(2).join('\n');
-    const checkIcon = Icon(
+    final checkIcon = Icon(
       Icons.check_circle,
-      color: Color(0xFF22C55E),
-      size: 18,
+      color: const Color(0xFF22C55E),
+      size: 18.sp,
     );
     final methodIcon = _MethodMark(method: method, small: true);
+
+    final fields = method.fields.take(2).toList();
     final content = Expanded(
       child: Column(
-        crossAxisAlignment:
-            isArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        // CrossAxisAlignment.start = RIGHT in RTL context, LEFT in LTR context
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             isArabic ? method.titleAr : method.titleEn,
             textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: context.textTheme.labelLarge?.copyWith(
               color: method.accent,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 5),
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: Text(
-              values,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: context.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.74),
-                fontWeight: FontWeight.w800,
-                height: 1.35,
-                fontFeatures: const [FontFeature.tabularFigures()],
+          SizedBox(height: 4.h),
+          for (final field in fields)
+            Padding(
+              padding: EdgeInsets.only(top: 2.h),
+              child: Row(
+                textDirection: TextDirection.ltr,
+                mainAxisAlignment: isArabic
+                    ? MainAxisAlignment.end // push to RIGHT in LTR row
+                    : MainAxisAlignment.start,
+                children: isArabic
+                    ? [
+                        Flexible(
+                          child: Text(
+                            field.value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: TextDirection.ltr,
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.74),
+                              fontWeight: FontWeight.w800,
+                              fontFeatures: [
+                                const FontFeature.tabularFigures()
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 5.w),
+                        Icon(Icons.circle,
+                            size: 5.sp,
+                            color: method.accent.withValues(alpha: 0.75)),
+                      ]
+                    : [
+                        Icon(Icons.circle,
+                            size: 5.sp,
+                            color: method.accent.withValues(alpha: 0.75)),
+                        SizedBox(width: 5.w),
+                        Flexible(
+                          child: Text(
+                            field.value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: TextDirection.ltr,
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.74),
+                              fontWeight: FontWeight.w800,
+                              fontFeatures: [
+                                const FontFeature.tabularFigures()
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
               ),
             ),
-          ),
         ],
       ),
     );
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.025),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: Row(
-        textDirection: isArabic ? TextDirection.ltr : TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         children: isArabic
             ? [
                 checkIcon,
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 content,
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 methodIcon
               ]
             : [
                 methodIcon,
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 content,
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 checkIcon
               ],
       ),
@@ -1010,17 +1062,17 @@ class _WarningBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(13),
+      padding: EdgeInsets.all(13.r),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 17),
-          const SizedBox(width: 10),
+          Icon(icon, color: color, size: 17.sp),
+          SizedBox(width: 10.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1032,7 +1084,7 @@ class _WarningBox extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   text,
                   style: context.textTheme.bodySmall?.copyWith(
@@ -1058,40 +1110,38 @@ class _NeedHelpCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
         color: const Color(0xCC11101D),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: EtbalyWebColors.border),
       ),
       child: Row(
         children: [
-          const Icon(FontAwesomeIcons.circleQuestion,
-              color: EtbalyWebColors.gold, size: 22),
-          const SizedBox(width: 12),
+          Icon(FontAwesomeIcons.circleQuestion,
+              color: EtbalyWebColors.gold, size: 22.sp),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isArabic ? 'تحتاج مساعدة؟' : 'Need help?',
+                  'auto.t_48b043613b'.tr(),
                   style: context.textTheme.titleMedium?.copyWith(
                     color: EtbalyWebColors.heading,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
-                  isArabic
-                      ? 'فريقنا متاح لمساعدتك في عملية الدفع'
-                      : 'Our team is available to help with your payment.',
+                  'auto.t_76a158e9e1'.tr(),
                   style: context.textTheme.bodySmall
                       ?.copyWith(color: EtbalyWebColors.body),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           OutlinedButton.icon(
             onPressed: onTap,
             style: OutlinedButton.styleFrom(
@@ -1099,13 +1149,13 @@ class _NeedHelpCard extends StatelessWidget {
               side: const BorderSide(color: EtbalyWebColors.goldBorder),
               backgroundColor: EtbalyWebColors.gold.withValues(alpha: 0.08),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9)),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  borderRadius: BorderRadius.circular(9.r)),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             ),
-            icon: Icon(isArabic ? Icons.arrow_back : Icons.arrow_forward,
-                size: 18),
+            icon: Icon(isArabic ? Icons.arrow_forward : Icons.arrow_back,
+                size: 18.sp),
             label: Text(
-              isArabic ? 'تواصل معنا' : 'Contact Us',
+              'auto.t_9886382321'.tr(),
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
             iconAlignment: isArabic ? IconAlignment.end : IconAlignment.start,
@@ -1130,7 +1180,7 @@ class _MethodMark extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: method.accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: method.accent.withValues(alpha: 0.55)),
       ),
       child: Icon(method.icon, color: method.accent, size: small ? 18 : 21),
@@ -1147,19 +1197,19 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: EtbalyWebColors.gold.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.circle, color: EtbalyWebColors.gold, size: 6),
-          const SizedBox(width: 10),
-          Icon(icon, color: EtbalyWebColors.gold, size: 13),
-          const SizedBox(width: 8),
+          Icon(Icons.circle, color: EtbalyWebColors.gold, size: 6.sp),
+          SizedBox(width: 10.w),
+          Icon(icon, color: EtbalyWebColors.gold, size: 13.sp),
+          SizedBox(width: 8.w),
           Text(
             label,
             style: context.textTheme.labelMedium?.copyWith(
@@ -1181,18 +1231,18 @@ class _AlertBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
       decoration: BoxDecoration(
         color: const Color(0x22EF4444),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: const Color(0x55EF4444)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(FontAwesomeIcons.triangleExclamation,
-              color: Color(0xFFF87171), size: 12),
-          const SizedBox(width: 6),
+          Icon(FontAwesomeIcons.triangleExclamation,
+              color: const Color(0xFFF87171), size: 12.sp),
+          SizedBox(width: 6.w),
           Text(
             label,
             style: context.textTheme.labelSmall?.copyWith(
@@ -1207,7 +1257,7 @@ class _AlertBadge extends StatelessWidget {
 }
 
 class _PaymentBackgroundPainter extends CustomPainter {
-  const _PaymentBackgroundPainter();
+  _PaymentBackgroundPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1262,7 +1312,7 @@ class _PaymentBackgroundPainter extends CustomPainter {
 }
 
 class _PaymentMethod {
-  const _PaymentMethod({
+  _PaymentMethod({
     required this.key,
     required this.titleAr,
     required this.titleEn,
@@ -1288,7 +1338,7 @@ class _PaymentMethod {
 }
 
 class _PaymentField {
-  const _PaymentField({
+  _PaymentField({
     required this.labelAr,
     required this.labelEn,
     required this.value,

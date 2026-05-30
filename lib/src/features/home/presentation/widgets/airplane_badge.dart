@@ -6,29 +6,29 @@ class _AirplaneBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: const Color(0x226F3FF5),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: const Color(0x665F37C7)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
+            width: 8.w,
+            height: 8.h,
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Color(0xFF9B5CF6),
+              color: const Color(0xFF9B5CF6),
               boxShadow: [
-                BoxShadow(color: Color(0x889B5CF6), blurRadius: 10),
+                BoxShadow(color: const Color(0x889B5CF6), blurRadius: 10.r),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Text(
-            'وكالة إبداعية متكاملة',
+            'auto.t_2d41d70d13'.tr(),
             style: context.textTheme.labelMedium?.copyWith(
               color: const Color(0xFFC084FC),
               fontWeight: FontWeight.w800,

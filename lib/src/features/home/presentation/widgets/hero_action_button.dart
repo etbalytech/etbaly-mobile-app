@@ -15,7 +15,7 @@ class _HeroActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(999);
+    final borderRadius = BorderRadius.circular(999.r);
 
     return Material(
       color: Colors.transparent,
@@ -24,8 +24,8 @@ class _HeroActionButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: borderRadius,
         child: Ink(
-          width: 136,
-          height: 58,
+          width: 136.w,
+          height: 58.h,
           decoration: BoxDecoration(
             borderRadius: borderRadius,
             gradient: outlined
@@ -41,15 +41,15 @@ class _HeroActionButton extends StatelessWidget {
                   ),
             color: outlined ? const Color(0x2418102F) : null,
             border: outlined
-                ? Border.all(color: const Color(0x887E5CB8), width: 1.2)
+                ? Border.all(color: const Color(0x887E5CB8), width: 1.2.w)
                 : null,
             boxShadow: outlined
                 ? null
-                : const [
+                : [
                     BoxShadow(
-                      color: Color(0x805B00B7),
-                      blurRadius: 26,
-                      offset: Offset(0, 14),
+                      color: const Color(0x805B00B7),
+                      blurRadius: 26.r,
+                      offset: Offset(0.w, 14.h),
                     ),
                   ],
           ),
@@ -66,8 +66,8 @@ class _HeroActionButton extends StatelessWidget {
                 ),
               ),
               if (icon != null) ...[
-                const SizedBox(width: 8),
-                Icon(icon, color: Colors.white, size: 18),
+                SizedBox(width: 8.w),
+                Icon(icon, color: Colors.white, size: 18.sp),
               ],
             ],
           ),

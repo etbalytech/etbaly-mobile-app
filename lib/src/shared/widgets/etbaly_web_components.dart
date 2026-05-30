@@ -2,20 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../extensions/context_extension.dart';
 import '../etbaly_web_tokens.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EtbalyWebSectionShell extends StatelessWidget {
-  const EtbalyWebSectionShell({
+  EtbalyWebSectionShell({
     super.key,
     required this.child,
     this.backgroundPainter,
     this.backgroundColor = EtbalyWebColors.sectionBlack,
-    this.margin = const EdgeInsets.only(top: 18),
-  });
+    EdgeInsets? margin,
+  }) : margin = margin ?? EdgeInsets.only(top: 18.h);
 
   final Widget child;
   final CustomPainter? backgroundPainter;
   final Color backgroundColor;
-  final EdgeInsets margin;
+  final EdgeInsets? margin;
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +25,12 @@ class EtbalyWebSectionShell extends StatelessWidget {
       child: Container(
         margin: margin,
         padding: EdgeInsets.symmetric(
-          horizontal: context.width < 390 ? 14 : 18,
-          vertical: context.width < 600 ? 34 : 46,
+          horizontal: (context.width < 390 ? 14 : 18).w,
+          vertical: (context.width < 600 ? 34 : 46).h,
         ),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
         ),
         clipBehavior: Clip.antiAlias,
         child: backgroundPainter == null
@@ -63,9 +64,9 @@ class EtbalyWebBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (websiteStyle) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(999.r),
           border: Border.all(color: const Color(0x665C4A36)),
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
@@ -77,11 +78,11 @@ class EtbalyWebBadge extends StatelessWidget {
             ],
             stops: [0, 0.58, 1],
           ),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
               color: EtbalyWebColors.shadow,
-              blurRadius: 16,
-              offset: Offset(0, 8),
+              blurRadius: 16.r,
+              offset: Offset(0.w, 8.h),
             ),
           ],
         ),
@@ -94,16 +95,16 @@ class EtbalyWebBadge extends StatelessWidget {
               style: context.textTheme.labelLarge?.copyWith(
                 color: accent,
                 fontWeight: FontWeight.w900,
-                fontSize: 13,
+                fontSize: 13.sp,
               ),
             ),
             if (glowDot != null) ...[
-              const SizedBox(width: 13),
-              _BadgeDot(color: glowDot!, size: 12, glow: true),
+              SizedBox(width: 13.w),
+              _BadgeDot(color: glowDot!, size: 12.sp, glow: true),
             ],
             if (trailingDot != null) ...[
-              const SizedBox(width: 12),
-              _BadgeDot(color: trailingDot!, size: 8),
+              SizedBox(width: 12.w),
+              _BadgeDot(color: trailingDot!, size: 8.sp),
             ],
           ],
         ),
@@ -111,17 +112,17 @@ class EtbalyWebBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+      padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 9.h),
       decoration: BoxDecoration(
         color: EtbalyWebColors.darkPill,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: accent.withValues(alpha: 0.34)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _BadgeDot(color: accent, size: 8),
-          const SizedBox(width: 8),
+          _BadgeDot(color: accent, size: 8.sp),
+          SizedBox(width: 8.w),
           Text(
             label,
             style: context.textTheme.labelLarge?.copyWith(
@@ -158,8 +159,8 @@ class _BadgeDot extends StatelessWidget {
             ? [
                 BoxShadow(
                   color: color.withValues(alpha: 0.6),
-                  blurRadius: 14,
-                  spreadRadius: 4,
+                  blurRadius: 14.r,
+                  spreadRadius: 4.r,
                 ),
               ]
             : null,
@@ -177,7 +178,7 @@ class EtbalyWebGoldDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: 3,
+      height: 3.h,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [

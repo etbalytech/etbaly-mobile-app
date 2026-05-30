@@ -5,31 +5,31 @@ class _AirplaneFeaturePills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const features = [
-      ('هوية بصرية', Icons.auto_awesome),
-      ('تصميم رقمي', Icons.diamond_outlined),
-      ('تسويق ذكي', Icons.hexagon_outlined),
-      ('استراتيجية نمو', Icons.adjust),
+    final features = [
+      ('auto.t_5dbc6132d0'.tr(), Icons.auto_awesome),
+      ('auto.t_c8dd386e3c'.tr(), Icons.diamond_outlined),
+      ('auto.t_613a55a9d3'.tr(), Icons.hexagon_outlined),
+      ('auto.t_61e87743ae'.tr(), Icons.adjust),
     ];
 
     return Wrap(
       alignment: WrapAlignment.center,
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 10.r,
+      runSpacing: 10.r,
       children: [
         for (final feature in features)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             decoration: BoxDecoration(
               color: const Color(0x4A160B31),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(999.r),
               border: Border.all(color: const Color(0x663D236C)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(feature.$2, color: const Color(0xFFC084FC), size: 15),
-                const SizedBox(width: 8),
+                Icon(feature.$2, color: const Color(0xFFC084FC), size: 15.sp),
+                SizedBox(width: 8.w),
                 Text(
                   feature.$1,
                   style: context.textTheme.labelLarge?.copyWith(

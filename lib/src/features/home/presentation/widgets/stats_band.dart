@@ -6,41 +6,41 @@ class _StatsBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18),
+      padding: EdgeInsets.symmetric(vertical: 18.h),
       decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(color: Color(0x55D4AF37)),
           bottom: BorderSide(color: Color(0x55D4AF37)),
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             child: _StatsBandItem(
               value: '+400,000',
               compactValue: '400K+',
-              label: 'مشروع منجز',
-              compactLabel: 'مشاريع',
+              label: 'auto.t_12b1d6581c'.tr(),
+              compactLabel: 'auto.t_d3b9a9e47b'.tr(),
               icon: Icons.rocket_launch,
             ),
           ),
-          _StatsBandDivider(),
+          const _StatsBandDivider(),
           Expanded(
             child: _StatsBandItem(
               value: '+5,000',
               compactValue: '5K+',
-              label: 'عميل راضي',
-              compactLabel: 'عملاء',
+              label: 'auto.t_6a6d13b7c7'.tr(),
+              compactLabel: 'auto.t_69bb4d70de'.tr(),
               icon: Icons.sentiment_satisfied_alt,
             ),
           ),
-          _StatsBandDivider(),
+          const _StatsBandDivider(),
           Expanded(
             child: _StatsBandItem(
               value: '+12',
               compactValue: '12+',
-              label: 'سنوات خبرة',
-              compactLabel: 'خبرة',
+              label: 'auto.t_07caf2cbc5'.tr(),
+              compactLabel: 'auto.t_9118f5a643'.tr(),
               icon: Icons.star,
             ),
           ),

@@ -9,9 +9,9 @@ class _StripHeader extends StatelessWidget {
       children: [
         const Expanded(child: Divider(color: Color(0x55D4AF37))),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
+          padding: EdgeInsets.symmetric(horizontal: 18.w),
           child: Text(
-            'نبذة عنّا',
+            'auto.t_4ab7f5f8c1'.tr(),
             style: context.textTheme.labelLarge?.copyWith(
               color: const Color(0xFFD4AF37),
               fontWeight: FontWeight.w900,

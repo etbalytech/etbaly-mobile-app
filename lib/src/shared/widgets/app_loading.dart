@@ -80,14 +80,14 @@ class _AppLoadingState extends State<AppLoading>
                           child: Container(
                             width: logoSize,
                             height: logoSize,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0x55D4AF37),
-                                  blurRadius: 26,
-                                  spreadRadius: 1,
+                                  color: const Color(0x55D4AF37),
+                                  blurRadius: 26.r,
+                                  spreadRadius: 1.r,
                                 ),
                               ],
                             ),
@@ -100,37 +100,37 @@ class _AppLoadingState extends State<AppLoading>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 26),
+                    SizedBox(height: 26.h),
                     Text(
-                      'اطبعلي',
+                      'auto.t_135dd3f6f1'.tr(),
                       textAlign: TextAlign.center,
                       style: context.textTheme.displaySmall?.copyWith(
                         color: const Color(0xFFD4AF37),
                         fontSize: (width < 390 ? 34.0 : 38.0),
                         fontWeight: FontWeight.w500,
                         height: 1,
-                        shadows: const [
+                        shadows: [
                           Shadow(
-                            color: Color(0x55D4AF37),
-                            blurRadius: 18,
+                            color: const Color(0x55D4AF37),
+                            blurRadius: 18.r,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     _EtbalyLoadingDivider(progress: progress),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     Text(
-                      widget.message ?? 'جاري التحميل',
+                      widget.message ?? 'auto.t_e3e6c99360'.tr(),
                       textAlign: TextAlign.center,
                       style: context.textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF9D9684),
-                        fontSize: 13,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w500,
                         height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 42),
+                    SizedBox(height: 42.h),
                     _EtbalyLoadingDots(progress: progress),
                   ],
                 ),
@@ -158,7 +158,7 @@ class _EtbalyLoadingDivider extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         Container(
-          height: 1,
+          height: 1.h,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -172,14 +172,14 @@ class _EtbalyLoadingDivider extends StatelessWidget {
         Transform.rotate(
           angle: math.pi / 4,
           child: Container(
-            width: 9,
-            height: 9,
+            width: 9.w,
+            height: 9.h,
             decoration: BoxDecoration(
               color: const Color(0xFFD4AF37).withValues(alpha: glow),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFD4AF37).withValues(alpha: glow * 0.5),
-                  blurRadius: 18,
+                  blurRadius: 18.r,
                 ),
               ],
             ),
@@ -200,7 +200,7 @@ class _EtbalyLoadingDots extends StatelessWidget {
     return Column(
       children: [
         Container(
-          height: 1,
+          height: 1.h,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -211,15 +211,15 @@ class _EtbalyLoadingDots extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 11),
+        SizedBox(height: 11.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: List.generate(5, (index) {
             final local = (progress + index * 0.14) % 1;
             final pulse = math.sin(local * math.pi * 2).abs();
             return Container(
-              width: 4 + pulse * 1.5,
-              height: 4 + pulse * 1.5,
+              width: 4.w + pulse * 1.5,
+              height: 4.h + pulse * 1.5,
               decoration: BoxDecoration(
                 color: const Color(0xFFD4AF37).withValues(
                   alpha: 0.35 + pulse * 0.65,
@@ -230,7 +230,7 @@ class _EtbalyLoadingDots extends StatelessWidget {
                     color: const Color(0xFFD4AF37).withValues(
                       alpha: pulse * 0.35,
                     ),
-                    blurRadius: 10,
+                    blurRadius: 10.r,
                   ),
                 ],
               ),
@@ -243,7 +243,7 @@ class _EtbalyLoadingDots extends StatelessWidget {
 }
 
 class _EtbalyLoaderRingsPainter extends CustomPainter {
-  const _EtbalyLoaderRingsPainter({
+  _EtbalyLoaderRingsPainter({
     required this.progress,
     required this.strokeWidth,
   });
@@ -291,7 +291,7 @@ class _EtbalyLoaderRingsPainter extends CustomPainter {
 }
 
 class _EtbalyLoaderBackgroundPainter extends CustomPainter {
-  const _EtbalyLoaderBackgroundPainter(this.progress);
+  _EtbalyLoaderBackgroundPainter(this.progress);
 
   final double progress;
 

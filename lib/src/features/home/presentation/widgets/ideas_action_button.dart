@@ -15,7 +15,7 @@ class _IdeasActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(999);
+    final radius = BorderRadius.circular(999.r);
 
     return Material(
       color: Colors.transparent,
@@ -24,18 +24,18 @@ class _IdeasActionButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: radius,
         child: Ink(
-          width: 150,
-          height: 58,
+          width: 150.w,
+          height: 58.h,
           decoration: BoxDecoration(
             color: filled ? const Color(0xFFE5C352) : Colors.transparent,
             borderRadius: radius,
-            border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
+            border: Border.all(color: const Color(0xFFD4AF37), width: 1.5.w),
             boxShadow: filled
-                ? const [
+                ? [
                     BoxShadow(
-                      color: Color(0x55D4AF37),
-                      blurRadius: 24,
-                      offset: Offset(0, 12),
+                      color: const Color(0x55D4AF37),
+                      blurRadius: 24.r,
+                      offset: Offset(0.w, 12.h),
                     ),
                   ]
                 : null,
@@ -54,8 +54,8 @@ class _IdeasActionButton extends StatelessWidget {
                 ),
               ),
               if (icon != null) ...[
-                const SizedBox(width: 8),
-                Icon(icon, color: const Color(0xFF1A102C), size: 20),
+                SizedBox(width: 8.w),
+                Icon(icon, color: const Color(0xFF1A102C), size: 20.sp),
               ],
             ],
           ),

@@ -92,8 +92,8 @@ class RawToastState extends State<RawToast> {
       bottom: widget.toastPosition == ToastPosition.bottom
           ? widget.getPosition() + 60
           : null,
-      left: 0,
-      right: 0,
+      left: 0.w,
+      right: 0.w,
       child: Material(
         color: Colors.transparent,
         child: AnimatedScale(
@@ -106,4 +106,3 @@ class RawToastState extends State<RawToast> {
     );
   }
 }
-

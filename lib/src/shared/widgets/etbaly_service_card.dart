@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../extensions/context_extension.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Etbaly Service Card Component
 /// Icon + Title + Desc + Arrow link matching web's .service-card
@@ -29,26 +30,26 @@ class EtbalyServiceCard extends StatelessWidget {
     final designTokens = context.designTokens;
 
     Widget card = Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(designTokens.borderRadiusMedium),
         border: Border.all(
           color: etbalyColors.borderColor.withValues(alpha: 0.3),
-          width: 1,
+          width: 1.w,
         ),
         boxShadow: [
           BoxShadow(
             color: etbalyColors.cardShadow,
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
+            blurRadius: 20.r,
+            offset: Offset(0.w, 8.h),
+            spreadRadius: 0.r,
           ),
           BoxShadow(
             color: etbalyColors.primaryGlow,
-            blurRadius: 32,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
+            blurRadius: 32.r,
+            offset: Offset(0.w, 8.h),
+            spreadRadius: 0.r,
           ),
         ],
       ),
@@ -57,19 +58,20 @@ class EtbalyServiceCard extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Container(
-              width: 48,
-              height: 48,
+              width: 48.w,
+              height: 48.h,
               decoration: BoxDecoration(
                 color: etbalyColors.badgeBg,
-                borderRadius: BorderRadius.circular(designTokens.borderRadiusSmall),
+                borderRadius:
+                    BorderRadius.circular(designTokens.borderRadiusSmall),
               ),
               child: Icon(
                 icon,
                 color: etbalyColors.primary,
-                size: 24,
+                size: 24.sp,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
           ],
           Text(
             title,
@@ -78,7 +80,7 @@ class EtbalyServiceCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             description,
             style: context.textTheme.bodySmall?.copyWith(
@@ -88,7 +90,7 @@ class EtbalyServiceCard extends StatelessWidget {
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Row(
             children: [
               Text(
@@ -98,11 +100,11 @@ class EtbalyServiceCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Icon(
                 FontAwesomeIcons.arrowRight,
                 color: etbalyColors.gold,
-                size: 12,
+                size: 12.sp,
               ),
             ],
           ),
@@ -122,16 +124,19 @@ class EtbalyServiceCard extends StatelessWidget {
     }
 
     if (animate) {
-      card = card.animate().fadeIn(
-        duration: const Duration(milliseconds: 600),
-        delay: animationDelay,
-        curve: Curves.easeOutCubic,
-      ).slideY(
-        begin: 0.1,
-        duration: const Duration(milliseconds: 600),
-        delay: animationDelay,
-        curve: Curves.easeOutCubic,
-      );
+      card = card
+          .animate()
+          .fadeIn(
+            duration: const Duration(milliseconds: 600),
+            delay: animationDelay,
+            curve: Curves.easeOutCubic,
+          )
+          .slideY(
+            begin: 0.1,
+            duration: const Duration(milliseconds: 600),
+            delay: animationDelay,
+            curve: Curves.easeOutCubic,
+          );
     }
 
     return card;

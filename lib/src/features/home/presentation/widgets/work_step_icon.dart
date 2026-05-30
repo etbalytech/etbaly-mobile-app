@@ -26,7 +26,7 @@ class _WorkStepIcon extends StatelessWidget {
             borderRadius: BorderRadius.circular(compact ? 17 : 22),
             border: Border.all(
               color: accent.withValues(alpha: 0.28),
-              width: 1.3,
+              width: 1.3.w,
             ),
           ),
         ),

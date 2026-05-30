@@ -22,14 +22,14 @@ class _HomeWebHeroState extends State<_HomeWebHero>
   @override
   Widget build(BuildContext context) {
     final width = context.width;
-    final heroHeight = width < 390 ? 390.0 : 410.0;
+    final heroHeight = width < 390 ? 590.h : 560.h;
     final horizontalPadding = width < 390 ? 16.0 : 22.0;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(8),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(8.r),
         ),
         child: Container(
           height: heroHeight,
@@ -56,15 +56,15 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                   );
                 },
               ),
-              const _HeroGlow(
+              _HeroGlow(
                 alignment: Alignment.topRight,
-                color: Color(0x886F3FF5),
-                size: 230,
+                color: const Color(0x886F3FF5),
+                size: 230.sp,
               ),
-              const _HeroGlow(
+              _HeroGlow(
                 alignment: Alignment.bottomLeft,
-                color: Color(0x55B85CFF),
-                size: 260,
+                color: const Color(0x55B85CFF),
+                size: 260.sp,
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -83,9 +83,9 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                         .animate()
                         .fadeIn(duration: const Duration(milliseconds: 450))
                         .slideY(begin: -0.16),
-                    SizedBox(height: width < 390 ? 30 : 38),
+                    SizedBox(height: width < 390 ? 26.h : 34.h),
                     Text(
-                      'نصنع لعلامتك',
+                      'auto.t_33ef1845b6'.tr(),
                       textAlign: TextAlign.right,
                       style: _heroTitleStyle(context, width),
                       maxLines: 2,
@@ -105,7 +105,7 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                         ],
                       ).createShader(bounds),
                       child: Text(
-                        'حضورًا لا يُنسى',
+                        'auto.t_1df71b9933'.tr(),
                         textAlign: TextAlign.right,
                         style: _heroTitleStyle(context, width).copyWith(
                           color: Colors.white,
@@ -117,9 +117,9 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                         .animate()
                         .fadeIn(delay: const Duration(milliseconds: 180))
                         .slideY(begin: 0.18),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     Text(
-                      'وكالة تسويق وإبداع رقمي تساعدك على بناء هوية قوية وتحقيق نتائج عبر حلول تسويقية مبتكرة.',
+                      'auto.t_e9c5fb7e87'.tr(),
                       textAlign: TextAlign.right,
                       style: context.textTheme.titleSmall?.copyWith(
                         color: const Color(0xFFC4BED4),
@@ -133,19 +133,19 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                         .animate()
                         .fadeIn(delay: const Duration(milliseconds: 280))
                         .slideY(begin: 0.18),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28.h),
                     Wrap(
                       alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
+                      spacing: 12.r,
+                      runSpacing: 12.r,
                       children: [
                         _HeroActionButton(
-                          label: 'خدماتنا',
+                          label: 'auto.t_300f7da948'.tr(),
                           icon: Icons.arrow_forward,
                           onTap: () => context.go(AppRoutes.services),
                         ),
                         _HeroActionButton(
-                          label: 'من نحن',
+                          label: 'auto.t_629d28fb52'.tr(),
                           outlined: true,
                           onTap: () => context.go(AppRoutes.about),
                         ),
@@ -168,10 +168,10 @@ class _HomeWebHeroState extends State<_HomeWebHero>
     return (context.textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: Colors.white,
       fontSize: width < 360
-          ? 36
+          ? 34.sp
           : width < 390
-              ? 40
-              : 48,
+              ? 38.sp
+              : 46.sp,
       fontWeight: FontWeight.w900,
       height: 1.12,
       letterSpacing: 0,

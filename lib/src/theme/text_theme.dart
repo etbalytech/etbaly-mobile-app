@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Returns the appropriate font family based on the current locale
 String _getFontFamilyForLocale(Locale locale) {
@@ -32,7 +33,7 @@ TextStyle _createTextStyle({
 /// ```
 TextTheme buildTextTheme([Locale? locale]) {
   final currentLocale = locale ?? const Locale('en');
-  
+
   // ── Display ──────────────────────────────────────────────────────────────
   // Use for the largest, most impactful text on a screen.
   // Typically reserved for hero/marketing sections, splash screens,
@@ -41,7 +42,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// 57 sp — Largest display text.
   /// Use for: splash screen titles, giant counters, hero numbers.
   final displayLarge = _createTextStyle(
-    fontSize: 57,
+    fontSize: 57.sp,
     fontWeight: FontWeight.w800, // Heavier weight for impact
     letterSpacing: -0.25,
     locale: currentLocale,
@@ -50,7 +51,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// 45 sp — Mid-size display text.
   /// Use for: prominent feature headlines, onboarding first-screen titles.
   final displayMedium = _createTextStyle(
-    fontSize: 45,
+    fontSize: 45.sp,
     fontWeight: FontWeight.w700, // Bold for headings
     letterSpacing: 0,
     locale: currentLocale,
@@ -59,7 +60,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// 36 sp — Smallest display text.
   /// Use for: section-level hero text, large marketing callouts.
   final displaySmall = _createTextStyle(
-    fontSize: 36,
+    fontSize: 36.sp,
     fontWeight: FontWeight.w600, // Semi-bold
     letterSpacing: 0,
     locale: currentLocale,
@@ -72,7 +73,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// 32 sp — Large page-level heading.
   /// Use for: main screen titles (e.g. "My Profile"), large dialog headers.
   final headlineLarge = _createTextStyle(
-    fontSize: 32,
+    fontSize: 32.sp,
     fontWeight: FontWeight.w700, // Bold for page titles
     letterSpacing: 0,
     locale: currentLocale,
@@ -81,7 +82,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// 28 sp — Standard page-level heading.
   /// Use for: AppBar titles on content-heavy screens, sheet headers.
   final headlineMedium = _createTextStyle(
-    fontSize: 28,
+    fontSize: 28.sp,
     fontWeight: FontWeight.w600, // Semi-bold
     letterSpacing: 0,
     locale: currentLocale,
@@ -90,7 +91,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// 24 sp — Compact page-level heading.
   /// Use for: section headings within a scrollable page, card group titles.
   final headlineSmall = _createTextStyle(
-    fontSize: 24,
+    fontSize: 24.sp,
     fontWeight: FontWeight.w600, // Semi-bold
     letterSpacing: 0,
     locale: currentLocale,
@@ -104,7 +105,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: AppBar titles (standard), large list-section headers,
   ///          dialog/modal titles.
   final titleLarge = _createTextStyle(
-    fontSize: 22,
+    fontSize: 22.sp,
     fontWeight: FontWeight.w600, // Semi-bold
     letterSpacing: 0,
     locale: currentLocale,
@@ -113,7 +114,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// 16 sp — Standard component title.
   /// Use for: ListTile titles, card headings, tab labels, dropdown labels.
   final titleMedium = _createTextStyle(
-    fontSize: 16,
+    fontSize: 16.sp,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.15,
     locale: currentLocale,
@@ -123,7 +124,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: dense list item titles, chip labels, form field labels,
   ///          subtitle of a section.
   final titleSmall = _createTextStyle(
-    fontSize: 14,
+    fontSize: 14.sp,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.1,
     locale: currentLocale,
@@ -137,7 +138,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: main paragraph text, message bubbles, article content,
   ///          default Text() inside cards.
   final bodyLarge = _createTextStyle(
-    fontSize: 16,
+    fontSize: 16.sp,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.5,
     locale: currentLocale,
@@ -147,7 +148,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: secondary descriptions, ListTile subtitles, form helper text,
   ///          dialog body copy. This is the workhorse style.
   final bodyMedium = _createTextStyle(
-    fontSize: 14,
+    fontSize: 14.sp,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.25,
     locale: currentLocale,
@@ -157,7 +158,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: captions under images, timestamps, metadata, fine print,
   ///          secondary info below a ListTile.
   final bodySmall = _createTextStyle(
-    fontSize: 12,
+    fontSize: 12.sp,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.4,
     locale: currentLocale,
@@ -171,7 +172,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: ElevatedButton / TextButton / OutlinedButton text,
   ///          navigation bar labels (selected), tab bar labels.
   final labelLarge = _createTextStyle(
-    fontSize: 14,
+    fontSize: 14.sp,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.1,
     locale: currentLocale,
@@ -181,7 +182,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: chip text, badge text, tooltip text, navigation rail labels,
   ///          input counter text, overline headings.
   final labelMedium = _createTextStyle(
-    fontSize: 12,
+    fontSize: 12.sp,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.5,
     locale: currentLocale,
@@ -191,7 +192,7 @@ TextTheme buildTextTheme([Locale? locale]) {
   /// Use for: dense navigation labels, very small badges, annotation text,
   ///          data table column headers. Avoid for reading-heavy content.
   final labelSmall = _createTextStyle(
-    fontSize: 11,
+    fontSize: 11.sp,
     fontWeight: FontWeight.w500,
     letterSpacing: 0.5,
     locale: currentLocale,

@@ -11,7 +11,7 @@ import '../../imports/imports.dart';
 /// // With a header
 /// AppCard(
 ///   title: 'Recent Transactions',
-///   trailing: TextButton(onPressed: _seeAll, child: const Text('See all')),
+///   trailing: TextButton(onPressed: _seeAll, child: Text('See all')),
 ///   child: TransactionList(),
 /// )
 /// ```
@@ -110,7 +110,7 @@ class AppCard extends StatelessWidget {
         borderRadius: AppBorders.card,
         border: showShadow
             ? null
-            : Border.all(color: cs.outlineVariant, width: 1),
+            : Border.all(color: cs.outlineVariant, width: 1.w),
         boxShadow: showShadow ? AppShadows.card : AppShadows.none,
       ),
       clipBehavior: Clip.antiAlias,

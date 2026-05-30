@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../extensions/context_extension.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Etbaly Button Component
 /// Gold gradient primary + outline-gold secondary matching web's buttons
@@ -38,14 +39,16 @@ class EtbalyButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: etbalyColors.gold,
             foregroundColor: Colors.black,
-            minimumSize: fullWidth ? Size.infinite : const Size(120, 48),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            minimumSize: fullWidth ? Size.infinite : Size(120.w, 48.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(designTokens.borderRadiusMedium),
+              borderRadius:
+                  BorderRadius.circular(designTokens.borderRadiusMedium),
             ),
             elevation: 0,
             shadowColor: etbalyColors.goldGlow,
-            disabledBackgroundColor: etbalyColors.goldLight.withValues(alpha: 0.5),
+            disabledBackgroundColor:
+                etbalyColors.goldLight.withValues(alpha: 0.5),
             disabledForegroundColor: Colors.black.withValues(alpha: 0.5),
           ),
           child: _buildButtonContent(),
@@ -57,12 +60,13 @@ class EtbalyButton extends StatelessWidget {
           onPressed: isDisabled ? null : onPressed,
           style: OutlinedButton.styleFrom(
             foregroundColor: etbalyColors.gold,
-            minimumSize: fullWidth ? Size.infinite : const Size(120, 48),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            minimumSize: fullWidth ? Size.infinite : Size(120.w, 48.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(designTokens.borderRadiusMedium),
+              borderRadius:
+                  BorderRadius.circular(designTokens.borderRadiusMedium),
             ),
-            side: BorderSide(color: etbalyColors.gold, width: 2),
+            side: BorderSide(color: etbalyColors.gold, width: 2.w),
             disabledForegroundColor: etbalyColors.gold.withValues(alpha: 0.5),
           ),
           child: _buildButtonContent(),
@@ -75,14 +79,16 @@ class EtbalyButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: etbalyColors.primary,
             foregroundColor: Colors.white,
-            minimumSize: fullWidth ? Size.infinite : const Size(120, 48),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            minimumSize: fullWidth ? Size.infinite : Size(120.w, 48.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(designTokens.borderRadiusMedium),
+              borderRadius:
+                  BorderRadius.circular(designTokens.borderRadiusMedium),
             ),
             elevation: 0,
             shadowColor: etbalyColors.primaryGlow,
-            disabledBackgroundColor: etbalyColors.primaryLight.withValues(alpha: 0.5),
+            disabledBackgroundColor:
+                etbalyColors.primaryLight.withValues(alpha: 0.5),
             disabledForegroundColor: Colors.white.withValues(alpha: 0.5),
           ),
           child: _buildButtonContent(),
@@ -93,8 +99,8 @@ class EtbalyButton extends StatelessWidget {
     // Animation temporarily disabled to fix null check error
     // if (animate && !isDisabled) {
     //   button = button.animate().scale(
-    //     begin: const Offset(0.95, 0.95),
-    //     duration: const Duration(milliseconds: 200),
+    //     begin: Offset(0.95.w, 0.95.h),
+    //     duration: Duration(milliseconds: 200),
     //     curve: Curves.easeOutCubic,
     //   );
     // }
@@ -105,10 +111,10 @@ class EtbalyButton extends StatelessWidget {
   Widget _buildButtonContent() {
     if (isLoading) {
       return SizedBox(
-        height: 20,
-        width: 20,
+        height: 20.h,
+        width: 20.w,
         child: CircularProgressIndicator(
-          strokeWidth: 2,
+          strokeWidth: 2.r,
           valueColor: AlwaysStoppedAnimation<Color>(
             style == EtbalyButtonStyle.primary ? Colors.black : Colors.white,
           ),
@@ -118,8 +124,8 @@ class EtbalyButton extends StatelessWidget {
 
     final children = <Widget>[
       if (icon != null) ...[
-        Icon(icon, size: 16),
-        const SizedBox(width: 8),
+        Icon(icon, size: 16.sp),
+        SizedBox(width: 8.w),
       ],
       Text(
         text,

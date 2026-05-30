@@ -1,48 +1,46 @@
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EtbalyWhyChooseUsSection extends StatelessWidget {
   const EtbalyWhyChooseUsSection({super.key});
 
-  static const _items = [
+  static final _items = [
     _WhyChooseUsData(
       slug: 'twelve-years-experience',
-      title: 'خبرة +12 عام',
-      description:
-          'فريق متخصص بخبرة واسعة في التسويق الرقمي وخدمة أكثر من 200 عميل',
+      title: 'auto.t_553f73c9cf'.tr(),
+      description: 'auto.t_67a7cba159'.tr(),
       icon: Icons.workspace_premium,
     ),
     _WhyChooseUsData(
       slug: 'guaranteed-results',
-      title: 'نتائج مضمونة',
-      description: 'نلتزم بتحقيق أهدافك القابلة للقياس ونعمل حتى نحققها',
+      title: 'auto.t_28e6b6b446'.tr(),
+      description: 'auto.t_59ea3a8c76'.tr(),
       icon: Icons.rocket_launch,
     ),
     _WhyChooseUsData(
       slug: 'transparent-reports',
-      title: 'تقارير شفافة',
-      description: 'تقارير تفصيلية أسبوعية وشهرية توضح كل نتيجة بدقة',
+      title: 'auto.t_8470b479cf'.tr(),
+      description: 'auto.t_66da1dd4a0'.tr(),
       icon: Icons.query_stats,
     ),
     _WhyChooseUsData(
       slug: 'support-24-7',
-      title: 'دعم على مدار الساعة',
-      description: 'فريق دعم متاح 7 أيام في الأسبوع للرد على كل استفساراتك',
+      title: 'auto.t_f5b5bccbee'.tr(),
+      description: 'auto.t_e4eef56c5e'.tr(),
       icon: Icons.headset_mic,
     ),
     _WhyChooseUsData(
       slug: 'security-guarantee',
-      title: 'حماية وأمان تام',
-      description:
-          'بياناتك ومعلومات عملك محمية بالكامل، نعمل بسرية تامة واحترافية عالية',
+      title: 'auto.t_b6b5d39eee'.tr(),
+      description: 'auto.t_96f9963b44'.tr(),
       icon: Icons.shield,
     ),
     _WhyChooseUsData(
       slug: 'documented-achievements',
-      title: 'إنجازات موثقة',
-      description:
-          'أكثر من 400,000 مشروع منجز وآلاف العملاء الراضين يتحدثون عن نجاحنا',
+      title: 'auto.t_cf044d61d6'.tr(),
+      description: 'auto.t_6af7b96764'.tr(),
       icon: Icons.emoji_events,
     ),
   ];
@@ -52,13 +50,13 @@ class EtbalyWhyChooseUsSection extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: EtbalyWebSectionShell(
-        backgroundPainter: const _WhyChooseUsPainter(),
+        backgroundPainter: _WhyChooseUsPainter(),
         child: Column(
           children: [
-            const EtbalyWebBadge(label: 'لماذا اطبعلي؟'),
-            const SizedBox(height: 18),
+            EtbalyWebBadge(label: 'auto.t_312fc90033'.tr()),
+            SizedBox(height: 18.h),
             Text(
-              'لماذا يختارنا عملاؤنا',
+              'auto.t_c18fb71739'.tr(),
               textAlign: TextAlign.center,
               style: context.textTheme.displaySmall?.copyWith(
                 color: EtbalyWebColors.heading,
@@ -67,13 +65,13 @@ class EtbalyWhyChooseUsSection extends StatelessWidget {
                 height: 1,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             const EtbalyWebGoldDivider(),
-            const SizedBox(height: 26),
+            SizedBox(height: 26.h),
             ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
+              constraints: BoxConstraints(maxWidth: 720.w),
               child: Text(
-                'نحن لا نقدم خدمات فحسب - نبني شراكات نجاح حقيقية',
+                'auto.t_aeb13335bf'.tr(),
                 textAlign: TextAlign.center,
                 style: context.textTheme.titleMedium?.copyWith(
                   color: EtbalyWebColors.body,
@@ -83,7 +81,7 @@ class EtbalyWhyChooseUsSection extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 34),
+            SizedBox(height: 34.h),
             EtbalyWebResponsiveGrid(
               children: [
                 for (final item in _items) _WhyChooseUsCard(item: item),
@@ -115,27 +113,27 @@ class _WhyChooseUsCard extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: EtbalyWebColors.card.withValues(alpha: 0.86),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(18.r),
           border: Border.all(color: EtbalyWebColors.border),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
               color: EtbalyWebColors.shadow,
-              blurRadius: 20,
-              offset: Offset(0, 12),
+              blurRadius: 20.r,
+              offset: Offset(0.w, 12.h),
             ),
           ],
         ),
         child: Stack(
           children: [
-            const Positioned(
-              top: 12,
-              right: 14,
-              child: _WhyParticle(alpha: 0.14, size: 5),
+            Positioned(
+              top: 12.h,
+              right: 14.w,
+              child: _WhyParticle(alpha: 0.14, size: 5.sp),
             ),
-            const Positioned(
-              bottom: 24,
-              left: 16,
-              child: _WhyParticle(alpha: 0.08, size: 4),
+            Positioned(
+              bottom: 24.h,
+              left: 16.w,
+              child: _WhyParticle(alpha: 0.08, size: 4.sp),
             ),
             if (isMobile)
               _WhyChooseUsMobileContent(item: item)
@@ -168,7 +166,7 @@ class _WhyChooseUsMobileContent extends StatelessWidget {
           Row(
             children: [
               _WhyIconTile(icon: item.icon, compact: true),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Text(
                   item.title,
@@ -183,7 +181,7 @@ class _WhyChooseUsMobileContent extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             item.description,
             textAlign: TextAlign.right,
@@ -211,24 +209,24 @@ class _WhyChooseUsDesktopContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _WhyIconTile(icon: item.icon),
-        const SizedBox(height: 22),
+        SizedBox(height: 22.h),
         Text(
           item.title,
           textAlign: TextAlign.center,
           style: context.textTheme.titleLarge?.copyWith(
             color: EtbalyWebColors.heading,
-            fontSize: 20,
+            fontSize: 20.sp,
             fontWeight: FontWeight.w900,
             height: 1.25,
           ),
         ),
-        const SizedBox(height: 11),
+        SizedBox(height: 11.h),
         Text(
           item.description,
           textAlign: TextAlign.center,
           style: context.textTheme.bodyMedium?.copyWith(
             color: EtbalyWebColors.body,
-            fontSize: 14,
+            fontSize: 14.sp,
             height: 1.75,
             fontWeight: FontWeight.w500,
           ),
@@ -282,10 +280,10 @@ class _WhyIconTile extends StatelessWidget {
                 blurRadius: compact ? 12 : 20,
                 offset: Offset(0, compact ? 5 : 9),
               ),
-              const BoxShadow(
-                color: Color(0x55000000),
-                blurRadius: 10,
-                offset: Offset(0, 6),
+              BoxShadow(
+                color: const Color(0x55000000),
+                blurRadius: 10.r,
+                offset: Offset(0.w, 6.h),
               ),
             ],
           ),
@@ -299,7 +297,7 @@ class _WhyIconTile extends StatelessWidget {
                   height: compact ? 9 : 13,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),
               ),
@@ -338,7 +336,7 @@ class _WhyParticle extends StatelessWidget {
 }
 
 class _WhyChooseUsData {
-  const _WhyChooseUsData({
+  _WhyChooseUsData({
     required this.slug,
     required this.title,
     required this.description,
@@ -352,7 +350,7 @@ class _WhyChooseUsData {
 }
 
 class _WhyChooseUsPainter extends CustomPainter {
-  const _WhyChooseUsPainter();
+  _WhyChooseUsPainter();
 
   @override
   void paint(Canvas canvas, Size size) {

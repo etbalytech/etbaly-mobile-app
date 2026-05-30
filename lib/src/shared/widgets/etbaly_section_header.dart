@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../extensions/context_extension.dart';
 import 'etbaly_badge.dart';
 import 'etbaly_gold_divider.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Etbaly Section Header Component
 /// Badge + Title + Gold divider + Description matching web's .section-header
@@ -40,7 +41,7 @@ class EtbalySectionHeader extends StatelessWidget {
             icon: badgeIcon,
             animate: animate,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
         ],
         Text(
           title,
@@ -50,20 +51,23 @@ class EtbalySectionHeader extends StatelessWidget {
             fontWeight: FontWeight.w700,
             height: 1.2,
           ),
-        ).animate(
-          delay: animationDelay + const Duration(milliseconds: 100),
-        ).fadeIn(
-          duration: const Duration(milliseconds: 600),
-        ).slideY(
-          begin: 0.1,
-          duration: const Duration(milliseconds: 600),
-        ),
-        const SizedBox(height: 24),
+        )
+            .animate(
+              delay: animationDelay + const Duration(milliseconds: 100),
+            )
+            .fadeIn(
+              duration: const Duration(milliseconds: 600),
+            )
+            .slideY(
+              begin: 0.1,
+              duration: const Duration(milliseconds: 600),
+            ),
+        SizedBox(height: 24.h),
         const EtbalyGoldDivider(
           animate: true,
         ),
         if (description != null) ...[
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           Text(
             description!,
             textAlign: descriptionAlignment,
@@ -71,14 +75,17 @@ class EtbalySectionHeader extends StatelessWidget {
               color: etbalyColors.textMuted,
               height: 1.6,
             ),
-          ).animate(
-            delay: animationDelay + const Duration(milliseconds: 300),
-          ).fadeIn(
-            duration: const Duration(milliseconds: 600),
-          ).slideY(
-            begin: 0.1,
-            duration: const Duration(milliseconds: 600),
-          ),
+          )
+              .animate(
+                delay: animationDelay + const Duration(milliseconds: 300),
+              )
+              .fadeIn(
+                duration: const Duration(milliseconds: 600),
+              )
+              .slideY(
+                begin: 0.1,
+                duration: const Duration(milliseconds: 600),
+              ),
         ],
       ],
     );

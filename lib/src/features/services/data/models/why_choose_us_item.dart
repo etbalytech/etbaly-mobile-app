@@ -1,5 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
+
 class WhyChooseUsItem {
-  const WhyChooseUsItem({
+  WhyChooseUsItem({
     required this.slug,
     required this.titleAr,
     required this.titleEn,
@@ -24,12 +26,12 @@ class WhyChooseUsItem {
   final List<String> detailedPointsEn;
 
   // Sample data with 6 why-choose-us items
-  static const List<WhyChooseUsItem> items = [
+  static List<WhyChooseUsItem> items = [
     WhyChooseUsItem(
       slug: 'transparent-reports',
-      titleAr: 'تقارير شفافة',
+      titleAr: 'auto.t_8470b479cf'.tr(),
       titleEn: 'Transparent Reports',
-      descriptionAr: 'نقدم لك تقارير دقيقة وشفافة تعكس كل جانب من جوانب استثمارك التسويقي.',
+      descriptionAr: 'auto.t_48441d345e'.tr(),
       descriptionEn:
           'We provide accurate and transparent reports that reflect every aspect of your marketing investment.',
       icon: 'fa-chart-bar',
@@ -37,10 +39,10 @@ class WhyChooseUsItem {
           'https://raw.githubusercontent.com/etbaly/assets/main/services/transparent-reports.png',
       color: '#D4AF37',
       detailedPointsAr: [
-        'تقارير شهرية مفصلة تشمل جميع المقاييس المهمة',
-        'لوحة تحكم حية لمتابعة النتائج في الوقت الفعلي',
-        'شفافية كاملة في التكاليف والنتائج',
-        'تحليل عميق لأداء كل حملة',
+        'auto.t_7d4afb5049'.tr(),
+        'auto.t_4e800408ed'.tr(),
+        'auto.t_1a0690d65c'.tr(),
+        'auto.t_7725403e49'.tr(),
       ],
       detailedPointsEn: [
         'Detailed monthly reports with all key metrics',
@@ -51,9 +53,9 @@ class WhyChooseUsItem {
     ),
     WhyChooseUsItem(
       slug: 'guaranteed-results',
-      titleAr: 'نتائج مضمونة',
+      titleAr: 'auto.t_28e6b6b446'.tr(),
       titleEn: 'Guaranteed Results',
-      descriptionAr: 'نضمن لك نتائج ملموسة وقابلة للقياس في كل حملة نقوم بها.',
+      descriptionAr: 'auto.t_64c1b70c01'.tr(),
       descriptionEn:
           'We guarantee measurable and tangible results in every campaign we execute.',
       icon: 'fa-bullseye',
@@ -61,10 +63,10 @@ class WhyChooseUsItem {
           'https://raw.githubusercontent.com/etbaly/assets/main/services/guaranteed-results.png',
       color: '#68D391',
       detailedPointsAr: [
-        'ضمان تحقيق أهدافك المحددة مسبقاً',
-        'زيادة مثبتة في المبيعات والعملاء',
-        'تحسن واضح في معدلات التحويل',
-        'عائد استثمار محسوب ومضمون',
+        'auto.t_259c35bbf6'.tr(),
+        'auto.t_80b2ed7b88'.tr(),
+        'auto.t_61339b6425'.tr(),
+        'auto.t_d20bd0ed5a'.tr(),
       ],
       detailedPointsEn: [
         'Guarantee to achieve your pre-defined goals',
@@ -75,9 +77,9 @@ class WhyChooseUsItem {
     ),
     WhyChooseUsItem(
       slug: 'twelve-years-experience',
-      titleAr: 'خبرة +12 عام',
+      titleAr: 'auto.t_553f73c9cf'.tr(),
       titleEn: '12+ Years Experience',
-      descriptionAr: 'فريق متخصص بخبرة تمتد لأكثر من 12 سنة في مجال التسويق الرقمي.',
+      descriptionAr: 'auto.t_c496d8ec9f'.tr(),
       descriptionEn:
           'A specialized team with over 12 years of experience in digital marketing.',
       icon: 'fa-star',
@@ -85,10 +87,10 @@ class WhyChooseUsItem {
           'https://raw.githubusercontent.com/etbaly/assets/main/services/experience.png',
       color: '#63B3ED',
       detailedPointsAr: [
-        'فريق متخصص في مختلف جوانب التسويق الرقمي',
-        'خبرة عملية في التعامل مع مئات الشركات',
-        'تدريب مستمر وتطور المهارات',
-        'معرفة عميقة بأحدث الاتجاهات والأدوات',
+        'auto.t_98bb951e65'.tr(),
+        'auto.t_2fb161cc87'.tr(),
+        'auto.t_a056fad7b2'.tr(),
+        'auto.t_6bf2e5912b'.tr(),
       ],
       detailedPointsEn: [
         'Specialized team in all aspects of digital marketing',
@@ -99,9 +101,9 @@ class WhyChooseUsItem {
     ),
     WhyChooseUsItem(
       slug: 'documented-achievements',
-      titleAr: 'إنجازات موثقة',
+      titleAr: 'auto.t_cf044d61d6'.tr(),
       titleEn: 'Documented Achievements',
-      descriptionAr: 'مئات المشاريع الناجحة والعملاء الراضين يشهدون على جودة عملنا.',
+      descriptionAr: 'auto.t_3540771351'.tr(),
       descriptionEn:
           'Hundreds of successful projects and satisfied clients testify to the quality of our work.',
       icon: 'fa-trophy',
@@ -109,10 +111,10 @@ class WhyChooseUsItem {
           'https://raw.githubusercontent.com/etbaly/assets/main/services/achievements.png',
       color: '#F6AD55',
       detailedPointsAr: [
-        'أكثر من 400,000 مشروع منجز بنجاح',
-        '93% معدل رضا العملاء',
-        'عملاء في دول خليجية متعددة',
-        'حالات نجاح موثقة وقابلة للتحقق',
+        'auto.t_1b0eb89acb'.tr(),
+        'auto.t_447499bcdf'.tr(),
+        'auto.t_252f71e248'.tr(),
+        'auto.t_5772e509ba'.tr(),
       ],
       detailedPointsEn: [
         'Over 400,000 successfully completed projects',
@@ -123,9 +125,9 @@ class WhyChooseUsItem {
     ),
     WhyChooseUsItem(
       slug: 'security-guarantee',
-      titleAr: 'حماية وأمان تام',
+      titleAr: 'auto.t_b6b5d39eee'.tr(),
       titleEn: 'Full Protection & Security',
-      descriptionAr: 'نحمي بيانات عملائنا بأعلى معايير الأمان والخصوصية العالمية.',
+      descriptionAr: 'auto.t_a3b86c382d'.tr(),
       descriptionEn:
           'We protect our clients\' data with the highest international security and privacy standards.',
       icon: 'fa-shield-alt',
@@ -133,10 +135,10 @@ class WhyChooseUsItem {
           'https://raw.githubusercontent.com/etbaly/assets/main/services/security.png',
       color: '#FC8181',
       detailedPointsAr: [
-        'عقود قانونية واضحة تحمي حقوقك',
-        'سرية كاملة على جميع البيانات والاستراتيجيات',
-        'التزام بمعايير حماية البيانات الدولية',
-        'ضمان حماية بيانات عملائك',
+        'auto.t_8e0c6b58e0'.tr(),
+        'auto.t_5179b4d4c8'.tr(),
+        'auto.t_0a8a802f9b'.tr(),
+        'auto.t_9c2d9c3c7a'.tr(),
       ],
       detailedPointsEn: [
         'Clear legal contracts protecting your rights',
@@ -147,9 +149,9 @@ class WhyChooseUsItem {
     ),
     WhyChooseUsItem(
       slug: 'support-24-7',
-      titleAr: 'دعم على مدار الساعة',
+      titleAr: 'auto.t_f5b5bccbee'.tr(),
       titleEn: '24/7 Support',
-      descriptionAr: 'فريق الدعم لدينا متاح لك في أي وقت تحتاج فيه إلى مساعدة.',
+      descriptionAr: 'auto.t_219ab2555a'.tr(),
       descriptionEn:
           'Our support team is available to you whenever you need assistance.',
       icon: 'fa-headset',
@@ -157,10 +159,10 @@ class WhyChooseUsItem {
           'https://raw.githubusercontent.com/etbaly/assets/main/services/support.png',
       color: '#9F7AEA',
       detailedPointsAr: [
-        'الرد على الاستفسارات خلال 24 ساعة كحد أقصى',
-        'قنوات تواصل متعددة (واتس، ايميل، هاتف)',
-        'متابعة مستمرة لحملاتك',
-        'فريق مختص وودي دائماً',
+        'auto.t_db488a348c'.tr(),
+        'auto.t_dbfdf55cac'.tr(),
+        'auto.t_45228641be'.tr(),
+        'auto.t_d11e0677d1'.tr(),
       ],
       detailedPointsEn: [
         'Response to inquiries within 24 hours maximum',

@@ -38,7 +38,7 @@ class _AirplaneStat extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
         Text(
           label,
           textAlign: TextAlign.center,
@@ -50,12 +50,12 @@ class _AirplaneStat extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: 14.h),
         Container(
           height: 2,
           width: isNarrow ? 58 : 74,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             gradient: const LinearGradient(
               colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
             ),

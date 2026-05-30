@@ -27,8 +27,8 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
     return Directionality(
       textDirection: TextDirection.rtl,
       child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(8),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(8.r),
         ),
         child: Container(
           width: double.infinity,
@@ -80,9 +80,9 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
                         .animate()
                         .fadeIn(duration: const Duration(milliseconds: 420))
                         .slideY(begin: -0.12),
-                    const SizedBox(height: 44),
+                    SizedBox(height: 44.h),
                     Text(
-                      'نصنع علامتك التجارية باحترافية لا تُنسى',
+                      'auto.t_1eba09a3c1'.tr(),
                       textAlign: TextAlign.center,
                       style: context.textTheme.displaySmall?.copyWith(
                         color: Colors.white,
@@ -95,9 +95,9 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
                         .animate()
                         .fadeIn(delay: const Duration(milliseconds: 80))
                         .slideY(begin: 0.14),
-                    const SizedBox(height: 26),
+                    SizedBox(height: 26.h),
                     Text(
-                      'من الهوية البصرية إلى الحضور الرقمي الكامل. نصنع تجربة علامة تجارية تتحدث عنك قبل أن تتكلم.',
+                      'auto.t_b1974a8b2b'.tr(),
                       textAlign: TextAlign.center,
                       style: context.textTheme.titleSmall?.copyWith(
                         color: const Color(0xFFC0BACD),

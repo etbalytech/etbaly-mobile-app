@@ -1,98 +1,89 @@
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EtbalyServicesShowcaseSection extends StatefulWidget {
   const EtbalyServicesShowcaseSection({super.key});
 
-  static const _services = [
+  static final _services = [
     _ServiceCardData(
       slug: 'design',
       number: '01',
-      title: 'تصميمات احترافية',
-      description:
-          'نبني هويتك البصرية الكاملة من شعار، موشن جرافيك، بوستات، وكل ما يعكس روح علامتك التجارية باحترافية.',
+      title: 'auto.t_d23c852e02'.tr(),
+      description: 'auto.t_a03df99f61'.tr(),
       icon: Icons.brush,
       imageAsset: 'assets/images/services/design.webp',
     ),
     _ServiceCardData(
       slug: 'social',
       number: '02',
-      title: 'إدارة السوشيال ميديا',
-      description:
-          'محتوى إبداعي يومي، إدارة احترافية لحساباتك على جميع المنصات، وتفاعل حقيقي مع جمهورك.',
+      title: 'auto.t_fec25e47d8'.tr(),
+      description: 'auto.t_90b9c2b24c'.tr(),
       icon: Icons.share,
       imageAsset: 'assets/images/services/social.webp',
     ),
     _ServiceCardData(
       slug: 'ads',
       number: '03',
-      title: 'الإعلانات الممولة',
-      description:
-          'حملات ذكية على المنصات المناسبة لجمهورك، بمتابعة مستمرة وتحسين للنتائج.',
+      title: 'auto.t_c18b0ca07e'.tr(),
+      description: 'auto.t_7833e9d1d7'.tr(),
       icon: Icons.campaign,
       imageAsset: 'assets/images/services/ads.webp',
     ),
     _ServiceCardData(
       slug: 'web',
       number: '04',
-      title: 'تصميم وتطوير المواقع',
-      description:
-          'مواقع ويب سريعة، متجاوبة، ومحسنة لمحركات البحث تحول الزوار إلى عملاء.',
+      title: 'auto.t_22aaa1064b'.tr(),
+      description: 'auto.t_dfd354088f'.tr(),
       icon: Icons.code,
       imageAsset: 'assets/images/services/web.webp',
     ),
     _ServiceCardData(
       slug: 'mobile-app',
       number: '05',
-      title: 'تصميم وتطوير تطبيقات موبايل',
-      description:
-          'نقوم بتصميم وتطوير تطبيقات موبايل احترافية لأندرويد وiOS لزيادة تفاعل عملائك وتوسيع نطاق علامتك التجارية.',
+      title: 'auto.t_75b4366b3d'.tr(),
+      description: 'auto.t_b8d7e8ed60'.tr(),
       icon: Icons.phone_iphone,
       imageAsset: 'assets/images/services/mobile.webp',
     ),
     _ServiceCardData(
       slug: 'boost',
       number: '06',
-      title: 'تزويد منصات السوشيال ميديا',
-      description:
-          'خدمات نمو مدروسة تساعد حضورك الرقمي يوصل بشكل أقوى وأسرع للجمهور المناسب.',
+      title: 'auto.t_a926e055d6'.tr(),
+      description: 'auto.t_150d4b670a'.tr(),
       icon: Icons.photo_camera,
       imageAsset: 'assets/images/services/boost.webp',
     ),
     _ServiceCardData(
       slug: 'video',
       number: '07',
-      title: 'إنشاء وتعديل الفيديوهات',
-      description:
-          'فيديوهات قصيرة ورييلز ومونتاج إعلاني يعرض رسالتك بشكل جذاب ومناسب للمنصات.',
+      title: 'auto.t_261ea35f06'.tr(),
+      description: 'auto.t_ce74767a58'.tr(),
       icon: Icons.videocam,
       imageAsset: 'assets/images/services/video.webp',
     ),
     _ServiceCardData(
       slug: 'seo',
       number: '08',
-      title: 'تحسين محركات البحث',
-      description:
-          'نحسن ظهورك في نتائج البحث ببنية تقنية ومحتوى واضح وخطة كلمات مفتاحية فعالة.',
+      title: 'auto.t_943b26af5b'.tr(),
+      description: 'auto.t_14f233c2dd'.tr(),
       icon: Icons.manage_search,
       imageAsset: 'assets/images/services/seo.webp',
     ),
     _ServiceCardData(
       slug: 'moderator',
       number: '09',
-      title: 'إدارة التعليقات والرسائل',
-      description:
-          'فريق متابعة يرد وينظم المحادثات ويحافظ على سرعة التواصل مع جمهورك.',
+      title: 'auto.t_c7351ab69b'.tr(),
+      description: 'auto.t_f9cacc63a6'.tr(),
       icon: Icons.support_agent,
       imageAsset: 'assets/images/services/moderator.webp',
     ),
     _ServiceCardData(
       slug: 'brand-plan',
       number: '10',
-      title: 'خطة البراند المتكاملة',
-      description:
-          'خطة استراتيجية تحدد تموضع العلامة ورسائلها وخطوات نموها التسويقية.',
+      title: 'auto.t_f9ebce237f'.tr(),
+      description: 'auto.t_4df6936306'.tr(),
       icon: Icons.diamond,
       imageAsset: 'assets/images/services/brand-plan.webp',
     ),
@@ -146,13 +137,13 @@ class _EtbalyServicesShowcaseSectionState
     return Directionality(
       textDirection: TextDirection.rtl,
       child: EtbalyWebSectionShell(
-        backgroundPainter: const _ServicesPainter(),
+        backgroundPainter: _ServicesPainter(),
         child: Column(
           children: [
-            const EtbalyWebBadge(label: 'ما نقدمه'),
-            const SizedBox(height: 18),
+            EtbalyWebBadge(label: 'auto.t_9a552e5cc5'.tr()),
+            SizedBox(height: 18.h),
             Text(
-              'كل ما تحتاجه لنجاحك الرقمي',
+              'auto.t_99b253f069'.tr(),
               textAlign: TextAlign.center,
               style: context.textTheme.displaySmall?.copyWith(
                 color: EtbalyWebColors.heading,
@@ -161,11 +152,11 @@ class _EtbalyServicesShowcaseSectionState
                 height: 1.15,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
+              constraints: BoxConstraints(maxWidth: 720.w),
               child: Text(
-                'حلول تسويقية متكاملة ومتطورة تضع علامتك التجارية في المكان الذي تستحقه',
+                'auto.t_0c5a74ddba'.tr(),
                 textAlign: TextAlign.center,
                 style: context.textTheme.titleMedium?.copyWith(
                   color: EtbalyWebColors.heading.withValues(alpha: 0.9),
@@ -175,7 +166,7 @@ class _EtbalyServicesShowcaseSectionState
                 ),
               ),
             ),
-            const SizedBox(height: 34),
+            SizedBox(height: 34.h),
             EtbalyWebResponsiveGrid(
               children: [
                 for (final service in EtbalyServicesShowcaseSection._services)
@@ -196,7 +187,7 @@ class _ServiceShowcaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(16);
+    final borderRadius = BorderRadius.circular(16.r);
 
     return Material(
       color: Colors.transparent,
@@ -209,22 +200,22 @@ class _ServiceShowcaseCard extends StatelessWidget {
             color: const Color(0xFF0F0D1D),
             borderRadius: borderRadius,
             border: Border.all(color: EtbalyWebColors.border),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
                 color: EtbalyWebColors.shadow,
-                blurRadius: 20,
-                offset: Offset(0, 12),
+                blurRadius: 20.r,
+                offset: Offset(0.w, 12.h),
               ),
             ],
           ),
           child: Stack(
             children: [
               Positioned(
-                top: -48,
-                left: -48,
+                top: -48.h,
+                left: -48.w,
                 child: Container(
-                  width: 160,
-                  height: 160,
+                  width: 160.w,
+                  height: 160.h,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
@@ -265,8 +256,8 @@ class _ServiceShowcaseCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 17),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 18.w, vertical: 17.h),
                     decoration: const BoxDecoration(
                       color: Color(0xFF11101F),
                       border: Border(
@@ -279,19 +270,19 @@ class _ServiceShowcaseCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'عرض التفاصيل',
+                          'auto.t_932d8ab1c1'.tr(),
                           textAlign: TextAlign.right,
                           style: context.textTheme.labelLarge?.copyWith(
                             color: EtbalyWebColors.gold,
                             fontWeight: FontWeight.w900,
-                            fontSize: 15,
+                            fontSize: 15.sp,
                           ),
                         ),
-                        const SizedBox(width: 7),
-                        const Icon(
+                        SizedBox(width: 7.w),
+                        Icon(
                           Icons.arrow_forward,
                           color: EtbalyWebColors.gold,
-                          size: 18,
+                          size: 18.sp,
                         ),
                       ],
                     ),
@@ -299,11 +290,11 @@ class _ServiceShowcaseCard extends StatelessWidget {
                 ],
               ),
               Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
+                bottom: 0.h,
+                left: 0.w,
+                right: 0.w,
                 child: Container(
-                  height: 3,
+                  height: 3.h,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -331,7 +322,7 @@ class _ServiceShowcaseCard extends StatelessWidget {
 ImageProvider _serviceImageProvider(String asset) {
   return ResizeImage(
     AssetImage(asset),
-    width: 900,
+    width: 900.w.round(),
   );
 }
 
@@ -363,7 +354,7 @@ class _ServiceAssetImage extends StatelessWidget {
 }
 
 class _ServiceCardData {
-  const _ServiceCardData({
+  _ServiceCardData({
     required this.slug,
     required this.number,
     required this.title,
@@ -390,7 +381,7 @@ class _ServiceImageFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18.r),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
@@ -404,8 +395,8 @@ class _ServiceImageFallback extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            top: 0,
-            right: 0,
+            top: 0.h,
+            right: 0.w,
             child: Text(
               service.number,
               style: context.textTheme.headlineMedium?.copyWith(
@@ -421,9 +412,9 @@ class _ServiceImageFallback extends StatelessWidget {
                 Icon(
                   service.icon,
                   color: EtbalyWebColors.gold,
-                  size: 48,
+                  size: 48.sp,
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14.h),
                 Text(
                   service.title,
                   textAlign: TextAlign.center,
@@ -433,7 +424,7 @@ class _ServiceImageFallback extends StatelessWidget {
                     height: 1.25,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
                   service.description,
                   textAlign: TextAlign.center,
@@ -454,7 +445,7 @@ class _ServiceImageFallback extends StatelessWidget {
 }
 
 class _ServicesPainter extends CustomPainter {
-  const _ServicesPainter();
+  _ServicesPainter();
 
   @override
   void paint(Canvas canvas, Size size) {

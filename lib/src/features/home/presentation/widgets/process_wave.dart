@@ -26,7 +26,7 @@ class _ProcessWave extends StatelessWidget {
               children: [
                 _WorkStepNumber(
                     number: wave.number, large: true, accent: wave.accent),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: waveTextWidth),
                   child: Column(
@@ -44,7 +44,7 @@ class _ProcessWave extends StatelessWidget {
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       Text(
                         wave.subtitle,
                         textAlign: TextAlign.right,
@@ -60,11 +60,11 @@ class _ProcessWave extends StatelessWidget {
                   ),
                 ),
                 if (!isMobile) ...[
-                  const SizedBox(width: 18),
+                  SizedBox(width: 18.w),
                   SizedBox(
                     width: context.width < 900 ? 96 : 132,
                     child: SizedBox(
-                      height: 44,
+                      height: 44.h,
                       child: CustomPaint(
                         painter: _WaveConnectorPainter(
                           accent: wave.accent,

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,9 +10,31 @@ import 'package:go_router/go_router.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../data/portfolio_data.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+extension _PortfolioIndustryLocale on PortfolioIndustry {
+  String localizedName(BuildContext context) =>
+      context.locale.languageCode == 'en' ? nameEn : nameAr;
+}
+
+extension _PortfolioSpecialtyLocale on PortfolioSpecialty {
+  String localizedName(BuildContext context) =>
+      context.locale.languageCode == 'en' ? nameEn : nameAr;
+}
+
+extension _PortfolioMediaLocale on PortfolioMedia {
+  String localizedTitle(BuildContext context) =>
+      context.locale.languageCode == 'en' ? titleEn : titleAr;
+
+  String localizedDesc(BuildContext context) =>
+      context.locale.languageCode == 'en' ? descEn : descAr;
+
+  String localizedTag(BuildContext context) =>
+      context.locale.languageCode == 'en' ? tagEn : tagAr;
+}
 
 class PortfolioScreen extends StatefulWidget {
   const PortfolioScreen({super.key});
@@ -27,10 +50,14 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   static const _reviewCooldown = Duration(minutes: 5);
 
   late final AnimationController _bgController;
+  final _scrollController = ScrollController();
   final _commentController = TextEditingController();
   final _customIndustryController = TextEditingController();
   final _customPhoneController = TextEditingController();
   final _dio = Dio();
+
+  double _mainScrollOffset = 0;
+  double _specialtyScrollOffset = 0;
 
   PortfolioIndustry? _industry;
   PortfolioSpecialty? _specialty;
@@ -57,6 +84,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _commentController.dispose();
     _customIndustryController.dispose();
     _customPhoneController.dispose();
@@ -69,17 +97,16 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   List<PortfolioMedia> get _photos {
     if (_specialty != null) return _specialty!.photos;
     if (_isDirectMode) return _industry!.photos;
-    return const [];
+    return [];
   }
 
   List<PortfolioMedia> get _reels {
     if (_specialty != null) return _specialty!.reels;
     if (_isDirectMode) return _industry!.reels;
-    return const [];
+    return [];
   }
 
   String _url(String path) => Uri.encodeFull('$_assetBase$path');
-  String _mediaAsset(String path) => 'assets/images/portfolio/media/$path';
 
   Color _color(String hex) {
     final cleaned = hex.replaceAll('#', '');
@@ -87,6 +114,8 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   }
 
   void _selectIndustry(PortfolioIndustry industry) {
+    _mainScrollOffset =
+        _scrollController.hasClients ? _scrollController.offset : 0;
     setState(() {
       _industry = industry;
       _specialty = null;
@@ -94,18 +123,27 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       _photosVisible = 6;
       _reelsVisible = 6;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    });
   }
 
   void _selectSpecialty(PortfolioSpecialty specialty) {
+    _specialtyScrollOffset =
+        _scrollController.hasClients ? _scrollController.offset : 0;
     setState(() {
       _specialty = specialty;
       _tab = 'photos';
       _photosVisible = 6;
       _reelsVisible = 6;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    });
   }
 
   void _back() {
+    final goingToMain = _specialty == null;
     setState(() {
       if (_specialty != null) {
         _specialty = null;
@@ -116,46 +154,39 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       _photosVisible = 6;
       _reelsVisible = 6;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final target = goingToMain ? _mainScrollOffset : _specialtyScrollOffset;
+      _scrollController.jumpTo(
+        target.clamp(0, _scrollController.position.maxScrollExtent),
+      );
+    });
   }
 
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.parse(url);
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened) {
-      await launchUrl(uri, mode: LaunchMode.platformDefault);
-    }
-  }
-
-  Future<void> _openClassPdf(String key) async {
-    const ids = {
-      'classA': '1xX3oVh8X4gXhm4EHGobkgymPm_cvYBak',
-      'classB': '1OMlt-uM8cu2LuuDmE-E5_kxv1H4Bsr7q',
+  Future<void> _viewClassPdf(BuildContext context, String key) async {
+    final fileNames = {
+      'classA': 'Class_A.pdf',
+      'classB': 'Class_B.pdf',
     };
-    await _openUrl(
-      'https://drive.google.com/file/d/${ids[key]}/view?usp=drive_link',
-    );
+    final fileName = fileNames[key]!;
+    final bytes = await rootBundle.load('assets/files/portfolio/$fileName');
+    final dir = await getTemporaryDirectory();
+    final outFile = File('${dir.path}/$fileName');
+    await outFile.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
+    await OpenFilex.open(outFile.path, type: 'application/pdf');
   }
 
   Future<void> _downloadClassPdf(BuildContext context, String file) async {
     final bytes = await rootBundle.load('assets/files/portfolio/$file');
-    final dir = await getApplicationDocumentsDirectory();
-    final portfolioDir = Directory('${dir.path}/portfolio');
-    if (!await portfolioDir.exists()) {
-      await portfolioDir.create(recursive: true);
-    }
-    final outFile = File('${portfolioDir.path}/$file');
+    final downloadsDir = await getDownloadsDirectory() ??
+        await getApplicationDocumentsDirectory();
+    final outFile = File('${downloadsDir.path}/$file');
     await outFile.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
 
     if (!context.mounted) return;
-    final result = await OpenFilex.open(
-      outFile.path,
-      type: 'application/pdf',
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('auto.t_b6fed30510'.tr(args: [outFile.path]))),
     );
-    if (result.type != ResultType.done && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تم حفظ الملف: ${outFile.path}')),
-      );
-    }
   }
 
   Future<void> _loadReviewCooldown() async {
@@ -214,7 +245,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
     if (industry.isEmpty || phone.isEmpty) {
       setState(
-        () => _customIndustryError = 'برجاء إدخال نوع نشاطك ورقم التليفون',
+        () => _customIndustryError = 'auto.t_1d4e9c9bd6'.tr(),
       );
       return;
     }
@@ -255,9 +286,20 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       if (!mounted) return;
       setState(() {
         _customIndustrySubmitting = false;
-        _customIndustryError = 'تأكد من الاتصال بالإنترنت وحاول مجدداً';
+        _customIndustryError = 'auto.t_ecb1301c7e'.tr();
       });
     }
+  }
+
+  void _openReel(PortfolioMedia media) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (_) => _ReelDialog(
+        url: _url(media.videoUrl),
+        title: media.localizedTitle(context),
+      ),
+    );
   }
 
   void _openImage(PortfolioMedia media) {
@@ -277,29 +319,28 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                 );
 
             return Dialog(
-              insetPadding: const EdgeInsets.all(14),
+              insetPadding: EdgeInsets.all(14.r),
               backgroundColor: const Color(0xFF05040B),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(18.r),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(18.r),
                 child: Stack(
                   children: [
                     AspectRatio(
                       aspectRatio: 0.78,
-                      child: Image(
-                        image: AssetImage(_mediaAsset(images[index])),
+                      child: CachedNetworkImage(
+                        imageUrl: _url(images[index]),
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Center(
+                        errorWidget: (context, url, error) => const Center(
                           child: Icon(Icons.broken_image_rounded),
                         ),
                       ),
                     ),
                     Positioned(
-                      top: 10,
-                      right: 10,
+                      top: 10.h,
+                      right: 10.w,
                       child: _CircleButton(
                         icon: Icons.close_rounded,
                         onTap: () => Navigator.of(context).pop(),
@@ -307,9 +348,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                     ),
                     if (images.length > 1) ...[
                       Positioned(
-                        top: 0,
-                        bottom: 0,
-                        left: 8,
+                        top: 0.h,
+                        bottom: 0.h,
+                        left: 8.w,
                         child: Center(
                           child: _CircleButton(
                             icon: Icons.chevron_left_rounded,
@@ -318,9 +359,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                         ),
                       ),
                       Positioned(
-                        top: 0,
-                        bottom: 0,
-                        right: 8,
+                        top: 0.h,
+                        bottom: 0.h,
+                        right: 8.w,
                         child: Center(
                           child: _CircleButton(
                             icon: Icons.chevron_right_rounded,
@@ -356,29 +397,30 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               );
             },
             child: CustomScrollView(
+              controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(18, 24, 18, 34),
+                  padding: EdgeInsets.fromLTRB(18.w, 24.h, 18.w, 34.h),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       const _HeroSection(),
-                      const SizedBox(height: 26),
+                      SizedBox(height: 26.h),
                       if (_industry == null) ...[
                         _ClassPdfSection(
-                          onPreview: _openClassPdf,
+                          onPreview: (key) => _viewClassPdf(context, key),
                           onDownload: (file) => _downloadClassPdf(
                             context,
                             file,
                           ),
                         ),
-                        const SizedBox(height: 26),
+                        SizedBox(height: 26.h),
                         _IndustriesSection(
                           industries: portfolioIndustries,
                           onSelect: _selectIndustry,
                           colorOf: _color,
                         ),
-                        const SizedBox(height: 26),
+                        SizedBox(height: 26.h),
                         _CustomIndustrySection(
                           industryController: _customIndustryController,
                           phoneController: _customPhoneController,
@@ -392,7 +434,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                           },
                           onSubmit: _submitCustomIndustry,
                         ),
-                        const SizedBox(height: 26),
+                        SizedBox(height: 26.h),
                         _ReviewSection(
                           rating: _rating,
                           controller: _commentController,
@@ -402,15 +444,15 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                           onRating: (value) => setState(() => _rating = value),
                           onSubmit: _submitReview,
                         ),
-                        const SizedBox(height: 26),
+                        SizedBox(height: 26.h),
                         const _PortfolioCtaSection(),
                       ] else if (!_isDirectMode && _specialty == null) ...[
                         _Breadcrumb(
-                          title: _industry!.nameAr,
-                          subtitle: 'اختر التخصص لاستعراض الصور والريلز',
+                          title: _industry!.localizedName(context),
+                          subtitle: 'auto.t_0bcee321a1'.tr(),
                           onBack: _back,
                         ),
-                        const SizedBox(height: 18),
+                        SizedBox(height: 18.h),
                         _SpecialtiesSection(
                           industry: _industry!,
                           onSelect: _selectSpecialty,
@@ -418,11 +460,12 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                         ),
                       ] else ...[
                         _Breadcrumb(
-                          title: _specialty?.nameAr ?? _industry!.nameAr,
-                          subtitle: _industry!.nameAr,
+                          title: _specialty?.localizedName(context) ??
+                              _industry!.localizedName(context),
+                          subtitle: _industry!.localizedName(context),
                           onBack: _back,
                         ),
-                        const SizedBox(height: 18),
+                        SizedBox(height: 18.h),
                         _MediaSection(
                           tab: _tab,
                           photos: _photos,
@@ -439,9 +482,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                                 math.min(_reelsVisible + 6, _reels.length),
                           ),
                           onImage: _openImage,
-                          onReel: (media) => _openUrl(_url(media.videoUrl)),
+                          onReel: _openReel,
                           colorOf: _color,
-                          assetOf: _mediaAsset,
+                          assetOf: _url,
                         ),
                       ],
                     ]),
@@ -464,9 +507,9 @@ class _HeroSection extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 34, 18, 24),
+      padding: EdgeInsets.fromLTRB(18.w, 34.h, 18.w, 24.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22.r),
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -476,17 +519,17 @@ class _HeroSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const _SectionBadge(
+          _SectionBadge(
             icon: Icons.photo_library_rounded,
-            label: 'معرض الأعمال',
+            label: 'auto.t_103315edfb'.tr(),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           Text.rich(
             TextSpan(
-              text: 'بعض أعمالنا ',
+              text: 'auto.t_e3b7664e6e'.tr(),
               children: [
                 TextSpan(
-                  text: 'المميزة',
+                  text: 'auto.t_e97958863f'.tr(),
                   style: TextStyle(color: colors.gold),
                 ),
               ],
@@ -498,44 +541,44 @@ class _HeroSection extends StatelessWidget {
               height: 1.08,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
-            'كل مشروع يحكى قصة نجاح – تصفح أعمالنا واكتشف كيف نحوّل الأفكار إلى واقع رقمي مؤثر',
+            'auto.t_5d859f21d3'.tr(),
             textAlign: TextAlign.center,
             style: context.textTheme.bodyMedium?.copyWith(
               color: colors.textMuted,
               height: 1.6,
             ),
           ),
-          const SizedBox(height: 22),
-          const Row(
+          SizedBox(height: 22.h),
+          Row(
             children: [
               Expanded(
                 child: _HeroStat(
                   icon: Icons.work_rounded,
                   value: '+400K',
-                  label: 'مشروع',
+                  label: 'auto.t_707c299a84'.tr(),
                 ),
               ),
               Expanded(
                 child: _HeroStat(
                   icon: Icons.favorite_rounded,
                   value: '5000+',
-                  label: 'عميل',
+                  label: 'auto.t_8898da70bb'.tr(),
                 ),
               ),
               Expanded(
                 child: _HeroStat(
                   icon: Icons.calendar_month_rounded,
                   value: '+12',
-                  label: 'سنة',
+                  label: 'auto.t_f91a7c9817'.tr(),
                 ),
               ),
               Expanded(
                 child: _HeroStat(
                   icon: Icons.star_rounded,
                   value: '93%',
-                  label: 'رضا',
+                  label: 'auto.t_e111542812'.tr(),
                 ),
               ),
             ],
@@ -562,32 +605,32 @@ class _ClassPdfSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const _SectionHeader(
-          eyebrow: 'أعمالنا',
-          title: 'نماذج من أعمالنا',
-          desc: 'اضغط على الصورة لفتح المعاينة على Google Drive',
+        _SectionHeader(
+          eyebrow: 'auto.t_5e2ed1586d'.tr(),
+          title: 'auto.t_a2187d02b6'.tr(),
+          desc: 'auto.t_e4c7e33092'.tr(),
           icon: Icons.picture_as_pdf_rounded,
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: 18.h),
         LayoutBuilder(
           builder: (context, constraints) {
             final wide = constraints.maxWidth >= 720;
             final cardWidth =
                 wide ? (constraints.maxWidth - 22) / 2 : constraints.maxWidth;
             return Wrap(
-              spacing: 22,
-              runSpacing: 16,
+              spacing: 22.r,
+              runSpacing: 16.r,
               alignment: WrapAlignment.center,
               children: [
                 SizedBox(
                   width: cardWidth,
                   child: _ClassCard(
-                    title: 'الفئة الأولى',
-                    desc:
-                        'نماذج متميزة من أعمالنا الاحترافية في مختلف المجالات',
+                    title: 'auto.t_9b3c3218ef'.tr(),
+                    desc: 'auto.t_e03a824ef7'.tr(),
                     icon: FontAwesomeIcons.crown,
                     color: const Color(0xFFD4AF37),
                     pillColor: const Color(0xFFFF3D3D),
+                    isBlue: false,
                     onTap: () => onPreview('classA'),
                     onDownload: () => onDownload('Class_A.pdf'),
                   ),
@@ -595,12 +638,12 @@ class _ClassPdfSection extends StatelessWidget {
                 SizedBox(
                   width: cardWidth,
                   child: _ClassCard(
-                    title: 'الفئة الثانية',
-                    desc:
-                        'مجموعة إضافية من أعمالنا الإبداعية والتسويقية المتنوعة',
+                    title: 'auto.t_7c0d3dfc88'.tr(),
+                    desc: 'auto.t_44df6a0bc7'.tr(),
                     icon: FontAwesomeIcons.gem,
                     color: const Color(0xFF63B3ED),
                     pillColor: const Color(0xFF3D70FF),
+                    isBlue: true,
                     onTap: () => onPreview('classB'),
                     onDownload: () => onDownload('Class_B.pdf'),
                   ),
@@ -621,6 +664,7 @@ class _ClassCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.pillColor,
+    required this.isBlue,
     required this.onTap,
     required this.onDownload,
   });
@@ -630,6 +674,7 @@ class _ClassCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final Color pillColor;
+  final bool isBlue;
   final VoidCallback onTap;
   final VoidCallback onDownload;
 
@@ -637,140 +682,93 @@ class _ClassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xF20B0914),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withValues(alpha: 0.36)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.28),
-                blurRadius: 26,
-                offset: const Offset(0, 14),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xF20B0914),
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(color: color.withValues(alpha: 0.36)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 26.r,
+            offset: Offset(0.w, 14.h),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Stack(
-                  children: [
-                    Positioned.fill(child: _PdfAnimatedBackdrop(color: color)),
-                    PositionedDirectional(
-                      top: 12,
-                      end: 12,
-                      child: _SmallPill(
-                        icon: Icons.picture_as_pdf_rounded,
-                        label: 'PDF',
-                        color: pillColor,
-                      ),
-                    ),
-                    PositionedDirectional(
-                      top: 20,
-                      start: 26,
-                      child: Container(
-                        width: 54,
-                        height: 54,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.48),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: color.withValues(alpha: 0.25),
-                            width: 5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.42),
-                              blurRadius: 42,
-                            ),
-                          ],
-                        ),
-                        child: Image.asset(AppAssets.logo, width: 78),
-                      ),
-                    ),
-                  ],
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: _AnimatedPdfPreview(
+                color: color,
+                isBlue: isBlue,
+                pillColor: pillColor,
+              ),
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(18.w, 22.h, 18.w, 18.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D0A18),
+              border: Border(
+                top: BorderSide(
+                  color: colors.primaryLight.withValues(alpha: 0.16),
                 ),
               ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0D0A18),
-                  border: Border(
-                    top: BorderSide(
-                      color: colors.primaryLight.withValues(alpha: 0.16),
-                    ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color.withValues(alpha: 0.38)),
+                  ),
+                  child: Icon(icon, color: color, size: 18.sp),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  title,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: colors.textMain,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.14),
-                        shape: BoxShape.circle,
-                        border:
-                            Border.all(color: color.withValues(alpha: 0.38)),
-                      ),
-                      child: Icon(icon, color: color, size: 18),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      title,
-                      style: context.textTheme.titleMedium?.copyWith(
-                        color: colors.textMain,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      desc,
-                      textAlign: TextAlign.center,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: colors.textMuted,
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Divider(color: colors.primaryLight.withValues(alpha: 0.16)),
-                    const SizedBox(height: 8),
-                    _TextLinkButton(
-                      label: 'معاينة على Google Drive',
-                      icon: Icons.visibility_rounded,
-                      color: color,
-                      onTap: onTap,
-                    ),
-                    const SizedBox(height: 14),
-                    _ActionButton(
-                      label: 'تحميل الملف',
-                      icon: Icons.download_rounded,
-                      color: color,
-                      onTap: onDownload,
-                    ),
-                  ],
+                SizedBox(height: 8.h),
+                Text(
+                  desc,
+                  textAlign: TextAlign.center,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: colors.textMuted,
+                    height: 1.45,
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 16.h),
+                Divider(color: colors.primaryLight.withValues(alpha: 0.16)),
+                SizedBox(height: 8.h),
+                _TextLinkButton(
+                  label: 'auto.t_fd3141c19a'.tr(),
+                  icon: Icons.visibility_rounded,
+                  color: color,
+                  onTap: onTap,
+                ),
+                SizedBox(height: 14.h),
+                _ActionButton(
+                  label: 'auto.t_0d8c9f7308'.tr(),
+                  icon: Icons.download_rounded,
+                  color: color,
+                  onTap: onDownload,
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -792,21 +790,21 @@ class _IndustriesSection extends StatelessWidget {
     return _Panel(
       child: Column(
         children: [
-          const _SectionHeader(
-            eyebrow: 'اختر مجالك',
-            title: 'بعض المجالات التي نخدمها',
-            desc: 'اضغط على مجال لاستعراض أعمالنا فيه',
+          _SectionHeader(
+            eyebrow: 'auto.t_f6736b6f48'.tr(),
+            title: 'auto.t_be72c00083'.tr(),
+            desc: 'auto.t_1e75bd77db'.tr(),
             icon: Icons.grid_view_rounded,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: industries.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 10.r,
+              crossAxisSpacing: 10.r,
               childAspectRatio: 0.82,
             ),
             itemBuilder: (context, index) {
@@ -845,20 +843,20 @@ class _SpecialtiesSection extends StatelessWidget {
       child: Column(
         children: [
           _SectionHeader(
-            eyebrow: industry.nameAr,
-            title: 'اختر التخصص',
-            desc: 'اضغط على التخصص لاستعراض الصور والريلز',
+            eyebrow: industry.localizedName(context),
+            title: 'auto.t_94f68e30c1'.tr(),
+            desc: 'auto.t_9932767326'.tr(),
             icon: _iconFor(industry.icon),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: industry.specialties.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 10.r,
+              crossAxisSpacing: 10.r,
               childAspectRatio: 1.02,
             ),
             itemBuilder: (context, index) {
@@ -901,10 +899,10 @@ class _CustomIndustrySection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+      padding: EdgeInsets.fromLTRB(18.w, 20.h, 18.w, 18.h),
       decoration: BoxDecoration(
         color: const Color(0xC90B0914),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(
           color: submitted
               ? const Color(0xFF25D366).withValues(alpha: 0.42)
@@ -914,8 +912,8 @@ class _CustomIndustrySection extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            blurRadius: 24.r,
+            offset: Offset(0.w, 12.h),
           ),
         ],
       ),
@@ -932,8 +930,8 @@ class _CustomIndustrySection extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                     children: [
                       Container(
-                        width: 34,
-                        height: 34,
+                        width: 34.w,
+                        height: 34.h,
                         decoration: BoxDecoration(
                           color: colors.primaryLight.withValues(alpha: 0.14),
                           shape: BoxShape.circle,
@@ -944,26 +942,26 @@ class _CustomIndustrySection extends StatelessWidget {
                         child: Icon(
                           Icons.help_rounded,
                           color: colors.primaryLight,
-                          size: 20,
+                          size: 20.sp,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12.w),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           textDirection: TextDirection.rtl,
                           children: [
                             Text(
-                              'مجالك مش موجود؟',
+                              'auto.t_7e933237c8'.tr(),
                               textAlign: TextAlign.right,
                               style: context.textTheme.titleMedium?.copyWith(
                                 color: colors.textMain,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4.h),
                             Text(
-                              'اكتب شغلك وهيتواصل معك متخصص من فريقنا فوراً',
+                              'auto.t_40c8381378'.tr(),
                               textAlign: TextAlign.right,
                               style: context.textTheme.bodySmall?.copyWith(
                                 color: colors.textMuted,
@@ -975,14 +973,14 @@ class _CustomIndustrySection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final wide = constraints.maxWidth >= 620;
                       final fields = [
                         _CustomIndustryInput(
                           controller: industryController,
-                          hint: 'مثلاً: مطعم، عيادة، محل ملابس...',
+                          hint: 'auto.t_6930dd2f9f'.tr(),
                           icon: Icons.work_rounded,
                           iconColor: colors.textMuted,
                           submitting: submitting,
@@ -993,7 +991,7 @@ class _CustomIndustrySection extends StatelessWidget {
                         ),
                         _CustomIndustryInput(
                           controller: phoneController,
-                          hint: 'رقم تليفونك أو واتساب',
+                          hint: 'auto.t_1b5839271a'.tr(),
                           icon: FontAwesomeIcons.whatsapp,
                           iconColor: const Color(0xFF25D366),
                           submitting: submitting,
@@ -1009,7 +1007,7 @@ class _CustomIndustrySection extends StatelessWidget {
                         return Column(
                           children: [
                             fields[0],
-                            const SizedBox(height: 10),
+                            SizedBox(height: 10.h),
                             fields[1],
                           ],
                         );
@@ -1018,23 +1016,23 @@ class _CustomIndustrySection extends StatelessWidget {
                       return Row(
                         children: [
                           Expanded(child: fields[0]),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12.w),
                           Expanded(child: fields[1]),
                         ],
                       );
                     },
                   ),
                   if (error.isNotEmpty) ...[
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     Row(
                       textDirection: TextDirection.rtl,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error_rounded,
-                          color: Color(0xFFFF6B6B),
-                          size: 16,
+                          color: const Color(0xFFFF6B6B),
+                          size: 16.sp,
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6.w),
                         Expanded(
                           child: Text(
                             error,
@@ -1048,7 +1046,7 @@ class _CustomIndustrySection extends StatelessWidget {
                       ],
                     ),
                   ],
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   Align(
                     alignment: AlignmentDirectional.centerEnd,
                     child: _CustomSubmitButton(
@@ -1093,10 +1091,10 @@ class _CustomIndustryInput extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      height: 44,
+      height: 44.h,
       decoration: BoxDecoration(
         color: const Color(0xAA151024),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(
           color: hasError
               ? const Color(0xFFFF6B6B)
@@ -1116,7 +1114,7 @@ class _CustomIndustryInput extends StatelessWidget {
           style: TextStyle(
             color: colors.textMain,
             fontWeight: FontWeight.w800,
-            fontSize: 13,
+            fontSize: 13.sp,
           ),
           decoration: InputDecoration(
             isDense: true,
@@ -1125,9 +1123,9 @@ class _CustomIndustryInput extends StatelessWidget {
             hintStyle: TextStyle(
               color: colors.textMuted.withValues(alpha: 0.7),
               fontWeight: FontWeight.w700,
-              fontSize: 12,
+              fontSize: 12.sp,
             ),
-            prefixIcon: Icon(icon, color: iconColor, size: 18),
+            prefixIcon: Icon(icon, color: iconColor, size: 18.sp),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 13,
@@ -1154,30 +1152,30 @@ class _CustomSubmitButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: submitting ? null : onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: Ink(
-          width: 276,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          width: 276.w,
+          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 13.h),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             gradient: const LinearGradient(
               colors: [Color(0xFFC9A227), Color(0xFF8B3DFF)],
             ),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x448B3DFF),
-                blurRadius: 22,
-                offset: Offset(0, 10),
+                color: const Color(0x448B3DFF),
+                blurRadius: 22.r,
+                offset: Offset(0.w, 10.h),
               ),
             ],
           ),
           child: Center(
             child: submitting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
+                ? SizedBox(
+                    width: 18.w,
+                    height: 18.h,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                      strokeWidth: 2.r,
                       color: Colors.white,
                     ),
                   )
@@ -1185,14 +1183,14 @@ class _CustomSubmitButton extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     textDirection: TextDirection.rtl,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.send_rounded,
                         color: Colors.white,
-                        size: 18,
+                        size: 18.sp,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       Text(
-                        'أرسل وهيتواصل معك فريقنا',
+                        'auto.t_5ee2a083df'.tr(),
                         style: context.textTheme.labelLarge?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
@@ -1218,8 +1216,8 @@ class _CustomIndustrySent extends StatelessWidget {
       key: const ValueKey('custom-sent'),
       children: [
         Container(
-          width: 46,
-          height: 46,
+          width: 46.w,
+          height: 46.h,
           decoration: BoxDecoration(
             color: const Color(0xFF25D366).withValues(alpha: 0.14),
             shape: BoxShape.circle,
@@ -1229,9 +1227,9 @@ class _CustomIndustrySent extends StatelessWidget {
             color: Color(0xFF25D366),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Text(
-          'سيتواصل معك أحد أعضاء فريقنا المتخصص في التسويق عبر الهاتف أو واتساب للاهتمام بكل التفاصيل ومساعدتك في تحقيق أفضل النتائج.',
+          'auto.t_f8e81a2053'.tr(),
           textAlign: TextAlign.center,
           style: context.textTheme.bodyMedium?.copyWith(
             color: colors.textMain,
@@ -1291,22 +1289,24 @@ class _MediaSection extends StatelessWidget {
                 child: _TabButton(
                   active: tab == 'photos',
                   icon: Icons.image_rounded,
-                  label: 'الصور (${photos.length})',
+                  label:
+                      'auto.t_bc7a21d8bb'.tr(args: [photos.length.toString()]),
                   onTap: () => onTab('photos'),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10.w),
               Expanded(
                 child: _TabButton(
                   active: tab == 'reels',
                   icon: Icons.movie_rounded,
-                  label: 'الريلز (${reels.length})',
+                  label:
+                      'auto.t_d1c0e0b7e7'.tr(args: [reels.length.toString()]),
                   onTap: () => onTab('reels'),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           if (items.isEmpty)
             const _EmptyState()
           else
@@ -1314,16 +1314,17 @@ class _MediaSection extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: items.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
+                mainAxisSpacing: 10.r,
+                crossAxisSpacing: 10.r,
                 childAspectRatio: 0.74,
               ),
               itemBuilder: (context, index) {
                 final item = items[index];
                 return _MediaCard(
                   media: item,
+                  index: index,
                   isReel: tab == 'reels',
                   color: colorOf(item.accentColor),
                   imagePath: assetOf(item.thumbnail),
@@ -1332,9 +1333,11 @@ class _MediaSection extends StatelessWidget {
               },
             ),
           if (hasMore) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             _ActionButton(
-              label: tab == 'photos' ? 'عرض صور أكثر' : 'عرض ريلز أكثر',
+              label: tab == 'photos'
+                  ? 'auto.t_09a1c4795b'.tr()
+                  : 'auto.t_466674eace'.tr(),
               icon: Icons.add_rounded,
               color: context.etbalyColors.gold,
               onTap: tab == 'photos' ? onMorePhotos : onMoreReels,
@@ -1372,13 +1375,13 @@ class _ReviewSection extends StatelessWidget {
     return _Panel(
       child: Column(
         children: [
-          const _SectionHeader(
-            eyebrow: 'آراؤكم تهمنا',
-            title: 'هل أعجبك ما رأيت؟',
-            desc: 'شاركنا رأيك – كل تقييم يساعدنا على التطور',
+          _SectionHeader(
+            eyebrow: 'auto.t_db138f8cff'.tr(),
+            title: 'auto.t_c426dbb874'.tr(),
+            desc: 'auto.t_5e7705fe07'.tr(),
             icon: Icons.star_rounded,
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
@@ -1390,56 +1393,58 @@ class _ReviewSection extends StatelessWidget {
                       ? Icons.star_rounded
                       : Icons.star_border_rounded,
                   color: colors.gold,
-                  size: 32,
+                  size: 32.sp,
                 ),
               );
             }),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           Text(
-            'انقر على النجوم لتقييمنا',
+            'auto.t_1949f29a1f'.tr(),
             style: context.textTheme.labelMedium?.copyWith(
               color: colors.textMuted,
               fontWeight: FontWeight.w800,
             ),
           ),
           if (rating > 0 && !submitted) ...[
-            const SizedBox(height: 14),
+            SizedBox(height: 14.h),
             TextField(
               controller: controller,
               minLines: 3,
               maxLines: 4,
               style: TextStyle(color: colors.textMain),
               decoration: InputDecoration(
-                hintText: 'اكتب تعليقك اختياريًا',
+                hintText: 'auto.t_bf35722b2f'.tr(),
                 hintStyle: TextStyle(color: colors.textMuted),
                 filled: true,
                 fillColor: const Color(0x990B0914),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14.r),
                   borderSide: BorderSide(color: colors.borderColor),
                 ),
               ),
             ),
           ],
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           if (submitted)
-            const _StatusBox(
-              text: 'تم إرسال تقييمك. شكراً لوقتك',
-              color: Color(0xFF68D391),
+            _StatusBox(
+              text: 'auto.t_bc222f68bb'.tr(),
+              color: const Color(0xFF68D391),
             )
           else if (rating > 0) ...[
             _ActionButton(
-              label: submitting ? 'جاري الإرسال...' : 'إرسال التقييم',
+              label: submitting
+                  ? 'auto.t_b303cc20c1'.tr()
+                  : 'auto.t_4e932bac85'.tr(),
               icon: Icons.send_rounded,
               color: colors.gold,
               onTap: submitting ? () {} : onSubmit,
             ),
             if (error) ...[
-              const SizedBox(height: 10),
-              const _StatusBox(
-                text: 'تعذر إرسال التقييم الآن. حاول مرة أخرى.',
-                color: Color(0xFFFF6B6B),
+              SizedBox(height: 10.h),
+              _StatusBox(
+                text: 'auto.t_e2879ed925'.tr(),
+                color: const Color(0xFFFF6B6B),
               ),
             ],
           ],
@@ -1458,28 +1463,28 @@ class _PortfolioCtaSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 42),
+      padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 42.h),
       decoration: BoxDecoration(
         color: const Color(0xEE1A1628),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.26),
-            blurRadius: 30,
-            offset: const Offset(0, 16),
+            blurRadius: 30.r,
+            offset: Offset(0.w, 16.h),
           ),
         ],
       ),
       child: Column(
         children: [
-          const _SectionBadge(
+          _SectionBadge(
             icon: Icons.rocket_launch_rounded,
-            label: 'معرض الأعمال',
+            label: 'auto.t_103315edfb'.tr(),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           Text(
-            'جاهز تبدأ رحلتك معانا؟',
+            'auto.t_845a30e13d'.tr(),
             textAlign: TextAlign.center,
             style: context.textTheme.headlineSmall?.copyWith(
               color: colors.textMain,
@@ -1487,21 +1492,21 @@ class _PortfolioCtaSection extends StatelessWidget {
               height: 1.15,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
-            'تواصل معنا الآن وابدأ طريقك نحو النجاح',
+            'auto.t_9cda1ed5f2'.tr(),
             textAlign: TextAlign.center,
             style: context.textTheme.bodyMedium?.copyWith(
               color: colors.textMuted,
               height: 1.55,
             ),
           ),
-          const SizedBox(height: 26),
+          SizedBox(height: 26.h),
           Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () => context.go(AppRoutes.contact),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(999.r),
               child: Ink(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 34,
@@ -1509,12 +1514,12 @@ class _PortfolioCtaSection extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: colors.gold,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(999.r),
                   boxShadow: [
                     BoxShadow(
                       color: colors.gold.withValues(alpha: 0.26),
-                      blurRadius: 24,
-                      offset: const Offset(0, 10),
+                      blurRadius: 24.r,
+                      offset: Offset(0.w, 10.h),
                     ),
                   ],
                 ),
@@ -1523,17 +1528,17 @@ class _PortfolioCtaSection extends StatelessWidget {
                   textDirection: TextDirection.rtl,
                   children: [
                     Text(
-                      'ابدأ الآن',
+                      'auto.t_e822237be7'.tr(),
                       style: context.textTheme.titleSmall?.copyWith(
                         color: Colors.black,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.arrow_back_rounded,
+                    SizedBox(width: 8.w),
+                    Icon(
+                      Icons.arrow_forward_rounded,
                       color: Colors.black,
-                      size: 20,
+                      size: 20.sp,
                     ),
                   ],
                 ),
@@ -1557,15 +1562,15 @@ class _Panel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: const Color(0xDD141020),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22.r),
         border: Border.all(
           color: context.etbalyColors.primaryLight.withValues(alpha: 0.18),
         ),
-        boxShadow: const [
-          BoxShadow(color: Color(0x66000000), blurRadius: 28),
+        boxShadow: [
+          BoxShadow(color: const Color(0x66000000), blurRadius: 28.r),
         ],
       ),
       child: child,
@@ -1592,7 +1597,7 @@ class _SectionHeader extends StatelessWidget {
     return Column(
       children: [
         _SectionBadge(icon: icon, label: eyebrow),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Text(
           title,
           textAlign: TextAlign.center,
@@ -1601,7 +1606,7 @@ class _SectionHeader extends StatelessWidget {
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           desc,
           textAlign: TextAlign.center,
@@ -1625,17 +1630,17 @@ class _SectionBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: colors.gold.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: colors.gold, size: 15),
-          const SizedBox(width: 7),
+          Icon(icon, color: colors.gold, size: 15.sp),
+          SizedBox(width: 7.w),
           Text(
             label,
             style: context.textTheme.labelMedium?.copyWith(
@@ -1668,7 +1673,7 @@ class _IndustryCard extends StatelessWidget {
       onTap: onTap,
       color: color,
       imagePath: 'assets/images/portfolio/industries/${index + 1}.webp',
-      title: industry.nameAr,
+      title: industry.localizedName(context),
     );
   }
 }
@@ -1692,18 +1697,18 @@ class _IndustryImageButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(10.r),
           decoration: BoxDecoration(
             color: const Color(0xAA0B0914),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             border: Border.all(color: color.withValues(alpha: 0.32)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.24),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                blurRadius: 24.r,
+                offset: Offset(0.w, 12.h),
               ),
             ],
           ),
@@ -1711,17 +1716,17 @@ class _IndustryImageButton extends StatelessWidget {
             aspectRatio: 1,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.28),
-                    blurRadius: 20,
-                    offset: const Offset(4, 8),
+                    blurRadius: 20.r,
+                    offset: Offset(4.w, 8.h),
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -1790,7 +1795,7 @@ class _IndustryImageFallback extends StatelessWidget {
     return Container(
       color: color.withValues(alpha: 0.12),
       alignment: Alignment.center,
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.r),
       child: Text(
         title,
         textAlign: TextAlign.center,
@@ -1818,80 +1823,65 @@ class _SpecialtyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _TileButton(
-      onTap: onTap,
-      color: color,
-      icon: _iconFor(specialty.icon),
-      title: specialty.nameAr,
-      subtitle:
-          '${specialty.photos.length} صورة | ${specialty.reels.length} ريلز',
-    );
-  }
-}
-
-class _TileButton extends StatelessWidget {
-  const _TileButton({
-    required this.onTap,
-    required this.color,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final VoidCallback onTap;
-  final Color color;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
     final colors = context.etbalyColors;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12.r),
           decoration: BoxDecoration(
             color: const Color(0xAA0B0914),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: color.withValues(alpha: 0.24)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Icon box
               Container(
-                width: 42,
-                height: 42,
+                width: 40.w,
+                height: 40.h,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withValues(alpha: 0.24)),
+                  borderRadius: BorderRadius.circular(11.r),
+                  border: Border.all(color: color.withValues(alpha: 0.28)),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child:
+                    Icon(_iconFor(specialty.icon), color: color, size: 19.sp),
               ),
               const Spacer(),
+              // Name
               Text(
-                title,
+                specialty.localizedName(context),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: context.textTheme.titleSmall?.copyWith(
+                style: context.textTheme.labelLarge?.copyWith(
                   color: colors.textMain,
-                  fontWeight: FontWeight.w900,
-                  height: 1.15,
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: colors.textMuted,
-                  fontWeight: FontWeight.w800,
-                ),
+              SizedBox(height: 6.h),
+              // Badges row
+              Wrap(
+                spacing: 5.r,
+                runSpacing: 4.r,
+                children: [
+                  _SpecBadge(
+                    icon: Icons.image_rounded,
+                    label: 'auto.t_0051eae24b'
+                        .tr(args: [specialty.photos.length.toString()]),
+                    color: color,
+                  ),
+                  _SpecBadge(
+                    icon: Icons.movie_rounded,
+                    label: 'auto.t_c95473ea98'
+                        .tr(args: [specialty.reels.length.toString()]),
+                    color: colors.textMuted,
+                  ),
+                ],
               ),
             ],
           ),
@@ -1901,9 +1891,49 @@ class _TileButton extends StatelessWidget {
   }
 }
 
+class _SpecBadge extends StatelessWidget {
+  const _SpecBadge({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(50.r),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10.sp, color: color),
+          SizedBox(width: 3.w),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MediaCard extends StatelessWidget {
   const _MediaCard({
     required this.media,
+    required this.index,
     required this.isReel,
     required this.color,
     required this.imagePath,
@@ -1911,6 +1941,7 @@ class _MediaCard extends StatelessWidget {
   });
 
   final PortfolioMedia media;
+  final int index;
   final bool isReel;
   final Color color;
   final String imagePath;
@@ -1923,11 +1954,11 @@ class _MediaCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xCC0B0914),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: color.withValues(alpha: 0.24)),
           ),
           clipBehavior: Clip.antiAlias,
@@ -1937,10 +1968,10 @@ class _MediaCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(
-                      imagePath,
+                    CachedNetworkImage(
+                      imageUrl: imagePath,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => ColoredBox(
+                      errorWidget: (context, url, error) => ColoredBox(
                         color: color.withValues(alpha: 0.12),
                         child: Icon(
                           isReel ? Icons.movie_rounded : Icons.image_rounded,
@@ -1963,26 +1994,26 @@ class _MediaCard extends StatelessWidget {
                     if (isReel)
                       Center(
                         child: Container(
-                          width: 48,
-                          height: 48,
+                          width: 48.w,
+                          height: 48.h,
                           decoration: BoxDecoration(
                             color: color,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.play_arrow_rounded,
                             color: Colors.white,
-                            size: 32,
+                            size: 32.sp,
                           ),
                         ),
                       ),
                     Positioned(
-                      right: 10,
-                      bottom: 10,
+                      right: 10.w,
+                      bottom: 10.h,
                       child: _SmallPill(
                         icon:
                             isReel ? Icons.movie_rounded : Icons.image_rounded,
-                        label: media.tagAr,
+                        label: media.localizedTag(context),
                         color: color,
                       ),
                     ),
@@ -1990,12 +2021,12 @@ class _MediaCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(10.r),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      media.titleAr,
+                      media.localizedTitle(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.labelLarge?.copyWith(
@@ -2003,9 +2034,9 @@ class _MediaCard extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4.h),
                     Text(
-                      media.descAr,
+                      media.localizedDesc(context),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.labelSmall?.copyWith(
@@ -2042,11 +2073,11 @@ class _Breadcrumb extends StatelessWidget {
       child: Row(
         children: [
           _IconAction(
-            icon: Icons.arrow_forward_rounded,
+            icon: Icons.arrow_back_rounded,
             color: colors.gold,
             onTap: onBack,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2058,7 +2089,7 @@ class _Breadcrumb extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   subtitle,
                   style: context.textTheme.bodySmall?.copyWith(
@@ -2094,19 +2125,20 @@ class _TabButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
             color: active ? colors.gold : const Color(0xAA0B0914),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14.r),
             border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: active ? Colors.black : colors.gold, size: 18),
-              const SizedBox(width: 8),
+              Icon(icon,
+                  color: active ? Colors.black : colors.gold, size: 18.sp),
+              SizedBox(width: 8.w),
               Text(
                 label,
                 style: context.textTheme.labelMedium?.copyWith(
@@ -2141,20 +2173,20 @@ class _ActionButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.13),
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             border: Border.all(color: color.withValues(alpha: 0.42)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: 8),
+              Icon(icon, color: color, size: 18.sp),
+              SizedBox(width: 8.w),
               Flexible(
                 child: Text(
                   label,
@@ -2193,9 +2225,9 @@ class _TextLinkButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2207,8 +2239,8 @@ class _TextLinkButton extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 7),
-              Icon(icon, color: color, size: 16),
+              SizedBox(width: 7.w),
+              Icon(icon, color: color, size: 16.sp),
             ],
           ),
         ),
@@ -2236,14 +2268,14 @@ class _IconAction extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Container(
-          width: 44,
-          height: 44,
+          width: 44.w,
+          height: 44.h,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.13),
             shape: BoxShape.circle,
             border: Border.all(color: color.withValues(alpha: 0.36)),
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: color, size: 20.sp),
         ),
       ),
     );
@@ -2265,17 +2297,17 @@ class _HeroStat extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 8.w),
       decoration: BoxDecoration(
         color: const Color(0x990B0914),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.18)),
       ),
       child: Column(
         children: [
-          Icon(icon, color: colors.gold, size: 20),
-          const SizedBox(height: 8),
+          Icon(icon, color: colors.gold, size: 20.sp),
+          SizedBox(height: 8.h),
           Text(
             value,
             style: context.textTheme.titleMedium?.copyWith(
@@ -2310,23 +2342,23 @@ class _SmallPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
       decoration: BoxDecoration(
         color: const Color(0xDD0B0914),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 12),
-          const SizedBox(width: 5),
+          Icon(icon, color: color, size: 12.sp),
+          SizedBox(width: 5.w),
           Text(
             label,
             style: context.textTheme.labelSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w900,
-              fontSize: 10,
+              fontSize: 10.sp,
             ),
           ),
         ],
@@ -2345,10 +2377,10 @@ class _StatusBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: color.withValues(alpha: 0.32)),
       ),
       child: Text(
@@ -2370,13 +2402,13 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
         color: const Color(0xAA0B0914),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Text(
-        'لا توجد عناصر في هذا التبويب حالياً',
+        'auto.t_f1f374ed5d'.tr(),
         textAlign: TextAlign.center,
         style: context.textTheme.bodyMedium?.copyWith(
           color: context.etbalyColors.textMuted,
@@ -2401,7 +2433,7 @@ class _CircleButton extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(8.r),
           child: Icon(icon, color: Colors.white),
         ),
       ),
@@ -2409,61 +2441,406 @@ class _CircleButton extends StatelessWidget {
   }
 }
 
-class _PdfAnimatedBackdrop extends StatelessWidget {
-  const _PdfAnimatedBackdrop({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _PdfBackdropPainter(color));
-  }
+// ── Star & Particle data ─────────────────────────────────────────
+class _StarDot {
+  _StarDot({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.delay,
+  });
+  final double x;
+  final double y;
+  final double size;
+  final double delay;
 }
 
-class _PdfBackdropPainter extends CustomPainter {
-  const _PdfBackdropPainter(this.color);
+class _ParticleDot {
+  _ParticleDot({
+    required this.x,
+    required this.size,
+    required this.delay,
+  });
+  final double x;
+  final double size;
+  final double delay;
+}
 
+// ── Stars painter ─────────────────────────────────────────────────
+class _StarsPainter extends CustomPainter {
+  _StarsPainter({
+    required this.stars,
+    required this.t,
+    required this.color,
+  });
+  final List<_StarDot> stars;
+  final double t;
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bg = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          const Color(0xFF110C1B),
-          color.withValues(alpha: 0.35),
-          const Color(0xFF080611),
-        ],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, bg);
-
-    final grid = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
-      ..strokeWidth = 1;
-    for (var x = 0.0; x < size.width; x += 34) {
-      canvas.drawLine(Offset(x, 0), Offset(x + 60, size.height), grid);
-    }
-    final glow = Paint()
-      ..shader = RadialGradient(
-        colors: [color.withValues(alpha: 0.28), Colors.transparent],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.5, size.height * 0.52),
-          radius: 120,
-        ),
+    for (final s in stars) {
+      final phase = (t + s.delay) % 1.0;
+      final alpha = (0.25 + 0.75 * math.sin(phase * math.pi)).clamp(0.0, 1.0);
+      final sc = (0.8 + 0.45 * math.sin(phase * math.pi)).clamp(0.5, 1.5);
+      canvas.drawCircle(
+        Offset(s.x * size.width, s.y * size.height),
+        s.size * sc * 0.5,
+        Paint()..color = color.withValues(alpha: alpha),
       );
-    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.52), 120, glow);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _PdfBackdropPainter oldDelegate) =>
-      oldDelegate.color != color;
+  bool shouldRepaint(_StarsPainter o) => o.t != t;
+}
+
+// ── Particles painter ─────────────────────────────────────────────
+class _ParticlesPainter extends CustomPainter {
+  _ParticlesPainter({
+    required this.particles,
+    required this.t,
+    required this.color,
+  });
+  final List<_ParticleDot> particles;
+  final double t;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final p in particles) {
+      final eff = (t + p.delay) % 1.0;
+      final double alpha;
+      if (eff < 0.20) {
+        alpha = eff / 0.20 * 0.7;
+      } else if (eff < 0.80) {
+        alpha = 0.7 - (eff - 0.20) / 0.60 * 0.3;
+      } else {
+        alpha = 0.4 * (1 - (eff - 0.80) / 0.20);
+      }
+      if (alpha < 0.01) continue;
+      final sc = 0.5 + eff * 0.6;
+      canvas.drawCircle(
+        Offset(p.x * size.width, size.height - eff * size.height * 1.1),
+        p.size * sc * 0.5,
+        Paint()..color = color.withValues(alpha: alpha),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ParticlesPainter o) => o.t != t;
+}
+
+// ── Animated PDF preview (logo floating, stars, orb, particles, shimmer) ──
+class _AnimatedPdfPreview extends StatefulWidget {
+  const _AnimatedPdfPreview({
+    required this.color,
+    required this.isBlue,
+    required this.pillColor,
+  });
+  final Color color;
+  final bool isBlue;
+  final Color pillColor;
+
+  @override
+  State<_AnimatedPdfPreview> createState() => _AnimatedPdfPreviewState();
+}
+
+class _AnimatedPdfPreviewState extends State<_AnimatedPdfPreview>
+    with TickerProviderStateMixin {
+  static final _rng = math.Random(42);
+
+  late final AnimationController _logoCtrl;
+  late final AnimationController _orbCtrl;
+  late final AnimationController _shimmerCtrl;
+  late final AnimationController _particleCtrl;
+  late final AnimationController _starCtrl;
+
+  late final List<_StarDot> _stars;
+  late final List<_ParticleDot> _particles;
+
+  @override
+  void initState() {
+    super.initState();
+    _logoCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5000),
+    )..repeat(reverse: true);
+    _orbCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5500),
+    )..repeat(reverse: true);
+    _shimmerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4200),
+    )..repeat();
+    _particleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    )..repeat();
+    _starCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
+
+    _stars = List.generate(
+      14,
+      (_) => _StarDot(
+        x: _rng.nextDouble(),
+        y: _rng.nextDouble() * 0.75,
+        size: _rng.nextDouble() * 2.5 + 1.0,
+        delay: _rng.nextDouble(),
+      ),
+    );
+    _particles = List.generate(
+      8,
+      (_) => _ParticleDot(
+        x: _rng.nextDouble(),
+        size: _rng.nextDouble() * 4 + 2,
+        delay: _rng.nextDouble(),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _logoCtrl.dispose();
+    _orbCtrl.dispose();
+    _shimmerCtrl.dispose();
+    _particleCtrl.dispose();
+    _starCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isBlue = widget.isBlue;
+    final accent = widget.color;
+    final orbColor = isBlue ? const Color(0xFF90CDF4) : const Color(0xFFE8E0C8);
+    final starColor = isBlue ? const Color(0xFFB4DCFF) : Colors.white;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // ── Sky gradient ──────────────────────────────────────────
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isBlue
+                  ? [
+                      const Color(0xFF071A3E),
+                      const Color(0xFF0B2A5A),
+                      const Color(0xFF0D1B4A),
+                    ]
+                  : [
+                      const Color(0xFF0A0E2A),
+                      const Color(0xFF0D1540),
+                      const Color(0xFF1A1040),
+                    ],
+              stops: const [0, 0.55, 1],
+            ),
+          ),
+        ),
+
+        // ── Ambient mid glow ──────────────────────────────────────
+        Positioned(
+          left: -30.w,
+          bottom: -20.h,
+          child: Container(
+            width: 180.w,
+            height: 110.h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(90.r),
+              gradient: RadialGradient(
+                colors: [accent.withValues(alpha: 0.09), Colors.transparent],
+              ),
+            ),
+          ),
+        ),
+
+        // ── Stars ─────────────────────────────────────────────────
+        AnimatedBuilder(
+          animation: _starCtrl,
+          builder: (_, __) => CustomPaint(
+            painter: _StarsPainter(
+              stars: _stars,
+              t: _starCtrl.value,
+              color: starColor,
+            ),
+          ),
+        ),
+
+        // ── Orb (moon / blue gem) ─────────────────────────────────
+        Positioned(
+          top: 18.h,
+          right: 18.w,
+          child: AnimatedBuilder(
+            animation: _orbCtrl,
+            builder: (_, child) => Transform.translate(
+              offset: Offset(
+                0,
+                Curves.easeInOut.transform(_orbCtrl.value) * -7,
+              ),
+              child: child,
+            ),
+            child: Container(
+              width: 40.w,
+              height: 40.h,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: orbColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: orbColor.withValues(alpha: 0.22),
+                    blurRadius: 36.r,
+                    spreadRadius: 7.r,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // ── Rising particles ──────────────────────────────────────
+        AnimatedBuilder(
+          animation: _particleCtrl,
+          builder: (_, __) => CustomPaint(
+            painter: _ParticlesPainter(
+              particles: _particles,
+              t: _particleCtrl.value,
+              color: accent,
+            ),
+          ),
+        ),
+
+        // ── Ground glow ───────────────────────────────────────────
+        Positioned(
+          bottom: 0.h,
+          left: 0.w,
+          right: 0.w,
+          height: 55.h,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  accent.withValues(alpha: 0.15),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // ── Floating logo ─────────────────────────────────────────
+        Positioned.fill(
+          child: Center(
+            child: AnimatedBuilder(
+              animation: _logoCtrl,
+              builder: (_, child) {
+                final eased = Curves.easeInOut.transform(_logoCtrl.value);
+                return Transform(
+                  transform: Matrix4.identity()
+                    ..translateByDouble(0, eased * -8.0, 0, 1)
+                    ..rotateZ((-0.5 + eased) * math.pi / 180),
+                  alignment: Alignment.center,
+                  child: child,
+                );
+              },
+              child: Container(
+                width: 96.w,
+                height: 96.h,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.55),
+                      blurRadius: 24.r,
+                      offset: Offset(0.w, 8.h),
+                    ),
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.30),
+                      blurRadius: 40.r,
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.all(10.r),
+                child: Image.asset(AppAssets.logo),
+              ),
+            ),
+          ),
+        ),
+
+        // ── Shimmer sweep on logo ─────────────────────────────────
+        Positioned.fill(
+          child: Center(
+            child: SizedBox(
+              width: 96.w,
+              height: 96.h,
+              child: AnimatedBuilder(
+                animation: _shimmerCtrl,
+                builder: (_, __) {
+                  final t = _shimmerCtrl.value;
+                  double opacity;
+                  double dx;
+                  if (t < 0.6) {
+                    final n = t / 0.6;
+                    dx = -60 + n * 120;
+                    opacity = n < 0.3 ? n / 0.3 : 1 - (n - 0.3) / 0.3;
+                  } else {
+                    dx = 60;
+                    opacity = 0;
+                  }
+                  return ClipOval(
+                    child: Transform.translate(
+                      offset: Offset(dx, 0),
+                      child: Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.transparent,
+                                Color(0x2EFFFFFF),
+                                Colors.transparent,
+                              ],
+                              stops: [0.3, 0.5, 0.7],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+
+        // ── PDF badge ─────────────────────────────────────────────
+        PositionedDirectional(
+          top: 12.h,
+          end: 12,
+          child: _SmallPill(
+            icon: Icons.picture_as_pdf_rounded,
+            label: 'PDF',
+            color: widget.pillColor,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _PortfolioBackgroundPainter extends CustomPainter {
-  const _PortfolioBackgroundPainter(this.progress);
+  _PortfolioBackgroundPainter(this.progress);
 
   final double progress;
 
@@ -2511,6 +2888,7 @@ class _PortfolioBackgroundPainter extends CustomPainter {
 
 IconData _iconFor(String icon) {
   return switch (icon) {
+    // Industries
     'fa-balance-scale' => FontAwesomeIcons.scaleBalanced,
     'fa-heartbeat' => FontAwesomeIcons.heartPulse,
     'fa-couch' => FontAwesomeIcons.couch,
@@ -2521,24 +2899,218 @@ IconData _iconFor(String icon) {
     'fa-dumbbell' => FontAwesomeIcons.dumbbell,
     'fa-utensils' => FontAwesomeIcons.utensils,
     'fa-truck' => FontAwesomeIcons.truck,
-    'fa-car' => FontAwesomeIcons.car,
+    'fa-car' || 'fa-car-alt' => FontAwesomeIcons.car,
     'fa-magic' => FontAwesomeIcons.wandMagicSparkles,
     'fa-plane' => FontAwesomeIcons.plane,
     'fa-video' => FontAwesomeIcons.video,
     'fa-code' => FontAwesomeIcons.code,
     'fa-paint-brush' => FontAwesomeIcons.paintbrush,
+    'fa-paint-roller' => FontAwesomeIcons.paintRoller,
     'fa-bullhorn' => FontAwesomeIcons.bullhorn,
     'fa-industry' => FontAwesomeIcons.industry,
     'fa-hotel' => FontAwesomeIcons.hotel,
     'fa-hammer' => FontAwesomeIcons.hammer,
     'fa-shield-alt' => FontAwesomeIcons.shieldHalved,
-    'fa-home' => FontAwesomeIcons.house,
+    'fa-home' || 'fa-house-user' => FontAwesomeIcons.house,
     'fa-calendar-alt' => FontAwesomeIcons.calendarDays,
     'fa-shopping-cart' => FontAwesomeIcons.cartShopping,
     'fa-hard-hat' => FontAwesomeIcons.helmetSafety,
+    // Medical specialties
     'fa-tooth' => FontAwesomeIcons.tooth,
     'fa-spa' => FontAwesomeIcons.spa,
     'fa-eye' => FontAwesomeIcons.eye,
+    'fa-brain' => FontAwesomeIcons.brain,
+    'fa-bone' => FontAwesomeIcons.bone,
+    'fa-baby' => FontAwesomeIcons.baby,
+    'fa-heart' => FontAwesomeIcons.heart,
+    'fa-hands' => FontAwesomeIcons.hands,
+    'fa-user-md' => FontAwesomeIcons.userDoctor,
+    'fa-child' => FontAwesomeIcons.child,
+    'fa-apple-alt' => FontAwesomeIcons.appleWhole,
+    'fa-paw' => FontAwesomeIcons.paw,
+    'fa-pills' => FontAwesomeIcons.pills,
+    'fa-tint' => FontAwesomeIcons.droplet,
+    // Fitness & Sports
+    'fa-trophy' => FontAwesomeIcons.trophy,
+    'fa-star' => FontAwesomeIcons.star,
+    // Commercial & Services
+    'fa-box' => FontAwesomeIcons.box,
+    'fa-gift' => FontAwesomeIcons.gift,
+    'fa-tshirt' => FontAwesomeIcons.shirt,
+    'fa-seedling' => FontAwesomeIcons.seedling,
+    'fa-flask' => FontAwesomeIcons.flask,
+    'fa-cut' => FontAwesomeIcons.scissors,
+    // Food & Hospitality
+    'fa-hamburger' => FontAwesomeIcons.burger,
+    'fa-coffee' => FontAwesomeIcons.mugHot,
+    'fa-birthday-cake' => FontAwesomeIcons.cakeCandles,
+    'fa-concierge-bell' => FontAwesomeIcons.bellConcierge,
+    // Engineering & Design
+    'fa-drafting-compass' => FontAwesomeIcons.compassDrafting,
+    'fa-city' => FontAwesomeIcons.city,
+    'fa-bolt' => FontAwesomeIcons.bolt,
+    'fa-wrench' => FontAwesomeIcons.wrench,
+    'fa-broom' => FontAwesomeIcons.broom,
+    // Technology
+    'fa-laptop' => FontAwesomeIcons.laptop,
+    'fa-laptop-code' => FontAwesomeIcons.laptopCode,
+    'fa-mobile-alt' => FontAwesomeIcons.mobileScreenButton,
+    'fa-user-shield' => FontAwesomeIcons.userShield,
+    'fa-layer-group' => FontAwesomeIcons.layerGroup,
+    'fa-bezier-curve' => FontAwesomeIcons.bezierCurve,
+    // Marketing & Media
+    'fa-chart-line' => FontAwesomeIcons.chartLine,
+    'fa-pencil-alt' => FontAwesomeIcons.penToSquare,
+    'fa-microphone' => FontAwesomeIcons.microphone,
+    'fa-share-alt' => FontAwesomeIcons.shareNodes,
+    'fa-user-tie' => FontAwesomeIcons.userTie,
+    // Logistics & Travel
+    'fa-truck-loading' => FontAwesomeIcons.truckRampBox,
+    'fa-shipping-fast' => FontAwesomeIcons.truckFast,
+    'fa-route' => FontAwesomeIcons.route,
+    'fa-suitcase' => FontAwesomeIcons.suitcase,
+    'fa-map-marked-alt' => FontAwesomeIcons.mapLocationDot,
+    'fa-globe' => FontAwesomeIcons.globe,
+    'fa-kaaba' => FontAwesomeIcons.kaaba,
+    // Education
+    'fa-chalkboard-teacher' => FontAwesomeIcons.chalkboardUser,
     _ => Icons.category_rounded,
   };
+}
+
+// ── Reel Dialog ────────────────────────────────────────────────────────────
+class _ReelDialog extends StatefulWidget {
+  const _ReelDialog({required this.url, required this.title});
+  final String url;
+  final String title;
+
+  @override
+  State<_ReelDialog> createState() => _ReelDialogState();
+}
+
+class _ReelDialogState extends State<_ReelDialog> {
+  late final VideoPlayerController _ctrl;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+      ..initialize().then((_) {
+        if (mounted) setState(() => _initialized = true);
+        _ctrl.play();
+        _ctrl.setLooping(true);
+      });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _togglePlay() {
+    setState(() {
+      _ctrl.value.isPlaying ? _ctrl.pause() : _ctrl.play();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFF0D0B18),
+      insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 32.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.r)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Padding(
+            padding: EdgeInsets.fromLTRB(12.w, 10.h, 16.w, 10.h),
+            child: Row(
+              children: [
+                _CircleButton(
+                  icon: Icons.close_rounded,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Video area
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(18.r)),
+            child: _initialized
+                ? GestureDetector(
+                    onTap: _togglePlay,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: _ctrl.value.aspectRatio,
+                          child: VideoPlayer(_ctrl),
+                        ),
+                        // Play/pause overlay
+                        AnimatedBuilder(
+                          animation: _ctrl,
+                          builder: (_, __) => _ctrl.value.isPlaying
+                              ? const SizedBox.shrink()
+                              : Container(
+                                  width: 60.w,
+                                  height: 60.h,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 36.sp,
+                                  ),
+                                ),
+                        ),
+                        // Progress bar
+                        Positioned(
+                          bottom: 0.h,
+                          left: 0.w,
+                          right: 0.w,
+                          child: VideoProgressIndicator(
+                            _ctrl,
+                            allowScrubbing: true,
+                            colors: VideoProgressColors(
+                              playedColor: const Color(0xFFD4AF37),
+                              bufferedColor:
+                                  Colors.white.withValues(alpha: 0.25),
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.08),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const AspectRatio(
+                    aspectRatio: 9 / 16,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFD4AF37),
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
 }

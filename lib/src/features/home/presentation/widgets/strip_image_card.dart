@@ -23,10 +23,10 @@ class _StripImageCard extends StatelessWidget {
         width: width,
         height: width * 0.92,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: const Color(0x553D365C)),
-          boxShadow: const [
-            BoxShadow(color: Color(0x55000000), blurRadius: 16),
+          boxShadow: [
+            BoxShadow(color: const Color(0x55000000), blurRadius: 16.r),
           ],
         ),
         clipBehavior: Clip.antiAlias,

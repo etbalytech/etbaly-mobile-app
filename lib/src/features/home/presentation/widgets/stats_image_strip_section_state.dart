@@ -84,7 +84,7 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
     return Directionality(
       textDirection: TextDirection.rtl,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         child: Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -117,10 +117,8 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const _StatsBand(),
-                    const SizedBox(height: 58),
                     const _StripHeader(),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28.h),
                     SizedBox(
                       height: isNarrow ? 260 : 300,
                       child: Directionality(
@@ -155,8 +153,8 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
                                       for (var rep = 0; rep < 3; rep++)
                                         for (var i = 0; i < _imageCount; i++)
                                           Padding(
-                                            padding: const EdgeInsets.only(
-                                              right: 18,
+                                            padding: EdgeInsets.only(
+                                              right: 18.w,
                                             ),
                                             child: _StripImageCard(
                                               image: AppAssets.stripImage(
@@ -175,6 +173,8 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
                         ),
                       ),
                     ),
+                    SizedBox(height: 28.h),
+                    const _StatsBand(),
                   ],
                 ),
               ),

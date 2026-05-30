@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:etbaly/src/imports/core_imports.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 part '../widgets/home_web_hero.dart';
 part '../widgets/home_web_hero_state.dart';
@@ -61,15 +61,15 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     PaintingBinding.instance.imageCache.maximumSizeBytes = 120 << 20;
 
-    return const EtbalyPage(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 28),
+    return EtbalyPage(
+      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 28.h),
       separatorHeight: 0,
-      children: [
+      children: const [
         _HomeWebHero(),
         _AirplaneBrandSection(),
         _SuccessPartnersSection(),
-        _IdeasSuccessSection(),
         _StatsImageStripSection(),
+        _IdeasSuccessSection(),
         _HowWeWorkSection(),
       ],
     );

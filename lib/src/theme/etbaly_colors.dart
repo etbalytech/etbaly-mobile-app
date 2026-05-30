@@ -178,7 +178,8 @@ class EtbalyColorsExtension extends ThemeExtension<EtbalyColorsExtension> {
       primaryLight: Color.lerp(primaryLight, other.primaryLight, t)!,
       primaryDark: Color.lerp(primaryDark, other.primaryDark, t)!,
       primaryGlow: Color.lerp(primaryGlow, other.primaryGlow, t)!,
-      primaryGlowStrong: Color.lerp(primaryGlowStrong, other.primaryGlowStrong, t)!,
+      primaryGlowStrong:
+          Color.lerp(primaryGlowStrong, other.primaryGlowStrong, t)!,
       gold: Color.lerp(gold, other.gold, t)!,
       goldLight: Color.lerp(goldLight, other.goldLight, t)!,
       goldDark: Color.lerp(goldDark, other.goldDark, t)!,
@@ -195,7 +196,8 @@ class EtbalyColorsExtension extends ThemeExtension<EtbalyColorsExtension> {
       borderSubtle: Color.lerp(borderSubtle, other.borderSubtle, t)!,
       badgeBg: Color.lerp(badgeBg, other.badgeBg, t)!,
       shadowPrimary: Color.lerp(shadowPrimary, other.shadowPrimary, t)!,
-      shadowPrimaryHover: Color.lerp(shadowPrimaryHover, other.shadowPrimaryHover, t)!,
+      shadowPrimaryHover:
+          Color.lerp(shadowPrimaryHover, other.shadowPrimaryHover, t)!,
       shadowGold: Color.lerp(shadowGold, other.shadowGold, t)!,
       shadowGoldHover: Color.lerp(shadowGoldHover, other.shadowGoldHover, t)!,
       cardShadow: Color.lerp(cardShadow, other.cardShadow, t)!,

@@ -18,30 +18,30 @@ void showToast(
 
   final (backgroundColor, foregroundColor, iconColor) = switch (toastStatus) {
     'error' => (
-      colorScheme.errorContainer,
-      colorScheme.onErrorContainer,
-      colorScheme.error,
-    ),
+        colorScheme.errorContainer,
+        colorScheme.onErrorContainer,
+        colorScheme.error,
+      ),
     'success' => (
-      etbalyColors.success.withValues(alpha: 0.15),
-      etbalyColors.onSuccess,
-      etbalyColors.success,
-    ),
+        etbalyColors.success.withValues(alpha: 0.15),
+        etbalyColors.onSuccess,
+        etbalyColors.success,
+      ),
     'warning' => (
-      etbalyColors.warning.withValues(alpha: 0.15),
-      etbalyColors.onWarning,
-      etbalyColors.warning,
-    ),
+        etbalyColors.warning.withValues(alpha: 0.15),
+        etbalyColors.onWarning,
+        etbalyColors.warning,
+      ),
     'info' => (
-      etbalyColors.info.withValues(alpha: 0.15),
-      etbalyColors.onInfo,
-      etbalyColors.info,
-    ),
+        etbalyColors.info.withValues(alpha: 0.15),
+        etbalyColors.onInfo,
+        etbalyColors.info,
+      ),
     _ => (
-      context.theme.scaffoldBackgroundColor,
-      colorScheme.onSurface,
-      colorScheme.onSurfaceVariant,
-    ),
+        context.theme.scaffoldBackgroundColor,
+        colorScheme.onSurface,
+        colorScheme.onSurfaceVariant,
+      ),
   };
 
   return ToastBar(

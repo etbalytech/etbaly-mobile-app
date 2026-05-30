@@ -1,6 +1,7 @@
 import 'package:etbaly/src/features/services/data/models/why_choose_us_item.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class WhyChooseUsDetailScreen extends StatelessWidget {
   const WhyChooseUsDetailScreen({super.key, required this.slug});
@@ -25,30 +26,30 @@ class WhyChooseUsDetailScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+          padding: EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 28.h),
           children: [
             // Hero Image from GitHub
             ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
               child: SizedBox(
                 width: double.infinity,
-                height: 280,
+                height: 280.h,
                 child: Image.network(
                   item.imageUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       width: double.infinity,
-                      height: 280,
+                      height: 280.h,
                       decoration: BoxDecoration(
                         color: Color(
                             int.parse(item.color.replaceFirst('#', '0xff'))),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Icon(
                         Icons.image_not_supported,
                         color: Colors.white,
-                        size: 60,
+                        size: 60.sp,
                       ),
                     );
                   },
@@ -56,11 +57,11 @@ class WhyChooseUsDetailScreen extends StatelessWidget {
                     if (loadingProgress == null) return child;
                     return Container(
                       width: double.infinity,
-                      height: 280,
+                      height: 280.h,
                       decoration: BoxDecoration(
                         color: Color(
                             int.parse(item.color.replaceFirst('#', '0xff'))),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Center(
                         child: CircularProgressIndicator(
@@ -76,80 +77,78 @@ class WhyChooseUsDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28.h),
             EtbalyHero(
-              badge: 'لماذا نختار',
+              badge: 'auto.t_d8e4322252'.tr(),
               title: item.titleAr,
               description: item.descriptionAr,
               icon: Icons.info_outline,
               actions: [
                 EtbalyActionButton(
-                  label: 'اتصل بنا',
+                  label: 'auto.t_c3721b0a95'.tr(),
                   icon: Icons.phone,
                   onTap: () => context.go(AppRoutes.contact),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
-            const EtbalyPageSectionHeader(
-              badge: 'الفوائد',
-              title: 'ماذا تحصل عليه؟',
-              description:
-                  'اكتشف كل المميزات والفوائد التي تحصل عليها عند اختيارك لنا.',
+            SizedBox(height: 18.h),
+            EtbalyPageSectionHeader(
+              badge: 'auto.t_f38cf27a37'.tr(),
+              title: 'auto.t_99299bd523'.tr(),
+              description: 'auto.t_04245363d3'.tr(),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: 18.h),
             ...item.detailedPointsAr.map(
               (point) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.only(bottom: 12.h),
                 child: EtbalyInfoCard(
                   icon: Icons.check_circle,
                   title: point,
                   description: '',
-                  accent: Color(
-                      int.parse(item.color.replaceFirst('#', '0xff'))),
+                  accent:
+                      Color(int.parse(item.color.replaceFirst('#', '0xff'))),
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28.h),
             // CTA Section
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24.r),
               decoration: BoxDecoration(
-                color: Color(
-                    int.parse(item.color.replaceFirst('#', '0xff'))),
-                borderRadius: BorderRadius.circular(16),
+                color: Color(int.parse(item.color.replaceFirst('#', '0xff'))),
+                borderRadius: BorderRadius.circular(16.r),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'هل تريد الاستفادة من هذه المميزات؟',
+                    'auto.t_bb5b9987c3'.tr(),
                     textAlign: TextAlign.right,
                     style: context.textTheme.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
                   Text(
-                    'تواصل معنا الآن واحصل على استشارة مجانية من فريقنا المختص.',
+                    'auto.t_3e4332f528'.tr(),
                     textAlign: TextAlign.right,
                     style: context.textTheme.bodyMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       ElevatedButton.icon(
                         onPressed: () => context.go(AppRoutes.contact),
                         icon: const Icon(Icons.send),
-                        label: const Text('تواصل معنا'),
+                        label: Text('auto.t_9886382321'.tr()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: Color(int.parse(
-                              item.color.replaceFirst('#', '0xff'))),
+                          foregroundColor: Color(
+                              int.parse(item.color.replaceFirst('#', '0xff'))),
                         ),
                       ),
                     ],
@@ -157,13 +156,13 @@ class WhyChooseUsDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28.h),
             // Back to services
             Center(
               child: TextButton.icon(
                 onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back),
-                label: const Text('العودة إلى الخدمات'),
+                label: Text('auto.t_616b2e879c'.tr()),
               ),
             ),
           ],

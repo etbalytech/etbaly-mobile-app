@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -80,9 +81,9 @@ class _ContactScreenState extends State<ContactScreen> {
                 sliver: SliverList.list(
                   children: [
                     const _ContactHero(),
-                    const SizedBox(height: 22),
+                    SizedBox(height: 22.h),
                     _buildMainLayout(context),
-                    const SizedBox(height: 26),
+                    SizedBox(height: 26.h),
                     const _MapSection(),
                   ],
                 ),
@@ -122,7 +123,7 @@ class _ContactScreenState extends State<ContactScreen> {
           return Column(
             children: [
               form,
-              const SizedBox(height: 18),
+              SizedBox(height: 18.h),
               channels,
             ],
           );
@@ -132,7 +133,7 @@ class _ContactScreenState extends State<ContactScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(flex: 7, child: form),
-            const SizedBox(width: 18),
+            SizedBox(width: 18.w),
             const Expanded(flex: 4, child: channels),
           ],
         );
@@ -155,7 +156,7 @@ class _ContactScreenState extends State<ContactScreen> {
     if (!valid) {
       setState(() {
         _successMessage = null;
-        _errorMessage = 'راجع البيانات المطلوبة ثم حاول مرة أخرى.';
+        _errorMessage = 'auto.t_feeba6be8f'.tr();
       });
       return;
     }
@@ -194,14 +195,12 @@ class _ContactScreenState extends State<ContactScreen> {
 
       if (!mounted) return;
       setState(() {
-        _successMessage =
-            'تم إرسال رسالتك بنجاح. سنتواصل معك خلال ساعات قليلة.';
+        _successMessage = 'auto.t_8156a21ea5'.tr();
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _errorMessage =
-            'حدث خطأ أثناء الإرسال. يمكنك التواصل مباشرة عبر واتساب.';
+        _errorMessage = 'auto.t_4071062caa'.tr();
       });
     } finally {
       if (mounted) {
@@ -234,22 +233,22 @@ class _ContactScreenState extends State<ContactScreen> {
 
     setState(() {
       _nameError = name.isEmpty
-          ? 'الاسم مطلوب'
+          ? 'auto.t_0925fc6b3b'.tr()
           : name.length < 2
-              ? 'الاسم قصير جداً'
+              ? 'auto.t_dd829b9c35'.tr()
               : null;
       _emailError = email.isNotEmpty && !_isValidEmail(email)
-          ? 'صيغة البريد غير صحيحة'
+          ? 'auto.t_96c47f9dfa'.tr()
           : null;
       _phoneError = phone.isEmpty
-          ? 'رقم الهاتف مطلوب'
+          ? 'auto.t_e9030fa52c'.tr()
           : !_isValidPhone(phone)
-              ? 'رقم الهاتف غير صحيح - مثال: 01012345678'
+              ? 'auto.t_dad81a3abf'.tr()
               : null;
       _whatsappError = whatsapp.isEmpty
-          ? 'رقم واتساب مطلوب'
+          ? 'auto.t_5f52637da9'.tr()
           : !_isValidPhone(whatsapp)
-              ? 'رقم واتساب غير صحيح - مثال: 01012345678'
+              ? 'auto.t_8d87b0c1e6'.tr()
               : null;
     });
 
@@ -316,10 +315,10 @@ class _ContactHeroState extends State<_ContactHero>
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 330),
+      constraints: BoxConstraints(minHeight: 330.h),
       decoration: BoxDecoration(
         color: EtbalyWebColors.sectionDeep,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
       clipBehavior: Clip.antiAlias,
       child: AnimatedBuilder(
@@ -328,19 +327,21 @@ class _ContactHeroState extends State<_ContactHero>
           return CustomPaint(
             painter: _ContactBackgroundPainter(progress: _controller.value),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 42, 18, 34),
+              padding: EdgeInsets.fromLTRB(18.w, 42.h, 18.w, 34.h),
               child: Column(
                 children: [
-                  const _WebBadge(label: 'تواصل معنا', icon: Icons.send_rounded)
+                  _WebBadge(
+                          label: 'auto.t_9886382321'.tr(),
+                          icon: Icons.send_rounded)
                       .animate()
                       .fadeIn(duration: const Duration(milliseconds: 450))
                       .slideY(
                         begin: -0.25,
                         duration: const Duration(milliseconds: 450),
                       ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: 18.h),
                   Text(
-                    'نحن هنا لمساعدتك',
+                    'auto.t_0f6336ed48'.tr(),
                     textAlign: TextAlign.center,
                     style: context.textTheme.headlineMedium?.copyWith(
                       color: EtbalyWebColors.heading,
@@ -359,37 +360,37 @@ class _ContactHeroState extends State<_ContactHero>
                         delay: const Duration(milliseconds: 90),
                         duration: const Duration(milliseconds: 520),
                       ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   _AnimatedGoldFrame(
                     progress: _controller.value,
                     child: Container(
                       width: math.min(context.width - 58, 520),
-                      padding: const EdgeInsets.all(20),
+                      padding: EdgeInsets.all(20.r),
                       decoration: BoxDecoration(
                         color: EtbalyWebColors.sectionBlack
                             .withValues(alpha: 0.86),
-                        borderRadius: BorderRadius.circular(17),
-                        boxShadow: const [
+                        borderRadius: BorderRadius.circular(17.r),
+                        boxShadow: [
                           BoxShadow(
-                            color: Color(0x3328155E),
-                            blurRadius: 28,
-                            offset: Offset(0, 14),
+                            color: const Color(0x3328155E),
+                            blurRadius: 28.r,
+                            offset: Offset(0.w, 14.h),
                           ),
                         ],
                       ),
                       child: Column(
                         children: [
                           Text(
-                            'هل لديك مشروع في ذهنك؟',
+                            'auto.t_e6899218c8'.tr(),
                             textAlign: TextAlign.center,
                             style: context.textTheme.titleMedium?.copyWith(
                               color: EtbalyWebColors.heading,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const EtbalyWebGoldDivider(width: 120),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 8.h),
+                          EtbalyWebGoldDivider(width: 120.w),
+                          SizedBox(height: 12.h),
                           RichText(
                             textAlign: TextAlign.center,
                             text: TextSpan(
@@ -397,19 +398,19 @@ class _ContactHeroState extends State<_ContactHero>
                                 color: EtbalyWebColors.body,
                                 height: 1.55,
                               ),
-                              children: const [
-                                TextSpan(text: 'نحن هنا لنحوّل '),
+                              children: [
+                                TextSpan(text: 'auto.t_54b9db9b2e'.tr()),
                                 TextSpan(
-                                  text: 'أفكارك',
-                                  style: TextStyle(
+                                  text: 'auto.t_cc10003c5c'.tr(),
+                                  style: const TextStyle(
                                     color: EtbalyWebColors.gold,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
-                                TextSpan(text: ' إلى واقع رقمي '),
+                                TextSpan(text: 'auto.t_cab8379b19'.tr()),
                                 TextSpan(
-                                  text: 'مؤثر',
-                                  style: TextStyle(
+                                  text: 'auto.t_7d2e3e23d6'.tr(),
+                                  style: const TextStyle(
                                     color: Color(0xFFE8C878),
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -417,8 +418,8 @@ class _ContactHeroState extends State<_ContactHero>
                               ],
                             ),
                           ),
-                          const SizedBox(height: 14),
-                          const _MiniPill(text: 'الاستشارة مجانية +'),
+                          SizedBox(height: 14.h),
+                          _MiniPill(text: 'auto.t_d9f0ff2067'.tr()),
                         ],
                       ),
                     ),
@@ -433,17 +434,21 @@ class _ContactHeroState extends State<_ContactHero>
                         delay: const Duration(milliseconds: 180),
                         duration: const Duration(milliseconds: 560),
                       ),
-                  const SizedBox(height: 20),
-                  const Wrap(
+                  SizedBox(height: 20.h),
+                  Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: 10,
-                    runSpacing: 10,
+                    spacing: 10.r,
+                    runSpacing: 10.r,
                     children: [
-                      _HeroStat(icon: Icons.timer_rounded, text: 'رد سريع'),
                       _HeroStat(
-                          icon: Icons.shield_rounded, text: 'بيانات محمية'),
+                          icon: Icons.timer_rounded,
+                          text: 'auto.t_e0b1480986'.tr()),
                       _HeroStat(
-                          icon: Icons.headset_mic_rounded, text: 'دوام كامل'),
+                          icon: Icons.shield_rounded,
+                          text: 'auto.t_637c01de60'.tr()),
+                      _HeroStat(
+                          icon: Icons.headset_mic_rounded,
+                          text: 'auto.t_27212b9ed6'.tr()),
                     ],
                   )
                       .animate()
@@ -508,17 +513,19 @@ class _ContactFormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardPadding = context.width < 390 ? 16.r : 20.r;
+
     return Container(
-      padding: EdgeInsets.all(context.width < 390 ? 16 : 20),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         color: EtbalyWebColors.card,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: EtbalyWebColors.border),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 26,
-            offset: Offset(0, 16),
+            color: const Color(0x66000000),
+            blurRadius: 26.r,
+            offset: Offset(0.w, 16.h),
           ),
         ],
       ),
@@ -527,21 +534,21 @@ class _ContactFormCard extends StatelessWidget {
           Row(
             children: [
               const _SquareIcon(icon: Icons.send_rounded),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'أرسل لنا رسالة',
+                      'auto.t_8a31c1a876'.tr(),
                       style: context.textTheme.titleLarge?.copyWith(
                         color: EtbalyWebColors.heading,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4.h),
                     Text(
-                      'سنتواصل معك خلال ساعات قليلة',
+                      'auto.t_604899061b'.tr(),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: EtbalyWebColors.body,
                       ),
@@ -551,22 +558,22 @@ class _ContactFormCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          const Divider(color: EtbalyWebColors.border, height: 1),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
+          Divider(color: EtbalyWebColors.border, height: 1.h),
+          SizedBox(height: 20.h),
           _ResponsiveFields(
             children: [
               _ContactTextField(
-                label: 'الاسم الكامل',
-                hint: 'اكتب اسمك',
+                label: 'auto.t_e19b16bdb7'.tr(),
+                hint: 'auto.t_462426235d'.tr(),
                 icon: Icons.person_rounded,
                 controller: nameController,
                 errorText: nameError,
                 onChanged: onChanged,
               ),
               _ContactTextField(
-                label: 'البريد الإلكتروني (اختياري)',
-                hint: 'اكتب بريدك الإلكتروني',
+                label: 'auto.t_73698845ba'.tr(),
+                hint: 'auto.t_373bbbafbb'.tr(),
                 icon: Icons.mail_rounded,
                 keyboardType: TextInputType.emailAddress,
                 controller: emailController,
@@ -574,8 +581,8 @@ class _ContactFormCard extends StatelessWidget {
                 onChanged: onChanged,
               ),
               _ContactTextField(
-                label: 'رقم الجوال',
-                hint: 'اكتب رقم موبايلك',
+                label: 'auto.t_e32f70222a'.tr(),
+                hint: 'auto.t_9037988ed7'.tr(),
                 icon: Icons.phone_rounded,
                 keyboardType: TextInputType.phone,
                 controller: phoneController,
@@ -583,8 +590,8 @@ class _ContactFormCard extends StatelessWidget {
                 onChanged: onChanged,
               ),
               _ContactTextField(
-                label: 'واتساب',
-                hint: 'اكتب رقم واتساب',
+                label: 'auto.t_7b5629bcb4'.tr(),
+                hint: 'auto.t_1c84106115'.tr(),
                 icon: FontAwesomeIcons.whatsapp,
                 iconColor: const Color(0xFF25D366),
                 keyboardType: TextInputType.phone,
@@ -593,27 +600,27 @@ class _ContactFormCard extends StatelessWidget {
                 onChanged: onChanged,
               ),
               _ContactTextField(
-                label: 'اسم النشاط (اختياري)',
-                hint: 'اكتب اسم نشاطك',
+                label: 'auto.t_869ea5ba41'.tr(),
+                hint: 'auto.t_7315f53e4a'.tr(),
                 icon: Icons.storefront_rounded,
                 controller: businessController,
                 onChanged: onChanged,
               ),
               _ContactTextField(
-                label: 'التخصص / المجال (اختياري)',
-                hint: 'مثال: مطعم، صالون، متجر إلكتروني...',
+                label: 'auto.t_7e204f3892'.tr(),
+                hint: 'auto.t_28489e99c1'.tr(),
                 icon: Icons.sell_rounded,
                 controller: specialtyController,
                 onChanged: onChanged,
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           const _PackageEmptyBox(),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           _ContactTextField(
-            label: 'رسالتك (اختياري)',
-            hint: 'اكتب رسالتك',
+            label: 'auto.t_1752e5546d'.tr(),
+            hint: 'auto.t_e8c347a148'.tr(),
             icon: Icons.chat_bubble_rounded,
             controller: messageController,
             minLines: 4,
@@ -621,13 +628,13 @@ class _ContactFormCard extends StatelessWidget {
             onChanged: onChanged,
           ),
           if (successMessage != null || errorMessage != null) ...[
-            const SizedBox(height: 14),
+            SizedBox(height: 14.h),
             _FormAlert(
               message: successMessage ?? errorMessage!,
               isSuccess: successMessage != null,
             ),
           ],
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           _SubmitGradientButton(
             isSubmitting: isSubmitting,
             onTap: onSubmit,
@@ -646,58 +653,58 @@ class _ContactInfoColumn extends StatelessWidget {
     return Column(
       children: [
         _ContactChannelCard(
-          label: 'واتساب',
+          label: 'auto.t_7b5629bcb4'.tr(),
           value: '+201010285020',
-          subtitle: 'متاح 7 أيام في الأسبوع',
+          subtitle: 'auto.t_a6e45fe589'.tr(),
           icon: FontAwesomeIcons.whatsapp,
           color: const Color(0xFF25D366),
           pulse: true,
           onTap: () => _open('https://wa.me/01010285020'),
         ),
         _ContactChannelCard(
-          label: 'فيسبوك',
-          value: 'اطبعلي للدعاية والإعلان',
-          subtitle: 'تابعنا على فيسبوك',
+          label: 'auto.t_ac86ec8e2a'.tr(),
+          value: 'auto.t_e2731f0b11'.tr(),
+          subtitle: 'auto.t_fce036ec2a'.tr(),
           icon: FontAwesomeIcons.facebookF,
           color: const Color(0xFF1877F2),
           onTap: () => _open('https://www.facebook.com/share/1Gw1i4iuXq'),
         ),
         _ContactChannelCard(
-          label: 'البريد الإلكتروني',
+          label: 'auto.t_0915ef8ea5'.tr(),
           value: 'support@etba3ly-dm.com',
-          subtitle: 'نرد خلال 24 ساعة',
+          subtitle: 'auto.t_d35d3e7a1b'.tr(),
           icon: Icons.mail_rounded,
           color: EtbalyWebColors.gold,
           onTap: () => _open('mailto:support@etba3ly-dm.com'),
         ),
         _ContactChannelCard(
-          label: 'انستجرام',
+          label: 'auto.t_42d151cf6f'.tr(),
           value: '@etba3ly2022',
-          subtitle: 'تابعنا وشاهد أعمالنا',
+          subtitle: 'auto.t_e3b0c2a6a0'.tr(),
           icon: FontAwesomeIcons.instagram,
           color: const Color(0xFFE4405F),
           onTap: () => _open('https://www.instagram.com/etba3ly2022'),
         ),
         _ContactChannelCard(
-          label: 'يوتيوب',
+          label: 'auto.t_2c6de2dad3'.tr(),
           value: '@etba3ly4adv',
-          subtitle: 'شاهد أعمالنا على يوتيوب',
+          subtitle: 'auto.t_db2f568d09'.tr(),
           icon: FontAwesomeIcons.youtube,
           color: const Color(0xFFFF0000),
           onTap: () => _open('https://www.youtube.com/@etba3ly4adv'),
         ),
         _ContactChannelCard(
-          label: 'تيك توك',
+          label: 'auto.t_5f19dfe113'.tr(),
           value: '@etba3ly2',
-          subtitle: 'تابعنا على تيك توك',
+          subtitle: 'auto.t_c98cad67e9'.tr(),
           icon: FontAwesomeIcons.tiktok,
           color: EtbalyWebColors.purple,
           onTap: () => _open('https://www.tiktok.com/@etba3ly2'),
         ),
         _ContactChannelCard(
-          label: 'تيليجرام',
+          label: 'auto.t_9e63c17fd2'.tr(),
           value: '@etba3ly_studio',
-          subtitle: 'تابعنا على تيليجرام',
+          subtitle: 'auto.t_2abf9dd7fb'.tr(),
           icon: FontAwesomeIcons.telegram,
           color: const Color(0xFF229ED9),
           onTap: () => _open('https://t.me/etba3ly_studio'),
@@ -734,42 +741,42 @@ class _ContactChannelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12.h),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
           child: Stack(
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.all(14.r),
                 decoration: BoxDecoration(
                   color: EtbalyWebColors.sectionDeep.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(color: EtbalyWebColors.border),
                   boxShadow: [
                     BoxShadow(
                       color: color.withValues(alpha: 0.06),
-                      blurRadius: 22,
-                      offset: const Offset(0, 12),
+                      blurRadius: 22.r,
+                      offset: Offset(0.w, 12.h),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 48.w,
+                      height: 48.h,
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                         border:
                             Border.all(color: color.withValues(alpha: 0.32)),
                       ),
-                      child: Icon(icon, color: color, size: 22),
+                      child: Icon(icon, color: color, size: 22.sp),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -781,7 +788,7 @@ class _ContactChannelCard extends StatelessWidget {
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(height: 5),
+                          SizedBox(height: 5.h),
                           Text(
                             value,
                             textDirection: value.startsWith('+') ||
@@ -796,7 +803,7 @@ class _ContactChannelCard extends StatelessWidget {
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4.h),
                           Text(
                             subtitle,
                             style: context.textTheme.bodySmall?.copyWith(
@@ -806,18 +813,18 @@ class _ContactChannelCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    const Icon(
+                    SizedBox(width: 10.w),
+                    Icon(
                       Icons.arrow_forward_rounded,
                       color: EtbalyWebColors.body,
-                      size: 18,
+                      size: 18.sp,
                     ),
                   ],
                 ),
               ),
               if (pulse)
                 PositionedDirectional(
-                  top: 12,
+                  top: 12.h,
                   end: 12,
                   child: _PulseDot(color: color),
                 ),
@@ -844,29 +851,29 @@ class _SubmitGradientButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: isSubmitting ? null : onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: Ink(
-          height: 54,
+          height: 54.h,
           width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             gradient: LinearGradient(
               colors: isSubmitting
                   ? [
                       EtbalyWebColors.gold.withValues(alpha: 0.48),
                       EtbalyWebColors.gold.withValues(alpha: 0.72),
                     ]
-                  : const [
-                      Color(0xFFB8922A),
+                  : [
+                      const Color(0xFFB8922A),
                       EtbalyWebColors.gold,
-                      Color(0xFFE8C878),
+                      const Color(0xFFE8C878),
                     ],
             ),
             boxShadow: [
               BoxShadow(
                 color: EtbalyWebColors.gold.withValues(alpha: 0.26),
-                blurRadius: 26,
-                offset: const Offset(0, 10),
+                blurRadius: 26.r,
+                offset: Offset(0.w, 10.h),
               ),
             ],
           ),
@@ -875,25 +882,27 @@ class _SubmitGradientButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isSubmitting)
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
+                  SizedBox(
+                    width: 18.w,
+                    height: 18.h,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
+                      strokeWidth: 2.r,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
                         Color(0xFF1A1501),
                       ),
                     ),
                   )
                 else
-                  const Icon(
+                  Icon(
                     Icons.arrow_back_rounded,
-                    color: Color(0xFF1A1501),
-                    size: 20,
+                    color: const Color(0xFF1A1501),
+                    size: 20.sp,
                   ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 Text(
-                  isSubmitting ? 'جاري الإرسال...' : 'أرسل الرسالة',
+                  isSubmitting
+                      ? 'auto.t_b303cc20c1'.tr()
+                      : 'auto.t_c43aa55fa9'.tr(),
                   style: context.textTheme.labelLarge?.copyWith(
                     color: const Color(0xFF1A1501),
                     fontWeight: FontWeight.w900,
@@ -916,24 +925,24 @@ class _PulseDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 8,
-      height: 8,
+      width: 8.w,
+      height: 8.h,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.7),
-            blurRadius: 10,
-            spreadRadius: 3,
+            blurRadius: 10.r,
+            spreadRadius: 3.r,
           ),
         ],
       ),
     )
         .animate(onPlay: (controller) => controller.repeat(reverse: true))
         .scale(
-          begin: const Offset(0.72, 0.72),
-          end: const Offset(1.25, 1.25),
+          begin: Offset(0.72.w, 0.72.h),
+          end: Offset(1.25.w, 1.25.h),
           duration: const Duration(milliseconds: 900),
         )
         .fade(
@@ -951,10 +960,10 @@ class _HoursCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: EtbalyWebColors.sectionDeep.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
       child: Column(
@@ -962,11 +971,11 @@ class _HoursCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.access_time_rounded,
-                  color: EtbalyWebColors.gold, size: 19),
-              const SizedBox(width: 8),
+              Icon(Icons.access_time_rounded,
+                  color: EtbalyWebColors.gold, size: 19.sp),
+              SizedBox(width: 8.w),
               Text(
-                'ساعات العمل',
+                'auto.t_0be90459f2'.tr(),
                 style: context.textTheme.titleMedium?.copyWith(
                   color: EtbalyWebColors.heading,
                   fontWeight: FontWeight.w900,
@@ -974,24 +983,29 @@ class _HoursCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const _HoursRow(label: 'ساعات مكتبية', value: 'السبت إلى الخميس'),
-          const _HoursRow(label: 'المواعيد', value: '12 مساءً حتى 9 مساءً'),
-          const _HoursRow(label: 'الجمعة', value: 'إجازة', warning: true),
-          const Divider(color: EtbalyWebColors.border, height: 26),
+          SizedBox(height: 16.h),
+          _HoursRow(
+              label: 'auto.t_f7e554583d'.tr(), value: 'auto.t_9c43f9b4ee'.tr()),
+          _HoursRow(
+              label: 'auto.t_b4e73ac2bc'.tr(), value: 'auto.t_10c46d4ef8'.tr()),
+          _HoursRow(
+              label: 'auto.t_8d067a376a'.tr(),
+              value: 'auto.t_e944ebd608'.tr(),
+              warning: true),
+          Divider(color: EtbalyWebColors.border, height: 26.h),
           Row(
             children: [
               Container(
-                width: 7,
-                height: 7,
+                width: 7.w,
+                height: 7.h,
                 decoration: const BoxDecoration(
                   color: EtbalyWebColors.green,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Text(
-                'دوام أونلاين طوال أيام الأسبوع',
+                'auto.t_98017f5ce6'.tr(),
                 style: context.textTheme.bodySmall?.copyWith(
                   color: EtbalyWebColors.green,
                   fontWeight: FontWeight.w900,
@@ -1021,7 +1035,7 @@ class _HoursRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: 10.h),
       child: Row(
         children: [
           Expanded(
@@ -1053,32 +1067,32 @@ class _MapSection extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: EtbalyWebColors.card,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: EtbalyWebColors.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
+            padding: EdgeInsets.fromLTRB(16.w, 22.h, 16.w, 18.h),
             child: Column(
               children: [
-                const _WebBadge(
-                  label: 'موقعنا',
+                _WebBadge(
+                  label: 'auto.t_320910a8ba'.tr(),
                   icon: Icons.location_on_rounded,
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14.h),
                 Text(
-                  'زورنا في مقرنا الرئيسي',
+                  'auto.t_acd4a23c87'.tr(),
                   textAlign: TextAlign.center,
                   style: context.textTheme.headlineSmall?.copyWith(
                     color: EtbalyWebColors.heading,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6.h),
                 Text(
-                  'الإسكندرية، مصر - متاحون للزيارة خلال ساعات العمل المكتبية',
+                  'auto.t_6cde5c70d7'.tr(),
                   textAlign: TextAlign.center,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: EtbalyWebColors.body,
@@ -1091,22 +1105,22 @@ class _MapSection extends StatelessWidget {
           const _MapInfoStrip(),
           ClipRect(
             child: SizedBox(
-              height: 260,
+              height: 260.h,
               width: double.infinity,
               child: CustomPaint(
                 painter: _MapPreviewPainter(),
                 child: Center(
                   child: Container(
-                    width: 54,
-                    height: 54,
+                    width: 54.w,
+                    height: 54.h,
                     decoration: BoxDecoration(
                       color: const Color(0xFFE53935).withValues(alpha: 0.14),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.location_pin,
-                      color: Color(0xFFE53935),
-                      size: 42,
+                      color: const Color(0xFFE53935),
+                      size: 42.sp,
                     ),
                   ),
                 ),
@@ -1114,20 +1128,20 @@ class _MapSection extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14.r),
             child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: 10.r,
+              runSpacing: 10.r,
               alignment: WrapAlignment.center,
               children: [
                 _OutlinedAction(
-                  label: 'احصل على الاتجاهات',
+                  label: 'auto.t_d2c8cef56d'.tr(),
                   icon: Icons.directions_rounded,
                   onTap: () =>
                       _open('https://maps.google.com/?q=31.094632,29.753261'),
                 ),
                 _OutlinedAction(
-                  label: 'تواصل قبل الزيارة',
+                  label: 'auto.t_a3326e7683'.tr(),
                   icon: FontAwesomeIcons.whatsapp,
                   color: const Color(0xFF25D366),
                   onTap: () => _open('https://wa.me/01010285020'),
@@ -1148,7 +1162,7 @@ class _MapInfoStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: const BoxDecoration(
         color: EtbalyWebColors.sectionDeep,
         border: Border(
@@ -1156,15 +1170,16 @@ class _MapInfoStrip extends StatelessWidget {
           bottom: BorderSide(color: EtbalyWebColors.border),
         ),
       ),
-      child: const Wrap(
-        spacing: 14,
-        runSpacing: 8,
+      child: Wrap(
+        spacing: 14.r,
+        runSpacing: 8.r,
         alignment: WrapAlignment.center,
         children: [
           _MapInfoItem(
-              icon: Icons.location_on_rounded, text: 'الإسكندرية، مصر'),
-          _MapInfoItem(icon: Icons.schedule_rounded, text: 'السبت - الخميس'),
-          _MapInfoItem(icon: Icons.phone_rounded, text: '+201010285020'),
+              icon: Icons.location_on_rounded, text: 'auto.t_19c155b158'.tr()),
+          _MapInfoItem(
+              icon: Icons.schedule_rounded, text: 'auto.t_0069eb3e9e'.tr()),
+          const _MapInfoItem(icon: Icons.phone_rounded, text: '+201010285020'),
         ],
       ),
     );
@@ -1182,8 +1197,8 @@ class _MapInfoItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: EtbalyWebColors.gold, size: 16),
-        const SizedBox(width: 6),
+        Icon(icon, color: EtbalyWebColors.gold, size: 16.sp),
+        SizedBox(width: 6.w),
         Text(
           text,
           textDirection:
@@ -1213,7 +1228,7 @@ class _ResponsiveFields extends StatelessWidget {
 
         return Wrap(
           spacing: gap,
-          runSpacing: 14,
+          runSpacing: 14.r,
           children: [
             for (final child in children) SizedBox(width: width, child: child),
           ],
@@ -1257,8 +1272,8 @@ class _ContactTextField extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 15, color: iconColor ?? EtbalyWebColors.body),
-            const SizedBox(width: 6),
+            Icon(icon, size: 15.sp, color: iconColor ?? EtbalyWebColors.body),
+            SizedBox(width: 6.w),
             Expanded(
               child: Text(
                 label,
@@ -1270,7 +1285,7 @@ class _ContactTextField extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
@@ -1290,16 +1305,16 @@ class _ContactTextField extends StatelessWidget {
             filled: true,
             fillColor: const Color(0xFF282240),
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: BorderSide(
                 color:
                     hasError ? const Color(0xFFFF6B6B) : EtbalyWebColors.border,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
               borderSide: BorderSide(
                 color:
                     hasError ? const Color(0xFFFF6B6B) : EtbalyWebColors.gold,
@@ -1308,7 +1323,7 @@ class _ContactTextField extends StatelessWidget {
           ),
         ),
         if (hasError) ...[
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             errorText!,
             style: context.textTheme.labelSmall?.copyWith(
@@ -1329,10 +1344,10 @@ class _PackageEmptyBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: EtbalyWebColors.sectionBlack.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(
           color: EtbalyWebColors.gold.withValues(alpha: 0.36),
           style: BorderStyle.solid,
@@ -1341,33 +1356,33 @@ class _PackageEmptyBox extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 42.w,
+            height: 42.h,
             decoration: BoxDecoration(
               color: EtbalyWebColors.gold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.card_giftcard_rounded,
               color: EtbalyWebColors.gold,
-              size: 21,
+              size: 21.sp,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'لم تختر باقة بعد',
+                  'auto.t_80a0344904'.tr(),
                   style: context.textTheme.titleSmall?.copyWith(
                     color: EtbalyWebColors.heading,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3.h),
                 Text(
-                  'يمكنك اختيار باقة مناسبة لك',
+                  'auto.t_9b84bd8cbe'.tr(),
                   style: context.textTheme.bodySmall?.copyWith(
                     color: EtbalyWebColors.body,
                   ),
@@ -1377,8 +1392,8 @@ class _PackageEmptyBox extends StatelessWidget {
           ),
           TextButton.icon(
             onPressed: () => context.go(AppRoutes.services),
-            icon: const Icon(Icons.arrow_back_rounded, size: 17),
-            label: const Text('عرض الباقات'),
+            icon: Icon(Icons.arrow_back_rounded, size: 17.sp),
+            label: Text('auto.t_ac442fdb57'.tr()),
             style: TextButton.styleFrom(
               foregroundColor: EtbalyWebColors.gold,
               textStyle: context.textTheme.labelMedium?.copyWith(
@@ -1404,10 +1419,10 @@ class _FormAlert extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: color.withValues(alpha: 0.34)),
       ),
       child: Row(
@@ -1417,9 +1432,9 @@ class _FormAlert extends StatelessWidget {
                 ? Icons.check_circle_rounded
                 : Icons.error_outline_rounded,
             color: color,
-            size: 18,
+            size: 18.sp,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Expanded(
             child: Text(
               message,
@@ -1455,20 +1470,20 @@ class _OutlinedAction extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 44.h,
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             border: Border.all(color: color.withValues(alpha: 0.62)),
             color: color.withValues(alpha: 0.08),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 17),
-              const SizedBox(width: 8),
+              Icon(icon, color: color, size: 17.sp),
+              SizedBox(width: 8.w),
               Text(
                 label,
                 style: context.textTheme.labelMedium?.copyWith(
@@ -1493,17 +1508,17 @@ class _WebBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: const Color(0x33251D33),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: EtbalyWebColors.gold, size: 15),
-          const SizedBox(width: 7),
+          Icon(icon, color: EtbalyWebColors.gold, size: 15.sp),
+          SizedBox(width: 7.w),
           Text(
             label,
             style: context.textTheme.labelMedium?.copyWith(
@@ -1511,10 +1526,10 @@ class _WebBadge extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Container(
-            width: 5,
-            height: 5,
+            width: 5.w,
+            height: 5.h,
             decoration: const BoxDecoration(
               color: EtbalyWebColors.gold,
               shape: BoxShape.circle,
@@ -1535,17 +1550,17 @@ class _HeroStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
         color: const Color(0x33251D33),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: EtbalyWebColors.gold, size: 16),
-          const SizedBox(width: 7),
+          Icon(icon, color: EtbalyWebColors.gold, size: 16.sp),
+          SizedBox(width: 7.w),
           Text(
             text,
             style: context.textTheme.labelMedium?.copyWith(
@@ -1569,10 +1584,10 @@ class _MiniPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = green ? EtbalyWebColors.green : EtbalyWebColors.gold;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: color.withValues(alpha: 0.38)),
       ),
       child: Text(
@@ -1594,14 +1609,14 @@ class _SquareIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 48.w,
+      height: 48.h,
       decoration: BoxDecoration(
         color: EtbalyWebColors.gold.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
-      child: Icon(icon, color: EtbalyWebColors.gold, size: 24),
+      child: Icon(icon, color: EtbalyWebColors.gold, size: 24.sp),
     );
   }
 }
@@ -1620,7 +1635,7 @@ class _AnimatedGoldFrame extends StatelessWidget {
     return CustomPaint(
       painter: _GoldFramePainter(progress: progress),
       child: Padding(
-        padding: const EdgeInsets.all(2),
+        padding: EdgeInsets.all(2.r),
         child: child,
       ),
     );
@@ -1628,14 +1643,14 @@ class _AnimatedGoldFrame extends StatelessWidget {
 }
 
 class _GoldFramePainter extends CustomPainter {
-  const _GoldFramePainter({required this.progress});
+  _GoldFramePainter({required this.progress});
 
   final double progress;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(18));
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(18.r));
     final sweep = SweepGradient(
       startAngle: 0,
       endAngle: math.pi * 2,
@@ -1667,7 +1682,7 @@ class _GoldFramePainter extends CustomPainter {
 }
 
 class _ContactBackgroundPainter extends CustomPainter {
-  const _ContactBackgroundPainter({this.progress = 0});
+  _ContactBackgroundPainter({this.progress = 0});
 
   final double progress;
 
@@ -1787,7 +1802,7 @@ class _MapPreviewPainter extends CustomPainter {
 
     final labelStyle = TextStyle(
       color: const Color(0xFF6B7280).withValues(alpha: 0.8),
-      fontSize: 12,
+      fontSize: 12.sp,
       fontWeight: FontWeight.w700,
     );
     _drawLabel(

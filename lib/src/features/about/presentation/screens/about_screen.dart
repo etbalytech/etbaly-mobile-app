@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -24,7 +25,7 @@ class _AboutScreenState extends State<AboutScreen>
     super.initState();
     _floatController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 9),
+      duration: Duration(seconds: 9),
     )..repeat();
   }
 
@@ -39,14 +40,14 @@ class _AboutScreenState extends State<AboutScreen>
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFF070511),
+        backgroundColor: Color(0xFF070511),
         body: SafeArea(
           top: false,
           child: AnimatedBuilder(
             animation: _floatController,
             builder: (context, child) {
               return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
                     child: CustomPaint(
@@ -60,30 +61,30 @@ class _AboutScreenState extends State<AboutScreen>
               );
             },
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 22, 18, 34),
+              padding: EdgeInsets.fromLTRB(18.w, 22.h, 18.w, 34.h),
               child: Column(
                 children: [
                   _HeroSection(progress: _floatController),
-                  const SizedBox(height: 28),
-                  const _PortfolioSection(),
-                  const SizedBox(height: 28),
-                  const _StorySection(),
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28.h),
+                  _PortfolioSection(),
+                  SizedBox(height: 28.h),
+                  _StorySection(),
+                  SizedBox(height: 28.h),
                   _CeoSection(progress: _floatController),
-                  const SizedBox(height: 28),
-                  const _ContractSection(),
-                  const SizedBox(height: 28),
-                  const _ValuesSection(),
-                  const SizedBox(height: 28),
-                  const _WhyChooseSection(),
-                  const SizedBox(height: 28),
-                  const _GrowthPartnerBanner(),
-                  const SizedBox(height: 28),
-                  const _CeoProfileSection(),
-                  const SizedBox(height: 28),
-                  const _TeamSection(),
-                  const SizedBox(height: 28),
-                  const _CtaSection(),
+                  SizedBox(height: 28.h),
+                  _ContractSection(),
+                  SizedBox(height: 28.h),
+                  _ValuesSection(),
+                  SizedBox(height: 28.h),
+                  _WhyChooseSection(),
+                  SizedBox(height: 28.h),
+                  _GrowthPartnerBanner(),
+                  SizedBox(height: 28.h),
+                  _CeoProfileSection(),
+                  SizedBox(height: 28.h),
+                  _TeamSection(),
+                  SizedBox(height: 28.h),
+                  _CtaSection(),
                 ],
               ),
             ),
@@ -107,18 +108,18 @@ class _HeroSection extends StatelessWidget {
     if (isWide) {
       return _DesktopAboutHero(progress: progress)
           .animate()
-          .fadeIn(duration: const Duration(milliseconds: 520))
+          .fadeIn(duration: Duration(milliseconds: 520))
           .slideY(
             begin: 0.08,
-            duration: const Duration(milliseconds: 520),
+            duration: Duration(milliseconds: 520),
           );
     }
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
+        borderRadius: BorderRadius.circular(22.r),
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
@@ -128,11 +129,11 @@ class _HeroSection extends StatelessWidget {
           ],
         ),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.18)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x66000000),
-            blurRadius: 34,
-            offset: Offset(0, 18),
+            blurRadius: 34.r,
+            offset: Offset(0.w, 18.h),
           ),
         ],
       ),
@@ -141,17 +142,19 @@ class _HeroSection extends StatelessWidget {
         children: [
           Positioned.fill(child: CustomPaint(painter: _HeroCardPainter())),
           Padding(
-            padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
+            padding: EdgeInsets.fromLTRB(22.w, 28.h, 22.w, 22.h),
             child: Column(
               children: [
-                _Badge(icon: Icons.groups_rounded, label: 'من نحن'),
-                const SizedBox(height: 20),
+                _Badge(
+                    icon: Icons.groups_rounded,
+                    label: 'auto.t_629d28fb52'.tr()),
+                SizedBox(height: 20.h),
                 Text.rich(
                   TextSpan(
-                    text: 'اطبعلي\n',
+                    text: 'auto.t_872cef8970'.tr(),
                     children: [
                       TextSpan(
-                        text: 'خبرة أكثر من 12 عام',
+                        text: 'auto.t_2407ba25b1'.tr(),
                         style: TextStyle(color: colors.gold),
                       ),
                     ],
@@ -163,43 +166,43 @@ class _HeroSection extends StatelessWidget {
                     height: 1.16,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
                 Text(
-                  'وكالة تسويق رقمي متكاملة تؤمن بأن كل علامة تجارية تستحق حضورًا رقميًا استثنائيًا يعكس قيمتها الحقيقية',
+                  'auto.t_5942a13c56'.tr(),
                   textAlign: TextAlign.center,
                   style: context.textTheme.bodyMedium?.copyWith(
                     color: colors.textMuted,
                     height: 1.75,
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.4,
-                  children: const [
+                  physics: NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 12.r,
+                  crossAxisSpacing: 12.r,
+                  childAspectRatio: 1.15,
+                  children: [
                     _MobileHeroMetric(
                       icon: Icons.star_rounded,
                       value: '93%',
-                      label: 'معدل رضا العملاء',
+                      label: 'auto.t_a8500d6236'.tr(),
                     ),
                     _MobileHeroMetric(
                       icon: Icons.calendar_month_rounded,
                       value: '+12',
-                      label: 'سنوات خبرة',
+                      label: 'auto.t_07caf2cbc5'.tr(),
                     ),
                     _MobileHeroMetric(
                       icon: Icons.handshake_rounded,
                       value: '5,000+',
-                      label: 'عميل راضي',
+                      label: 'auto.t_6a6d13b7c7'.tr(),
                     ),
                     _MobileHeroMetric(
                       icon: Icons.work_rounded,
                       value: '400,000+',
-                      label: 'مشروع منجز',
+                      label: 'auto.t_12b1d6581c'.tr(),
                     ),
                   ],
                 ),
@@ -208,9 +211,9 @@ class _HeroSection extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: const Duration(milliseconds: 520)).slideY(
+    ).animate().fadeIn(duration: Duration(milliseconds: 520)).slideY(
           begin: 0.08,
-          duration: const Duration(milliseconds: 520),
+          duration: Duration(milliseconds: 520),
         );
   }
 }
@@ -226,10 +229,10 @@ class _DesktopAboutHero extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(28, 48, 28, 38),
+      padding: EdgeInsets.fromLTRB(28.w, 48.h, 28.w, 38.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
+        borderRadius: BorderRadius.circular(22.r),
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xFF11101C), Color(0xFF151225), Color(0xFF0C0A14)],
@@ -241,14 +244,15 @@ class _DesktopAboutHero extends StatelessWidget {
           Positioned.fill(child: CustomPaint(painter: _HeroDesktopPainter())),
           Column(
             children: [
-              _Badge(icon: Icons.groups_rounded, label: 'من نحن'),
-              const SizedBox(height: 20),
+              _Badge(
+                  icon: Icons.groups_rounded, label: 'auto.t_629d28fb52'.tr()),
+              SizedBox(height: 20.h),
               Text.rich(
                 TextSpan(
-                  text: 'في\nاطبعلي\n',
+                  text: 'auto.t_dccb5014d7'.tr(),
                   children: [
                     TextSpan(
-                      text: 'خبرة أكثر من 12 عام',
+                      text: 'auto.t_2407ba25b1'.tr(),
                       style: TextStyle(color: colors.gold),
                     ),
                   ],
@@ -260,9 +264,9 @@ class _DesktopAboutHero extends StatelessWidget {
                   height: 1.02,
                 ),
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: 18.h),
               Text(
-                'وكالة تسويق رقمي متكاملة تؤمن بأن كل علامة تجارية تستحق حضورًا رقميًا استثنائيًا يعكس قيمتها الحقيقية',
+                'auto.t_5942a13c56'.tr(),
                 textAlign: TextAlign.center,
                 style: context.textTheme.titleMedium?.copyWith(
                   color: colors.textMuted,
@@ -270,31 +274,31 @@ class _DesktopAboutHero extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 42),
+              SizedBox(height: 42.h),
               Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 16,
-                runSpacing: 16,
-                children: const [
+                spacing: 16.r,
+                runSpacing: 16.r,
+                children: [
                   _DesktopHeroMetric(
                     icon: Icons.work_rounded,
                     value: '400,000+',
-                    label: 'مشروع منجز',
+                    label: 'auto.t_12b1d6581c'.tr(),
                   ),
                   _DesktopHeroMetric(
                     icon: Icons.handshake_rounded,
                     value: '5,000+',
-                    label: 'عميل راضي',
+                    label: 'auto.t_6a6d13b7c7'.tr(),
                   ),
                   _DesktopHeroMetric(
                     icon: Icons.calendar_month_rounded,
                     value: '+12',
-                    label: 'سنوات خبرة',
+                    label: 'auto.t_07caf2cbc5'.tr(),
                   ),
                   _DesktopHeroMetric(
                     icon: Icons.star_rounded,
                     value: '93%',
-                    label: 'معدل رضا العملاء',
+                    label: 'auto.t_a8500d6236'.tr(),
                   ),
                 ],
               ),
@@ -322,19 +326,19 @@ class _DesktopHeroMetric extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      width: 170,
-      height: 138,
-      padding: const EdgeInsets.all(16),
+      width: 170.w,
+      height: 138.h,
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0x40110E1B),
-        borderRadius: BorderRadius.circular(16),
+        color: Color(0x40110E1B),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.24)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: colors.gold, size: 25),
-          const SizedBox(height: 14),
+          Icon(icon, color: colors.gold, size: 25.sp),
+          SizedBox(height: 14.h),
           Text(
             value,
             style: context.textTheme.headlineSmall?.copyWith(
@@ -343,7 +347,7 @@ class _DesktopHeroMetric extends StatelessWidget {
               height: 1,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             label,
             style: context.textTheme.labelMedium?.copyWith(
@@ -373,17 +377,17 @@ class _MobileHeroMetric extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: const Color(0x40110E1B),
-        borderRadius: BorderRadius.circular(16),
+        color: Color(0x40110E1B),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.24)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: colors.gold, size: 22),
-          const SizedBox(height: 8),
+          Icon(icon, color: colors.gold, size: 22.sp),
+          SizedBox(height: 8.h),
           Text(
             value,
             style: context.textTheme.titleMedium?.copyWith(
@@ -392,10 +396,12 @@ class _MobileHeroMetric extends StatelessWidget {
               height: 1,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           Text(
             label,
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: context.textTheme.labelSmall?.copyWith(
               color: colors.textMuted,
               fontWeight: FontWeight.w800,
@@ -421,45 +427,49 @@ class _PortfolioSection extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: _Badge(
               icon: Icons.business_center_rounded,
-              label: 'بورتفوليو الأعمال',
+              label: 'auto.t_aafc8fcd10'.tr(),
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           _SectionTitle(
-            title: 'أعمالنا تتحدث',
-            highlight: 'عن نفسها',
+            title: 'auto.t_a11d973e7e'.tr(),
+            highlight: 'auto.t_ee96ebdc3f'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           _MutedText(
-            'اكتشف مجموعة مختارة من أبرز مشاريعنا عبر مختلف القطاعات — من الهوية البصرية إلى حملات الأداء الرقمي. كل صفحة تحكي قصة نجاح حقيقية.',
+            'auto.t_a681047442'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           _PortfolioShowcaseCard(),
-          const SizedBox(height: 18),
-          const _Checklist(items: [
-            _CheckItem('تصميم هوية بصرية متكاملة', Color(0xFFD4AF37)),
-            _CheckItem('حملات أداء رقمية قابلة للقياس', Color(0xFF68D391)),
-            _CheckItem('إنتاج محتوى إبداعي متعدد المنصات', Color(0xFF63B3ED)),
+          SizedBox(height: 18.h),
+          _Checklist(items: [
+            _CheckItem('auto.t_4c26d8c6bd'.tr(), Color(0xFFD4AF37)),
+            _CheckItem('auto.t_8a9f9f49a0'.tr(), Color(0xFF68D391)),
+            _CheckItem('auto.t_eb65c7506d'.tr(), Color(0xFF63B3ED)),
           ]),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: EdgeInsets.symmetric(vertical: 16.h),
             decoration: BoxDecoration(
               color: colors.bgCard.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(18.r),
               border: Border.all(color: colors.gold.withValues(alpha: 0.14)),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
-                    child: _MiniMetric(value: '400K+', label: 'مشروع منجز')),
-                _VerticalDivider(),
-                Expanded(child: _MiniMetric(value: '+12', label: 'سنة خبرة')),
+                    child: _MiniMetric(
+                        value: '400K+', label: 'auto.t_12b1d6581c'.tr())),
                 _VerticalDivider(),
                 Expanded(
-                  child: _MiniMetric(value: '49', label: 'صفحة في البورتفوليو'),
+                    child: _MiniMetric(
+                        value: '+12', label: 'auto.t_ddb0fad5c4'.tr())),
+                _VerticalDivider(),
+                Expanded(
+                  child:
+                      _MiniMetric(value: '49', label: 'auto.t_4f47c5d7ff'.tr()),
                 ),
               ],
             ),
@@ -469,12 +479,12 @@ class _PortfolioSection extends StatelessWidget {
     )
         .animate()
         .fadeIn(
-          delay: const Duration(milliseconds: 90),
-          duration: const Duration(milliseconds: 520),
+          delay: Duration(milliseconds: 90),
+          duration: Duration(milliseconds: 520),
         )
         .slideY(
           begin: 0.08,
-          duration: const Duration(milliseconds: 520),
+          duration: Duration(milliseconds: 520),
         );
   }
 }
@@ -500,7 +510,7 @@ class _PortfolioShowcaseCard extends StatelessWidget {
   Future<void> _launchPortfolioUrl(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      context.showErrorSnackBar('تعذر فتح الرابط');
+      context.showErrorSnackBar('auto.t_994266fd86'.tr());
     }
   }
 
@@ -509,16 +519,16 @@ class _PortfolioShowcaseCard extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        color: const Color(0xAA0B0914),
+        borderRadius: BorderRadius.circular(26.r),
+        color: Color(0xAA0B0914),
         border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
             color: colors.gold.withValues(alpha: 0.12),
-            blurRadius: 34,
-            offset: const Offset(0, 18),
+            blurRadius: 34.r,
+            offset: Offset(0.w, 18.h),
           ),
         ],
       ),
@@ -526,13 +536,13 @@ class _PortfolioShowcaseCard extends StatelessWidget {
         children: [
           InkWell(
             onTap: () => _openPortfolio(context),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18.r),
             child: Container(
-              height: 190,
+              height: 190.h,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFFF7F0E6),
-                borderRadius: BorderRadius.circular(18),
+                color: Color(0xFFF7F0E6),
+                borderRadius: BorderRadius.circular(18.r),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
               ),
               clipBehavior: Clip.antiAlias,
@@ -541,27 +551,27 @@ class _PortfolioShowcaseCard extends StatelessWidget {
                   Positioned.fill(
                       child: CustomPaint(painter: _PortfolioCoverPainter())),
                   Positioned(
-                    top: 16,
-                    right: 20,
-                    child: Image.asset(AppAssets.logo, width: 122),
+                    top: 16.h,
+                    right: 20.w,
+                    child: Image.asset(AppAssets.logo, width: 122.w),
                   ),
                   Positioned(
-                    left: 14,
-                    top: 14,
+                    left: 14.w,
+                    top: 14.h,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A2537),
-                        borderRadius: BorderRadius.circular(999),
+                        color: Color(0xFF2A2537),
+                        borderRadius: BorderRadius.circular(999.r),
                       ),
                       child: Row(
                         children: [
                           Icon(Icons.description_rounded,
-                              color: colors.gold, size: 15),
-                          const SizedBox(width: 5),
+                              color: colors.gold, size: 15.sp),
+                          SizedBox(width: 5.w),
                           Text(
-                            '49 صفحة',
+                            'auto.t_eb23bd0ff6'.tr(),
                             style: context.textTheme.labelSmall?.copyWith(
                               color: colors.gold,
                               fontWeight: FontWeight.w900,
@@ -572,33 +582,33 @@ class _PortfolioShowcaseCard extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 60,
+                    bottom: 0.h,
+                    left: 0.w,
+                    right: 0.w,
+                    height: 60.h,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            const Color(0xFFC8AE87).withValues(alpha: 0.25),
-                            const Color(0xFFAA865A),
+                            Color(0xFFC8AE87).withValues(alpha: 0.25),
+                            Color(0xFFAA865A),
                           ],
                         ),
                       ),
                     ),
                   ),
                   Positioned(
-                    bottom: 22,
-                    right: 22,
+                    bottom: 22.h,
+                    right: 22.w,
                     child: Text(
                       'Digital Marketing',
                       style: context.textTheme.titleMedium?.copyWith(
-                        color: const Color(0xFFB9915E),
+                        color: Color(0xFFB9915E),
                         fontWeight: FontWeight.w800,
-                        shadows: const [
-                          Shadow(color: Colors.white, blurRadius: 2),
+                        shadows: [
+                          Shadow(color: Colors.white, blurRadius: 2.r),
                         ],
                       ),
                     ),
@@ -607,44 +617,44 @@ class _PortfolioShowcaseCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(14.r),
             decoration: BoxDecoration(
-              color: const Color(0x66110E1B),
-              borderRadius: BorderRadius.circular(18),
+              color: Color(0x66110E1B),
+              borderRadius: BorderRadius.circular(18.r),
               border:
                   Border.all(color: colors.borderColor.withValues(alpha: 0.35)),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 44.w,
+                  height: 44.h,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: colors.gold.withValues(alpha: 0.12),
                     border:
                         Border.all(color: colors.gold.withValues(alpha: 0.28)),
                   ),
-                  child:
-                      Icon(Icons.shield_rounded, color: colors.gold, size: 22),
+                  child: Icon(Icons.shield_rounded,
+                      color: colors.gold, size: 22.sp),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'بورتفوليو اطبعلي الشامل',
+                        'auto.t_8d3c9f4792'.tr(),
                         style: context.textTheme.titleSmall?.copyWith(
                           color: colors.textMain,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
-                        '49 صفحة PDF • قابل للطباعة',
+                        'auto.t_550eb47812'.tr(),
                         style: context.textTheme.labelSmall?.copyWith(
                           color: colors.textMuted,
                           fontWeight: FontWeight.w700,
@@ -654,40 +664,44 @@ class _PortfolioShowcaseCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 48.w,
+                  height: 48.h,
                   decoration: BoxDecoration(
-                    color: const Color(0x33FF4D4D),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0x66FF4D4D)),
+                    color: Color(0x33FF4D4D),
+                    borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(color: Color(0x66FF4D4D)),
                   ),
-                  child: const Icon(Icons.picture_as_pdf_rounded,
+                  child: Icon(Icons.picture_as_pdf_rounded,
                       color: Color(0xFFFF6B6B)),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           _PortfolioActionButton(
             filled: true,
-            title: 'معاينة البورتفوليو',
-            subtitle: 'معاينة عبر Google Drive',
+            title: 'auto.t_f620535292'.tr(),
+            subtitle: 'auto.t_1218e3b37d'.tr(),
             icon: Icons.visibility_rounded,
             onTap: () => _openPortfolio(context),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _PortfolioActionButton(
-            title: 'تحميل البورتفوليو PDF',
+            title: 'auto.t_1ba8c2f9ba'.tr(),
             icon: Icons.download_rounded,
             onTap: () => _downloadPortfolio(context),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _TinyTrust(label: 'تحميل فوري', icon: Icons.flash_on_rounded),
-              _TinyTrust(label: 'آمن 100%', icon: Icons.lock_rounded),
-              _TinyTrust(label: 'محدث 2025', icon: Icons.refresh_rounded),
+              _TinyTrust(
+                  label: 'auto.t_5f5f468124'.tr(),
+                  icon: Icons.flash_on_rounded),
+              _TinyTrust(
+                  label: 'auto.t_4ea25eef7a'.tr(), icon: Icons.lock_rounded),
+              _TinyTrust(
+                  label: 'auto.t_e0cc864c0f'.tr(), icon: Icons.refresh_rounded),
             ],
           ),
         ],
@@ -706,26 +720,26 @@ class _StorySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _SectionTitle(
-            title: 'من فكرة إلى',
-            highlight: 'وكالة رائدة',
+            title: 'auto.t_b445aa7f5a'.tr(),
+            highlight: 'auto.t_634987483b'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           _MutedText(
-            'بدأت اطبعلي بالتسويق التقليدي من خلال طباعة اللافتات والإعلانات في الطرق والجرائد، ثم تطورنا مع مرور الوقت لنصبح من رواد منصات التواصل الاجتماعي ونواكب كل جديد في عالم الإعلانات.\n\nرحلتنا هي انتقال من الطرق التقليدية إلى الابتكار الرقمي، حيث نجمع بين الخبرة والتطور لنقدم حلول تسويقية تواكب العصر وتحقق نتائج حقيقية.\n\nاليوم، نفخر بخدمة أكثر من 5000 عميل نشط عبر مجالات متعددة، مسلحين بفريق من أكثر من 15 متخصصًا يجمعون بين الإبداع والتحليل والتقنية. لسنا مجرد وكالة تسويق — نحن شريك نمو حقيقي يستثمر في نجاحك كما تستثمر أنت فيه.',
+            'auto.t_0952aae8e7'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
-          const _Timeline(items: [
-            _TimelineItem('2014', 'بداية رحلتنا في التسويق التقليدي'),
-            _TimelineItem('2017', 'الانتقال الكامل للتسويق الرقمي'),
-            _TimelineItem('2020', 'التوسع وإطلاق خدمات الإعلانات المدفوعة'),
-            _TimelineItem('اليوم', '+5000 عميل نشط وفريق من +15 متخصص'),
+          SizedBox(height: 18.h),
+          _Timeline(items: [
+            _TimelineItem('2014', 'auto.t_6db098f663'.tr()),
+            _TimelineItem('2017', 'auto.t_11c1be824a'.tr()),
+            _TimelineItem('2020', 'auto.t_1192cf6f63'.tr()),
+            _TimelineItem('auto.t_b76444a321'.tr(), 'auto.t_f3a6c65ac2'.tr()),
           ]),
-          const SizedBox(height: 22),
-          const _StoryMetaStats(),
-          const SizedBox(height: 18),
-          const _QuoteCard(),
+          SizedBox(height: 22.h),
+          _StoryMetaStats(),
+          SizedBox(height: 18.h),
+          _QuoteCard(),
         ],
       ),
     );
@@ -740,53 +754,50 @@ class _ValuesSection extends StatelessWidget {
     return _PlainSection(
       child: Column(
         children: [
-          _Badge(icon: Icons.diamond_rounded, label: 'قيمنا'),
-          const SizedBox(height: 14),
+          _Badge(icon: Icons.diamond_rounded, label: 'auto.t_b562a738ca'.tr()),
+          SizedBox(height: 14.h),
           _SectionTitle(
-            title: 'ما الذي',
-            highlight: 'يميزنا',
+            title: 'auto.t_2854acd0e9'.tr(),
+            highlight: 'auto.t_2617826e9c'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _MutedText(
-            'مبادئ راسخة تقود كل قرار نتخذه وكل مشروع ننجزه',
+            'auto.t_b031255ba6'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 1.02,
-            children: const [
+            physics: NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10.r,
+            crossAxisSpacing: 10.r,
+            childAspectRatio: 0.82,
+            children: [
               _ValueCard(
                 icon: Icons.lightbulb_rounded,
                 color: Color(0xFFD4AF37),
-                title: 'الإبداع أولًا',
-                desc:
-                    'نرفض الحلول الجاهزة. كل مشروع يستحق فكرة أصلية تعكس هوية العلامة.',
+                title: 'auto.t_d6b172e114'.tr(),
+                desc: 'auto.t_935c389ce7'.tr(),
               ),
               _ValueCard(
                 icon: Icons.visibility_rounded,
                 color: Color(0xFF63B3ED),
-                title: 'الشفافية الكاملة',
-                desc:
-                    'لا أسرار مع عملائنا. تقارير واضحة وتواصل مفتوح في كل مرحلة.',
+                title: 'auto.t_6cdd38ff07'.tr(),
+                desc: 'auto.t_f757bd831b'.tr(),
               ),
               _ValueCard(
                 icon: Icons.trending_up_rounded,
                 color: Color(0xFF68D391),
-                title: 'النتائج القابلة للقياس',
-                desc:
-                    'نعمل بالأرقام والبيانات. لا وعود فارغة، فقط نتائج حقيقية يمكن قياسها.',
+                title: 'auto.t_2d00bef233'.tr(),
+                desc: 'auto.t_b658e0aef8'.tr(),
               ),
               _ValueCard(
                 icon: Icons.handshake_rounded,
                 color: Color(0xFFF6AD55),
-                title: 'الشراكة الحقيقية',
-                desc: 'نجاحك هو نجاحنا. نعاملك كشريك لا كعميل فحسب.',
+                title: 'auto.t_2cd92ecc4c'.tr(),
+                desc: 'auto.t_cc9c1b113f'.tr(),
               ),
             ],
           ),
@@ -804,47 +815,47 @@ class _WhyChooseSection extends StatelessWidget {
     return _GlowPanel(
       child: Column(
         children: [
-          _Badge(icon: Icons.star_rounded, label: 'لماذا نحن'),
-          const SizedBox(height: 14),
+          _Badge(icon: Icons.star_rounded, label: 'auto.t_f4df70c059'.tr()),
+          SizedBox(height: 14.h),
           _SectionTitle(
-            title: 'ما الذي يجعل',
-            highlight: 'اطبعلي مختلفة؟',
+            title: 'auto.t_81d5c04f03'.tr(),
+            highlight: 'auto.t_82b1b427db'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _MutedText(
-            'نمزج بين الإبداع والبيانات والخبرة لنصنع نتائج لا تُنسى.',
+            'auto.t_704292d95e'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
-          const _WhyCard(
+          SizedBox(height: 18.h),
+          _WhyCard(
             icon: Icons.rocket_launch_rounded,
             color: Color(0xFFD4AF37),
             number: '+400,000',
-            title: 'مشروع منجز',
-            desc: 'خبرة واسعة في قطاعات مختلفة بجودة تنفيذ ثابتة.',
+            title: 'auto.t_12b1d6581c'.tr(),
+            desc: 'auto.t_55e9d4fd28'.tr(),
             progress: 0.92,
           ),
-          const SizedBox(height: 12),
-          const _WhyCard(
+          SizedBox(height: 12.h),
+          _WhyCard(
             icon: Icons.show_chart_rounded,
             color: Color(0xFF68D391),
             number: '3.8x',
-            title: 'متوسط عائد الاستثمار',
-            desc: 'قرارات تسويقية مبنية على أثر واضح وأرقام قابلة للمتابعة.',
+            title: 'auto.t_c25a3cf5f7'.tr(),
+            desc: 'auto.t_6585f8612c'.tr(),
             progress: 0.85,
           ),
-          const SizedBox(height: 12),
-          const _WhyCard(
+          SizedBox(height: 12.h),
+          _WhyCard(
             icon: Icons.schedule_rounded,
             color: Color(0xFF63B3ED),
             number: '24h',
-            title: 'وقت الاستجابة',
-            desc: 'متابعة سريعة ومنظمة حتى لا يتوقف العمل عند سؤال.',
+            title: 'auto.t_1cf34c10bd'.tr(),
+            desc: 'auto.t_d0539d01f1'.tr(),
             progress: 1,
           ),
-          const SizedBox(height: 18),
-          const _PartnerBanner(),
+          SizedBox(height: 18.h),
+          _PartnerBanner(),
         ],
       ),
     );
@@ -863,16 +874,16 @@ class _CeoSection extends StatelessWidget {
     return _PlainSection(
       child: Column(
         children: [
-          const _CeoVideoWidget(),
-          const SizedBox(height: 24),
-          _RoleLabel(label: 'رسالة المدير التنفيذي'),
-          const SizedBox(height: 12),
+          _CeoVideoWidget(),
+          SizedBox(height: 24.h),
+          _RoleLabel(label: 'auto.t_99f47461d4'.tr()),
+          SizedBox(height: 12.h),
           Text.rich(
             TextSpan(
-              text: 'نقود نمو أعمالك\n',
+              text: 'auto.t_2db47720a7'.tr(),
               children: [
                 TextSpan(
-                  text: 'برؤية تعتمد على الأرقام',
+                  text: 'auto.t_85830ec4f3'.tr(),
                   style: TextStyle(color: colors.gold),
                 ),
               ],
@@ -884,43 +895,40 @@ class _CeoSection extends StatelessWidget {
               height: 1.12,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           _MutedText(
-            'في اطبعلي، بنحوّل أفكارك لنتائج حقيقية على أرض الواقع. بنصمّم، بنسوّق، وبنصنع محتوى يخليك توصل لعملاء أكتر وتكبر بثقة.',
+            'auto.t_3a1fe378de'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           _GlowPanel(
-            child: const _Checklist(items: [
-              _CheckItem(
-                  'رؤية إبداعية تجمع بين الفن والبيانات', Color(0xFFD4AF37)),
-              _CheckItem(
-                  'استراتيجيات مخصصة لكل عميل على حدة', Color(0xFF68D391)),
-              _CheckItem(
-                  'شفافية كاملة في التقارير والنتائج', Color(0xFF63B3ED)),
+            child: _Checklist(items: [
+              _CheckItem('auto.t_dbe41ec88c'.tr(), Color(0xFFD4AF37)),
+              _CheckItem('auto.t_955599c7fe'.tr(), Color(0xFF68D391)),
+              _CheckItem('auto.t_279d3a38ef'.tr(), Color(0xFF63B3ED)),
             ]),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
               color: colors.bgCard.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
               border: Border.all(color: colors.gold.withValues(alpha: 0.24)),
             ),
             child: Column(
               children: [
                 Text(
-                  'المهندس/ محمد المصراوي',
+                  'auto.t_1d64625ba1'.tr(),
                   style: context.textTheme.titleMedium?.copyWith(
                     color: colors.textMain,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
-                  'المدير التنفيذي',
+                  'auto.t_533951e10c'.tr(),
                   style: context.textTheme.labelMedium?.copyWith(
                     color: colors.gold,
                     fontWeight: FontWeight.w900,
@@ -943,54 +951,54 @@ class _TeamSection extends StatelessWidget {
     return _PlainSection(
       child: Column(
         children: [
-          _Badge(icon: Icons.groups_2_rounded, label: 'فريقنا'),
-          const SizedBox(height: 14),
+          _Badge(icon: Icons.groups_2_rounded, label: 'auto.t_3f01048980'.tr()),
+          SizedBox(height: 14.h),
           _SectionTitle(
-            title: 'الفريق الذي',
-            highlight: 'يصنع الفرق',
+            title: 'auto.t_c6acefe39a'.tr(),
+            highlight: 'auto.t_a13b57d943'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _MutedText(
-            'متخصصون شغوفون يجمعهم هدف واحد: نجاحك الرقمي.',
+            'auto.t_026f598165'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.92,
-            children: const [
+            physics: NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12.r,
+            crossAxisSpacing: 12.r,
+            childAspectRatio: 0.78,
+            children: [
               _TeamCard(
-                name: 'ياسمين',
+                name: 'auto.t_c7eca3246d'.tr(),
                 role: 'Account Manager',
                 image: 'yasmine',
               ),
               _TeamCard(
-                name: 'محمود السيد',
+                name: 'auto.t_f3b9fa8833'.tr(),
                 role: 'Team Leader & Video Editor',
                 image: 'mahmoud',
               ),
               _TeamCard(
-                name: 'هاجر',
+                name: 'auto.t_6f5f22e2d3'.tr(),
                 role: 'Operations Coordinator',
                 image: 'hagar',
               ),
               _TeamCard(
-                name: 'أحمد السيد',
+                name: 'auto.t_89a5dde564'.tr(),
                 role: 'Web Developer',
                 image: 'ahmed',
               ),
               _TeamCard(
-                name: 'سلمى صافي',
+                name: 'auto.t_ca0fa79930'.tr(),
                 role: 'Mobile Developer',
                 image: 'salma',
               ),
               _TeamCard(
-                name: 'شهد',
+                name: 'auto.t_669c3a1d44'.tr(),
                 role: 'Moderator',
                 image: 'shahd',
               ),
@@ -1015,7 +1023,7 @@ class _ContractSection extends StatelessWidget {
       mode: LaunchMode.externalApplication,
     );
     if (!ok && context.mounted) {
-      context.showErrorSnackBar('تعذر تحميل العقد');
+      context.showErrorSnackBar('auto.t_50d30ecfb1'.tr());
     }
   }
 
@@ -1026,57 +1034,60 @@ class _ContractSection extends StatelessWidget {
     return _PlainSection(
       child: Column(
         children: [
-          _Badge(icon: Icons.file_copy_rounded, label: 'عقد الشراكة'),
-          const SizedBox(height: 14),
+          _Badge(
+              icon: Icons.file_copy_rounded, label: 'auto.t_f90a123d29'.tr()),
+          SizedBox(height: 14.h),
           _SectionTitle(
-            title: 'عقد تسويق',
-            highlight: 'الشركة',
+            title: 'auto.t_f76c858efd'.tr(),
+            highlight: 'auto.t_c1c6feb8a7'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _MutedText(
-            'شراكة مبنية على الثقة والشفافية — اطّلع على تفاصيل عقدنا الاحترافي',
+            'auto.t_873e38d33a'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: 22.h),
           _ContractDocumentPreview(),
-          const SizedBox(height: 22),
+          SizedBox(height: 22.h),
           _GlowPanel(
             child: Column(
               children: [
-                _Badge(icon: Icons.shield_rounded, label: 'عقد رسمي معتمد'),
-                const SizedBox(height: 14),
+                _Badge(
+                    icon: Icons.shield_rounded,
+                    label: 'auto.t_8105b8969a'.tr()),
+                SizedBox(height: 14.h),
                 Text(
-                  'شفافية كاملة منذ اليوم الأول',
+                  'auto.t_bd3b897a4d'.tr(),
                   textAlign: TextAlign.center,
                   style: context.textTheme.titleLarge?.copyWith(
                     color: colors.textMain,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 10.h),
                 _MutedText(
-                  'نؤمن أن العلاقة المهنية الناجحة تبدأ بعقد واضح يحدد الحقوق والالتزامات لكلا الطرفين. عقدنا يضمن لك الحماية الكاملة وضمان جودة الخدمة.',
+                  'auto.t_d7c397ce17'.tr(),
                   centered: true,
                 ),
-                const SizedBox(height: 16),
-                const _Checklist(items: [
-                  _CheckItem('تحديد واضح للخدمات والمواعيد', Color(0xFFD4AF37)),
-                  _CheckItem('ضمان حماية بيانات العميل', Color(0xFF68D391)),
-                  _CheckItem('آلية واضحة للدفع والفواتير', Color(0xFF63B3ED)),
-                  _CheckItem('حقوق الملكية الفكرية محفوظة', Color(0xFFF6AD55)),
+                SizedBox(height: 16.h),
+                _Checklist(items: [
+                  _CheckItem('auto.t_40682890ce'.tr(), Color(0xFFD4AF37)),
+                  _CheckItem('auto.t_b8b9558fc1'.tr(), Color(0xFF68D391)),
+                  _CheckItem('auto.t_da15c08d6b'.tr(), Color(0xFF63B3ED)),
+                  _CheckItem('auto.t_dfbe69d96d'.tr(), Color(0xFFF6AD55)),
                 ]),
-                const SizedBox(height: 14),
+                SizedBox(height: 14.h),
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => _downloadContract(context),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     child: Container(
-                      padding: const EdgeInsets.all(13),
+                      padding: EdgeInsets.all(13.r),
                       decoration: BoxDecoration(
                         color: colors.gold.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                         border: Border.all(
                             color: colors.gold.withValues(alpha: 0.36)),
                       ),
@@ -1084,20 +1095,20 @@ class _ContractSection extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.download_rounded,
-                              color: colors.gold, size: 18),
-                          const SizedBox(width: 10),
+                              color: colors.gold, size: 18.sp),
+                          SizedBox(width: 10.w),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'تحميل العقد',
+                                'auto.t_b11d86790f'.tr(),
                                 style: context.textTheme.labelLarge?.copyWith(
                                   color: colors.textMain,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
                               Text(
-                                'ملف PDF • يمكن الطباعة',
+                                'auto.t_f98b05b709'.tr(),
                                 style: context.textTheme.labelSmall?.copyWith(
                                   color: colors.textMuted,
                                   fontWeight: FontWeight.w700,
@@ -1105,16 +1116,16 @@ class _ContractSection extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10.w),
                           Container(
-                            width: 38,
-                            height: 38,
+                            width: 38.w,
+                            height: 38.h,
                             decoration: BoxDecoration(
                               color: colors.gold,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12.r),
                             ),
-                            child: const Icon(Icons.picture_as_pdf_rounded,
-                                color: Colors.black, size: 19),
+                            child: Icon(Icons.picture_as_pdf_rounded,
+                                color: Colors.black, size: 19.sp),
                           ),
                         ],
                       ),
@@ -1163,7 +1174,7 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
     final next = index.clamp(0, _pages.length - 1);
     _pageController.animateToPage(
       next,
-      duration: const Duration(milliseconds: 320),
+      duration: Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
     );
   }
@@ -1182,15 +1193,15 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
       children: [
         Container(
           width: double.infinity,
-          constraints: const BoxConstraints(maxWidth: 360),
-          height: 506,
+          constraints: BoxConstraints(maxWidth: 360.w),
+          height: 506.h,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
               BoxShadow(
                 color: Color(0x99000000),
-                blurRadius: 32,
-                offset: Offset(0, 18),
+                blurRadius: 32.r,
+                offset: Offset(0.w, 18.h),
               ),
             ],
           ),
@@ -1209,29 +1220,29 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
           ),
         ),
         Positioned(
-          left: -18,
-          top: 234,
+          left: -18.w,
+          top: 234.h,
           child: _SlideArrow(
             icon: Icons.chevron_right_rounded,
             onTap: _previous,
           ),
         ),
         Positioned(
-          right: -18,
-          top: 234,
+          right: -18.w,
+          top: 234.h,
           child: _SlideArrow(
             icon: Icons.chevron_left_rounded,
             onTap: _next,
           ),
         ),
         Positioned(
-          top: 10,
-          left: 10,
+          top: 10.h,
+          left: 10.w,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: const Color(0xFF111018),
-              borderRadius: BorderRadius.circular(999),
+              color: Color(0xFF111018),
+              borderRadius: BorderRadius.circular(999.r),
               border: Border.all(color: colors.gold.withValues(alpha: 0.45)),
             ),
             child: Text(
@@ -1262,23 +1273,23 @@ class _SlideArrow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        customBorder: const CircleBorder(),
+        customBorder: CircleBorder(),
         child: Container(
-          width: 42,
-          height: 42,
+          width: 42.w,
+          height: 42.h,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF101018),
+            color: Color(0xFF101018),
             border: Border.all(color: colors.gold.withValues(alpha: 0.48)),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
                 color: Color(0x66000000),
-                blurRadius: 12,
-                offset: Offset(0, 5),
+                blurRadius: 12.r,
+                offset: Offset(0.w, 5.h),
               ),
             ],
           ),
-          child: Icon(icon, color: colors.gold, size: 24),
+          child: Icon(icon, color: colors.gold, size: 24.sp),
         ),
       ),
     );
@@ -1293,41 +1304,42 @@ class _CtaSection extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return _GlassSection(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(22.r),
       child: Column(
         children: [
-          _Badge(icon: Icons.rocket_launch_rounded, label: 'من نحن'),
-          const SizedBox(height: 14),
+          _Badge(
+              icon: Icons.rocket_launch_rounded,
+              label: 'auto.t_629d28fb52'.tr()),
+          SizedBox(height: 14.h),
           Text(
-            'جاهز تبني حضورك الرقمي؟',
+            'auto.t_51c7eea713'.tr(),
             textAlign: TextAlign.center,
             style: context.textTheme.titleLarge?.copyWith(
               color: colors.textMain,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _MutedText(
-            'فريقنا مستعد للإجابة على كل أسئلتك وتحويل أفكارك إلى واقع',
+            'auto.t_c5425f0ee3'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           Material(
             color: colors.gold,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             child: InkWell(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(999.r),
               onTap: () => context.go(AppRoutes.contact),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+                padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 13.h),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.arrow_back_rounded, color: Colors.black),
-                    const SizedBox(width: 8),
+                    Icon(Icons.arrow_back_rounded, color: Colors.black),
+                    SizedBox(width: 8.w),
                     Text(
-                      'تحدث مع فريقنا',
+                      'auto.t_daf7ba6d71'.tr(),
                       style: context.textTheme.labelLarge?.copyWith(
                         color: Colors.black,
                         fontWeight: FontWeight.w900,
@@ -1353,20 +1365,20 @@ class _GrowthPartnerBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
+        borderRadius: BorderRadius.circular(22.r),
+        gradient: LinearGradient(
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
           colors: [Color(0xFF221D18), Color(0xFF111018), Color(0xFF181323)],
         ),
         border: Border.all(color: colors.gold.withValues(alpha: 0.22)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x66000000),
-            blurRadius: 28,
-            offset: Offset(0, 14),
+            blurRadius: 28.r,
+            offset: Offset(0.w, 14.h),
           ),
         ],
       ),
@@ -1375,39 +1387,39 @@ class _GrowthPartnerBanner extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 58,
-                height: 58,
+                width: 58.w,
+                height: 58.h,
                 decoration: BoxDecoration(
                   color: colors.gold,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(18.r),
                   boxShadow: [
                     BoxShadow(
                       color: colors.gold.withValues(alpha: 0.26),
-                      blurRadius: 22,
+                      blurRadius: 22.r,
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.workspace_premium_rounded,
                   color: Colors.white,
-                  size: 30,
+                  size: 30.sp,
                 ),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'شريك نمو حقيقي، لا مجرد مزود خدمة',
+                      'auto.t_9db3e3333a'.tr(),
                       style: context.textTheme.titleMedium?.copyWith(
                         color: colors.textMain,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6.h),
                     Text(
-                      'نؤمن أن نجاحك هو نجاحنا — لذا ندير حملاتك كأنها حملاتنا ونقيس كل قرار بالنتيجة.',
+                      'auto.t_3372e14588'.tr(),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: colors.textMuted,
                         height: 1.45,
@@ -1418,16 +1430,24 @@ class _GrowthPartnerBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          const Row(
+          SizedBox(height: 18.h),
+          Row(
             children: [
-              Expanded(child: _MiniMetric(value: '+12', label: 'سنوات خبرة')),
+              Expanded(
+                  child: _MiniMetric(
+                      value: '+12', label: 'auto.t_07caf2cbc5'.tr())),
               _VerticalDivider(),
-              Expanded(child: _MiniMetric(value: '5,000+', label: 'عميل نشط')),
+              Expanded(
+                  child: _MiniMetric(
+                      value: '5,000+', label: 'auto.t_ad40b0e22c'.tr())),
               _VerticalDivider(),
-              Expanded(child: _MiniMetric(value: '+15', label: 'متخصص')),
+              Expanded(
+                  child: _MiniMetric(
+                      value: '+15', label: 'auto.t_a1ceae33b8'.tr())),
               _VerticalDivider(),
-              Expanded(child: _MiniMetric(value: '4', label: 'دول خليجية')),
+              Expanded(
+                  child:
+                      _MiniMetric(value: '4', label: 'auto.t_ebccd17f9b'.tr())),
             ],
           ),
         ],
@@ -1446,16 +1466,16 @@ class _CeoProfileSection extends StatelessWidget {
     return _PlainSection(
       child: Column(
         children: [
-          _RoleLabel(label: 'المدير التنفيذي والمؤسس'),
-          const SizedBox(height: 14),
+          _RoleLabel(label: 'auto.t_aa406e4c94'.tr()),
+          SizedBox(height: 14.h),
           _CeoPortraitCard(),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           Text.rich(
             TextSpan(
-              text: 'مهندس/ محمد\n',
+              text: 'auto.t_b418443b8b'.tr(),
               children: [
                 TextSpan(
-                  text: 'المصراوي',
+                  text: 'auto.t_de70ae52e8'.tr(),
                   style: TextStyle(color: colors.gold),
                 ),
               ],
@@ -1467,42 +1487,46 @@ class _CeoProfileSection extends StatelessWidget {
               height: 1.08,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           _MutedText(
-            'رائد أعمال ومسوق رقمي بخبرة تمتد لأكثر من 12 عامًا في تحويل الأفكار إلى علامات تجارية ناجحة. أسس اطبعلي لتكون جسر النجاح بين الشركات وعملائها، بأسلوب يجمع بين الإبداع العلمي والنتائج القابلة للقياس.',
+            'auto.t_51c39a8008'.tr(),
             centered: true,
           ),
-          const SizedBox(height: 18),
-          const _Checklist(items: [
-            _CheckItem(
-                'رؤية إبداعية تجمع بين الفن والبيانات', Color(0xFFD4AF37)),
-            _CheckItem('استراتيجيات مخصصة لكل عميل على حدة', Color(0xFF68D391)),
-            _CheckItem('شفافية كاملة في التقارير والنتائج', Color(0xFF63B3ED)),
+          SizedBox(height: 18.h),
+          _Checklist(items: [
+            _CheckItem('auto.t_dbe41ec88c'.tr(), Color(0xFFD4AF37)),
+            _CheckItem('auto.t_955599c7fe'.tr(), Color(0xFF68D391)),
+            _CheckItem('auto.t_279d3a38ef'.tr(), Color(0xFF63B3ED)),
           ]),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: EdgeInsets.symmetric(vertical: 16.h),
             decoration: BoxDecoration(
               color: colors.bgCard.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(18.r),
               border: Border.all(color: colors.gold.withValues(alpha: 0.18)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Expanded(child: _MiniMetric(value: '5K+', label: 'عميل راضٍ')),
+                Expanded(
+                    child: _MiniMetric(
+                        value: '5K+', label: 'auto.t_317d1c1684'.tr())),
                 _VerticalDivider(),
                 Expanded(
-                    child: _MiniMetric(value: '93%', label: 'رضا العملاء')),
+                    child: _MiniMetric(
+                        value: '93%', label: 'auto.t_52c33d066b'.tr())),
                 _VerticalDivider(),
-                Expanded(child: _MiniMetric(value: '4', label: 'دول خليجية')),
+                Expanded(
+                    child: _MiniMetric(
+                        value: '4', label: 'auto.t_ebccd17f9b'.tr())),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              'مهندس/ محمد المصراوي',
+              'auto.t_32afe007d4'.tr(),
               style: context.textTheme.labelMedium?.copyWith(
                 color: colors.gold.withValues(alpha: 0.8),
                 fontWeight: FontWeight.w800,
@@ -1527,16 +1551,16 @@ class _CeoPortraitCard extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Container(
-          width: 260,
-          height: 330,
+          width: 260.w,
+          height: 330.h,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: colors.gold.withValues(alpha: 0.55)),
             boxShadow: [
               BoxShadow(
                 color: colors.gold.withValues(alpha: 0.12),
-                blurRadius: 34,
-                offset: const Offset(0, 18),
+                blurRadius: 34.r,
+                offset: Offset(0.w, 18.h),
               ),
             ],
           ),
@@ -1548,15 +1572,16 @@ class _CeoPortraitCard extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 34,
-          left: -18,
-          child: _FloatingBadge(icon: Icons.work_rounded, label: '400K+ مشروع'),
+          top: 34.h,
+          left: -18.w,
+          child: _FloatingBadge(
+              icon: Icons.work_rounded, label: 'auto.t_f85359e2a9'.tr()),
         ),
         Positioned(
-          bottom: 28,
-          right: -18,
+          bottom: 28.h,
+          right: -18.w,
           child: _FloatingBadge(
-              icon: Icons.timeline_rounded, label: '+12 سنة خبرة'),
+              icon: Icons.timeline_rounded, label: 'auto.t_ebf7a4b024'.tr()),
         ),
       ],
     );
@@ -1586,13 +1611,13 @@ class _PortfolioActionButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
           decoration: BoxDecoration(
             color: filled ? colors.gold : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: colors.gold.withValues(alpha: 0.35)),
           ),
           child: Row(
@@ -1600,9 +1625,9 @@ class _PortfolioActionButton extends StatelessWidget {
               Icon(
                 Icons.arrow_back_rounded,
                 color: filled ? Colors.black : colors.gold,
-                size: 18,
+                size: 18.sp,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1615,7 +1640,7 @@ class _PortfolioActionButton extends StatelessWidget {
                       ),
                     ),
                     if (subtitle != null) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2.h),
                       Text(
                         subtitle!,
                         style: context.textTheme.labelSmall?.copyWith(
@@ -1630,13 +1655,13 @@ class _PortfolioActionButton extends StatelessWidget {
                 ),
               ),
               Container(
-                width: 42,
-                height: 42,
+                width: 42.w,
+                height: 42.h,
                 decoration: BoxDecoration(
                   color: filled
                       ? Colors.black.withValues(alpha: 0.14)
                       : colors.gold.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(13.r),
                 ),
                 child: Icon(icon, color: filled ? Colors.white : colors.gold),
               ),
@@ -1661,14 +1686,14 @@ class _TinyTrust extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: colors.gold.withValues(alpha: 0.72), size: 13),
-        const SizedBox(width: 4),
+        Icon(icon, color: colors.gold.withValues(alpha: 0.72), size: 13.sp),
+        SizedBox(width: 4.w),
         Text(
           label,
           style: context.textTheme.labelSmall?.copyWith(
             color: colors.textMuted,
             fontWeight: FontWeight.w800,
-            fontSize: 10,
+            fontSize: 10.sp,
           ),
         ),
       ],
@@ -1688,9 +1713,9 @@ class _GlassSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: padding ?? const EdgeInsets.all(18),
+      padding: padding ?? EdgeInsets.all(18.r),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22.r),
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
@@ -1701,11 +1726,11 @@ class _GlassSection extends StatelessWidget {
           ],
         ),
         border: Border.all(color: colors.borderColor.withValues(alpha: 0.55)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x66000000),
-            blurRadius: 32,
-            offset: Offset(0, 16),
+            blurRadius: 32.r,
+            offset: Offset(0.w, 16.h),
           ),
         ],
       ),
@@ -1725,16 +1750,16 @@ class _GlowPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         color: colors.bgCard.withValues(alpha: 0.88),
         border: Border.all(color: colors.gold.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
             color: colors.gold.withValues(alpha: 0.08),
-            blurRadius: 34,
-            offset: const Offset(0, 14),
+            blurRadius: 34.r,
+            offset: Offset(0.w, 14.h),
           ),
         ],
       ),
@@ -1765,17 +1790,17 @@ class _Badge extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: colors.gold.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: colors.gold.withValues(alpha: 0.26)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: colors.gold, size: 16),
-          const SizedBox(width: 8),
+          Icon(icon, color: colors.gold, size: 16.sp),
+          SizedBox(width: 8.w),
           Text(
             label,
             style: context.textTheme.labelMedium?.copyWith(
@@ -1851,20 +1876,20 @@ class _FloatingBadge extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: const Color(0xDD0B0912),
-        borderRadius: BorderRadius.circular(12),
+        color: Color(0xDD0B0912),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x55000000), blurRadius: 18),
+        boxShadow: [
+          BoxShadow(color: Color(0x55000000), blurRadius: 18.r),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: colors.gold, size: 15),
-          const SizedBox(width: 6),
+          Icon(icon, color: colors.gold, size: 15.sp),
+          SizedBox(width: 6.w),
           Text(
             label,
             style: context.textTheme.labelSmall?.copyWith(
@@ -1889,24 +1914,24 @@ class _Checklist extends StatelessWidget {
       children: items
           .map(
             (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: EdgeInsets.only(bottom: 10.h),
               child: Row(
                 children: [
                   Container(
-                    width: 10,
-                    height: 10,
+                    width: 10.w,
+                    height: 10.h,
                     decoration: BoxDecoration(
                       color: item.color,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
                           color: item.color.withValues(alpha: 0.38),
-                          blurRadius: 10,
+                          blurRadius: 10.r,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
                       item.label,
@@ -1927,7 +1952,7 @@ class _Checklist extends StatelessWidget {
 }
 
 class _CheckItem {
-  const _CheckItem(this.label, this.color);
+  _CheckItem(this.label, this.color);
 
   final String label;
   final Color color;
@@ -1971,8 +1996,8 @@ class _VerticalDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 1,
-      height: 42,
+      width: 1.w,
+      height: 42.h,
       color: context.etbalyColors.gold.withValues(alpha: 0.18),
     );
   }
@@ -1990,21 +2015,21 @@ class _Timeline extends StatelessWidget {
     return Align(
       alignment: Alignment.center,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 430),
+        constraints: BoxConstraints(maxWidth: 430.w),
         child: Stack(
           children: [
             Positioned(
-              top: 7,
-              bottom: 7,
-              right: 7,
+              top: 7.h,
+              bottom: 7.h,
+              right: 7.w,
               child: Container(
-                width: 2,
+                width: 2.w,
                 decoration: BoxDecoration(
                   color: colors.gold.withValues(alpha: 0.7),
                   boxShadow: [
                     BoxShadow(
                       color: colors.gold.withValues(alpha: 0.26),
-                      blurRadius: 12,
+                      blurRadius: 12.r,
                     ),
                   ],
                 ),
@@ -2024,7 +2049,7 @@ class _Timeline extends StatelessWidget {
 }
 
 class _TimelineItem {
-  const _TimelineItem(this.year, this.label);
+  _TimelineItem(this.year, this.label);
 
   final String year;
   final String label;
@@ -2040,14 +2065,15 @@ class _TimelineRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
     final dotColor = switch (index) {
-      1 => const Color(0xFF63B3ED),
-      2 => const Color(0xFF68D391),
+      1 => Color(0xFF63B3ED),
+      2 => Color(0xFF68D391),
       _ => colors.gold,
     };
-    final isActive = item.year == 'اليوم';
+    final isActive = item.year == 'auto.t_b76444a321'.tr();
+    final bottomPadding = index == 3 ? 0.h : 20.h;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: index == 3 ? 0 : 20),
+      padding: EdgeInsets.only(bottom: bottomPadding),
       child: Row(
         textDirection: TextDirection.ltr,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -2066,9 +2092,9 @@ class _TimelineRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16.w),
           SizedBox(
-            width: 46,
+            width: 46.w,
             child: Text(
               item.year,
               textAlign: TextAlign.right,
@@ -2078,14 +2104,14 @@ class _TimelineRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10.w),
           Container(
-            width: 16,
-            height: 16,
+            width: 16.w,
+            height: 16.h,
             decoration: BoxDecoration(
-              color: isActive ? dotColor : const Color(0xFF0B0914),
+              color: isActive ? dotColor : Color(0xFF0B0914),
               shape: BoxShape.circle,
-              border: Border.all(color: dotColor, width: 2.5),
+              border: Border.all(color: dotColor, width: 2.5.w),
               boxShadow: [
                 BoxShadow(
                   color: dotColor.withValues(alpha: isActive ? 0.48 : 0.18),
@@ -2109,33 +2135,33 @@ class _StoryMetaStats extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 18),
+      padding: EdgeInsets.only(top: 18.h),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: colors.gold.withValues(alpha: 0.16)),
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             child: _StoryMetaItem(
               icon: Icons.calendar_month_rounded,
-              label: 'تأسست',
+              label: 'auto.t_01e2eb192c'.tr(),
               value: '2014',
             ),
           ),
           Expanded(
             child: _StoryMetaItem(
               icon: Icons.location_on_rounded,
-              label: 'المقر الرئيسي',
-              value: 'الإسكندرية، مصر',
+              label: 'auto.t_e149f9e84f'.tr(),
+              value: 'auto.t_19c155b158'.tr(),
             ),
           ),
           Expanded(
             child: _StoryMetaItem(
               icon: Icons.groups_rounded,
-              label: 'حجم الفريق',
-              value: '+15 متخصص',
+              label: 'auto.t_59be02cd45'.tr(),
+              value: 'auto.t_6c872d9623'.tr(),
             ),
           ),
         ],
@@ -2163,16 +2189,16 @@ class _StoryMetaItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 38,
-          height: 38,
+          width: 38.w,
+          height: 38.h,
           decoration: BoxDecoration(
             color: colors.bgCard.withValues(alpha: 0.88),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
           ),
-          child: Icon(icon, color: colors.gold, size: 19),
+          child: Icon(icon, color: colors.gold, size: 19.sp),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           label,
           maxLines: 1,
@@ -2183,9 +2209,9 @@ class _StoryMetaItem extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 3),
+        SizedBox(height: 3.h),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
+          padding: EdgeInsets.symmetric(horizontal: 2.w),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
@@ -2212,47 +2238,48 @@ class _QuoteCard extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: colors.bgCard.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.borderColor.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.format_quote_rounded, color: colors.gold, size: 30),
-          const SizedBox(height: 6),
+          Icon(Icons.format_quote_rounded, color: colors.gold, size: 30.sp),
+          SizedBox(height: 6.h),
           _MutedText(
-            'لم نكتفِ بمواكبة التحول الرقمي — بل كنا جزءًا من صناعته. كل مشروع ننجزه هو شهادة على التزامنا بالتميز وحرصنا على أن يُترجم استثمارك التسويقي إلى نتائج يمكن قياسها والاحتفال بها.',
+            'auto.t_207f6b510a'.tr(),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 44.w,
+                height: 44.h,
                 decoration: BoxDecoration(
                   color: colors.gold.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   border:
                       Border.all(color: colors.gold.withValues(alpha: 0.28)),
                 ),
-                child: Icon(Icons.person_rounded, color: colors.gold, size: 22),
+                child:
+                    Icon(Icons.person_rounded, color: colors.gold, size: 22.sp),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'مهندس/ محمد المصراوي',
+                    'auto.t_32afe007d4'.tr(),
                     style: context.textTheme.labelLarge?.copyWith(
                       color: colors.textMain,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   Text(
-                    'المدير التنفيذي والمؤسس',
+                    'auto.t_aa406e4c94'.tr(),
                     style: context.textTheme.labelSmall?.copyWith(
                       color: colors.gold,
                       fontWeight: FontWeight.w800,
@@ -2286,10 +2313,10 @@ class _ValueCard extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.all(11),
+      padding: EdgeInsets.all(11.r),
       decoration: BoxDecoration(
         color: colors.bgCard.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: color.withValues(alpha: 0.24)),
       ),
       child: Column(
@@ -2298,20 +2325,20 @@ class _ValueCard extends StatelessWidget {
           Align(
             alignment: Alignment.topRight,
             child: Container(
-              width: 32,
-              height: 32,
+              width: 32.w,
+              height: 32.h,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(9.r),
                 border: Border.all(color: color.withValues(alpha: 0.2)),
               ),
-              child: Icon(icon, color: color, size: 18),
+              child: Icon(icon, color: color, size: 18.sp),
             ),
           ),
           Expanded(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding: EdgeInsets.only(top: 2.h),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -2323,11 +2350,11 @@ class _ValueCard extends StatelessWidget {
                       style: context.textTheme.titleSmall?.copyWith(
                         color: colors.textMain,
                         fontWeight: FontWeight.w900,
-                        fontSize: 14,
+                        fontSize: 14.sp,
                         height: 1.12,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     Text(
                       desc,
                       maxLines: 5,
@@ -2336,7 +2363,7 @@ class _ValueCard extends StatelessWidget {
                       style: context.textTheme.bodySmall?.copyWith(
                         color: colors.textMuted,
                         height: 1.25,
-                        fontSize: 11.6,
+                        fontSize: 11.6.sp,
                       ),
                     ),
                   ],
@@ -2372,10 +2399,10 @@ class _WhyCard extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: EdgeInsets.all(15.r),
       decoration: BoxDecoration(
-        color: const Color(0x66110E1B),
-        borderRadius: BorderRadius.circular(16),
+        color: Color(0x66110E1B),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
@@ -2383,8 +2410,8 @@ class _WhyCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 26),
-              const Spacer(),
+              Icon(icon, color: color, size: 26.sp),
+              Spacer(),
               Text(
                 number,
                 style: context.textTheme.titleLarge?.copyWith(
@@ -2394,7 +2421,7 @@ class _WhyCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             title,
             style: context.textTheme.titleSmall?.copyWith(
@@ -2402,7 +2429,7 @@ class _WhyCard extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             desc,
             style: context.textTheme.bodySmall?.copyWith(
@@ -2410,12 +2437,12 @@ class _WhyCard extends StatelessWidget {
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 5,
+              minHeight: 5.h,
               backgroundColor: colors.borderColor.withValues(alpha: 0.28),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
@@ -2435,9 +2462,9 @@ class _PartnerBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(17),
+      padding: EdgeInsets.all(17.r),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18.r),
         gradient: LinearGradient(
           colors: [
             colors.gold.withValues(alpha: 0.16),
@@ -2448,19 +2475,19 @@ class _PartnerBanner extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.emoji_events_rounded, color: colors.gold, size: 30),
-          const SizedBox(height: 10),
+          Icon(Icons.emoji_events_rounded, color: colors.gold, size: 30.sp),
+          SizedBox(height: 10.h),
           Text(
-            'شريك نمو حقيقي، لا مجرد مزود خدمة',
+            'auto.t_9db3e3333a'.tr(),
             textAlign: TextAlign.center,
             style: context.textTheme.titleSmall?.copyWith(
               color: colors.textMain,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           _MutedText(
-            'ندير حملاتك كأنها حملاتنا، ونقيس كل قرار بالنتيجة.',
+            'auto.t_f8c00fd952'.tr(),
             centered: true,
           ),
         ],
@@ -2482,18 +2509,18 @@ class _RoleLabel extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 8,
-          height: 8,
+          width: 8.w,
+          height: 8.h,
           decoration: BoxDecoration(
             color: colors.gold,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                  color: colors.gold.withValues(alpha: 0.5), blurRadius: 12),
+                  color: colors.gold.withValues(alpha: 0.5), blurRadius: 12.r),
             ],
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8.w),
         Text(
           label,
           style: context.textTheme.labelMedium?.copyWith(
@@ -2522,17 +2549,17 @@ class _TeamCard extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.all(13),
+      padding: EdgeInsets.all(11.r),
       decoration: BoxDecoration(
         color: colors.bgCard.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.borderColor.withValues(alpha: 0.38)),
       ),
       child: Column(
         children: [
           Container(
-            width: 70,
-            height: 70,
+            width: 64.w,
+            height: 64.h,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: colors.gold.withValues(alpha: 0.24)),
@@ -2544,7 +2571,7 @@ class _TeamCard extends StatelessWidget {
               alignment: Alignment.topCenter,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 9.h),
           Text(
             name,
             maxLines: 1,
@@ -2554,7 +2581,7 @@ class _TeamCard extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 5),
+          SizedBox(height: 4.h),
           Text(
             role,
             maxLines: 2,
@@ -2566,9 +2593,11 @@ class _TeamCard extends StatelessWidget {
               height: 1.25,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 8.h),
           Container(
-              height: 2, width: 38, color: colors.gold.withValues(alpha: 0.55)),
+              height: 2,
+              width: 38.w,
+              color: colors.gold.withValues(alpha: 0.55)),
         ],
       ),
     );
@@ -2579,7 +2608,7 @@ class _PortfolioCoverPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final sky = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [Color(0xFFEFE2D0), Color(0xFFF9F5ED), Color(0xFFE1C39D)],
@@ -2587,32 +2616,32 @@ class _PortfolioCoverPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, sky);
 
     final framePaint = Paint()
-      ..color = const Color(0xFFB99262).withValues(alpha: 0.45)
+      ..color = Color(0xFFB99262).withValues(alpha: 0.45)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(18, 20, 74, 88),
-        const Radius.circular(2),
+        Radius.circular(2.r),
       ),
       framePaint,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(size.width - 92, 20, 74, 88),
-        const Radius.circular(2),
+        Radius.circular(2.r),
       ),
       framePaint,
     );
 
     final artPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         colors: [Color(0xFFE8D4BE), Color(0xFFB6C4C1), Color(0xFFD6B58F)],
       ).createShader(Rect.fromLTWH(22, 24, 66, 80));
     canvas.drawRect(Rect.fromLTWH(22, 24, 66, 80), artPaint);
     canvas.drawRect(Rect.fromLTWH(size.width - 88, 24, 66, 80), artPaint);
 
-    final floorPaint = Paint()..color = const Color(0xFFB08A60);
+    final floorPaint = Paint()..color = Color(0xFFB08A60);
     for (double y = size.height - 56; y < size.height; y += 10) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y + 5), floorPaint);
     }
@@ -2626,7 +2655,7 @@ class _HeroCardPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final grid = Paint()
-      ..color = const Color(0x11745CBA)
+      ..color = Color(0x11745CBA)
       ..strokeWidth = 1;
     for (double x = 0; x < size.width; x += 54) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
@@ -2640,9 +2669,9 @@ class _HeroCardPainter extends CustomPainter {
         begin: Alignment.topRight,
         end: Alignment.bottomLeft,
         colors: [
-          const Color(0xFF321069).withValues(alpha: 0.08),
-          const Color(0xFF321069).withValues(alpha: 0.42),
-          const Color(0xFF271052).withValues(alpha: 0.68),
+          Color(0xFF321069).withValues(alpha: 0.08),
+          Color(0xFF321069).withValues(alpha: 0.42),
+          Color(0xFF271052).withValues(alpha: 0.68),
         ],
       ).createShader(Offset.zero & size);
     final band = Path()
@@ -2655,7 +2684,7 @@ class _HeroCardPainter extends CustomPainter {
     final glow = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFFD4AF37).withValues(alpha: 0.2),
+          Color(0xFFD4AF37).withValues(alpha: 0.2),
           Colors.transparent,
         ],
       ).createShader(
@@ -2675,7 +2704,7 @@ class _HeroDesktopPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final grid = Paint()
-      ..color = const Color(0x10745CBA)
+      ..color = Color(0x10745CBA)
       ..strokeWidth = 1;
     for (double x = 0; x < size.width; x += 72) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
@@ -2687,7 +2716,7 @@ class _HeroDesktopPainter extends CustomPainter {
     final glow = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFFD4AF37).withValues(alpha: 0.16),
+          Color(0xFFD4AF37).withValues(alpha: 0.16),
           Colors.transparent,
         ],
       ).createShader(
@@ -2699,7 +2728,7 @@ class _HeroDesktopPainter extends CustomPainter {
     canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.16), 250, glow);
 
     final linePaint = Paint()
-      ..color = const Color(0x557D5DFF)
+      ..color = Color(0x557D5DFF)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4;
     canvas.drawLine(
@@ -2809,13 +2838,13 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
           onTap: _onTap,
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
               border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
               boxShadow: [
                 BoxShadow(
                   color: colors.gold.withValues(alpha: 0.08),
-                  blurRadius: 28,
-                  offset: const Offset(0, 12),
+                  blurRadius: 28.r,
+                  offset: Offset(0.w, 12.h),
                 ),
               ],
             ),
@@ -2859,9 +2888,9 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
                   ),
                   if (_showOverlay) _VideoPlayOverlay(isReady: isReady),
                   Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
+                    bottom: 0.h,
+                    left: 0.w,
+                    right: 0.w,
                     child: _VideoBar(
                       ctrl: _ctrl,
                       onPlayPause: _onTap,
@@ -2874,17 +2903,17 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Directionality(
           textDirection: TextDirection.rtl,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              const _VideoBadge(
+              _VideoBadge(
                 icon: Icons.movie_creation_rounded,
-                label: 'فيديو حصري',
+                label: 'auto.t_445ae6072e'.tr(),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               _VideoBadge(
                 icon: Icons.access_time_rounded,
                 label: isReady ? _fmt(_ctrl.value.duration) : '1:15',
@@ -2908,20 +2937,20 @@ class _VideoPlayOverlay extends StatelessWidget {
 
     return Center(
       child: Transform.translate(
-        offset: const Offset(0, 12),
+        offset: Offset(0.w, 12.h),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 62,
-              height: 62,
+              width: 62.w,
+              height: 62.h,
               decoration: BoxDecoration(
                 color: colors.gold,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
                     color: colors.gold.withValues(alpha: 0.35),
-                    blurRadius: 24,
+                    blurRadius: 24.r,
                   ),
                 ],
               ),
@@ -2931,30 +2960,30 @@ class _VideoPlayOverlay extends StatelessWidget {
                 size: isReady ? 38 : 28,
               ),
             ),
-            const SizedBox(height: 36),
+            SizedBox(height: 36.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Directionality(
                   textDirection: TextDirection.rtl,
                   child: Text(
-                    'مشاهدة رسالة المدير',
+                    'auto.t_3a51a7bc4d'.tr(),
                     style: context.textTheme.labelLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
-                      shadows: const [
+                      shadows: [
                         Shadow(
                           color: Colors.black54,
-                          blurRadius: 10,
+                          blurRadius: 10.r,
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 9),
+                SizedBox(width: 9.w),
                 Container(
-                  width: 9,
-                  height: 9,
+                  width: 9.w,
+                  height: 9.h,
                   decoration: BoxDecoration(
                     color: colors.gold,
                     shape: BoxShape.circle,
@@ -2987,8 +3016,8 @@ class _VideoBar extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.fromLTRB(12.w, 6.h, 12.w, 8.h),
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
@@ -3013,16 +3042,15 @@ class _VideoBar extends StatelessWidget {
                       ? Icons.pause_rounded
                       : Icons.play_arrow_rounded,
                   color: Colors.white,
-                  size: 28,
+                  size: 28.sp,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Expanded(
                 child: SliderTheme(
                   data: SliderThemeData(
                     trackHeight: 3,
-                    thumbShape:
-                        const RoundSliderThumbShape(enabledThumbRadius: 5),
+                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5),
                     overlayShape: SliderComponentShape.noOverlay,
                     activeTrackColor: colors.gold,
                     inactiveTrackColor: Colors.white24,
@@ -3036,19 +3064,19 @@ class _VideoBar extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Text(
                   '${fmt(pos)} / ${fmt(dur)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               GestureDetector(
                 onTap: onToggleMute,
                 child: Icon(
@@ -3056,7 +3084,7 @@ class _VideoBar extends StatelessWidget {
                       ? Icons.volume_up_rounded
                       : Icons.volume_off_rounded,
                   color: Colors.white,
-                  size: 22,
+                  size: 22.sp,
                 ),
               ),
             ],
@@ -3077,17 +3105,17 @@ class _VideoBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: colors.bgCard.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: colors.gold, size: 13),
-          const SizedBox(width: 5),
+          Icon(icon, color: colors.gold, size: 13.sp),
+          SizedBox(width: 5.w),
           Text(
             label,
             style: context.textTheme.labelSmall?.copyWith(
@@ -3105,7 +3133,7 @@ class _CeoVideoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final bg = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [Color(0xFF0E0A16), Color(0xFF21123B), Color(0xFF080611)],
@@ -3115,7 +3143,7 @@ class _CeoVideoPainter extends CustomPainter {
     final glow = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFFD4AF37).withValues(alpha: 0.16),
+          Color(0xFFD4AF37).withValues(alpha: 0.16),
           Colors.transparent,
         ],
       ).createShader(
@@ -3138,14 +3166,14 @@ class _CeoVideoPainter extends CustomPainter {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AboutBackgroundPainter extends CustomPainter {
-  const _AboutBackgroundPainter({required this.progress});
+  _AboutBackgroundPainter({required this.progress});
 
   final double progress;
 
   @override
   void paint(Canvas canvas, Size size) {
     final bgPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [Color(0xFF070511), Color(0xFF0F0E18), Color(0xFF080613)],
@@ -3153,7 +3181,7 @@ class _AboutBackgroundPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, bgPaint);
 
     final gridPaint = Paint()
-      ..color = const Color(0x12D4AF37)
+      ..color = Color(0x12D4AF37)
       ..strokeWidth = 1;
     for (double x = 0; x < size.width; x += 58) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
@@ -3169,19 +3197,19 @@ class _AboutBackgroundPainter extends CustomPainter {
         80 + math.cos(progress * math.pi * 2) * 16,
       ),
       radius: 260,
-      color: const Color(0x20D4AF37),
+      color: Color(0x20D4AF37),
     );
     _drawOrb(
       canvas,
       center: Offset(size.width + 40, size.height * 0.28),
       radius: 210,
-      color: const Color(0x1263B3ED),
+      color: Color(0x1263B3ED),
     );
     _drawOrb(
       canvas,
       center: Offset(-20, size.height * 0.62),
       radius: 190,
-      color: const Color(0x1068D391),
+      color: Color(0x1068D391),
     );
   }
 

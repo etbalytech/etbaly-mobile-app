@@ -15,7 +15,7 @@ class _AirplaneStatsCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: const Color(0xA0100B1D),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: const Color(0x553D236C)),
       ),
       child: Row(
@@ -23,7 +23,7 @@ class _AirplaneStatsCard extends StatelessWidget {
           Expanded(
             child: _AirplaneStat(
               value: '+5000',
-              label: 'علامة تجارية',
+              label: 'auto.t_8c4b0068fb'.tr(),
               isNarrow: isNarrow,
             ),
           ),
@@ -31,15 +31,15 @@ class _AirplaneStatsCard extends StatelessWidget {
           Expanded(
             child: _AirplaneStat(
               value: '%93',
-              label: 'رضا العملاء',
+              label: 'auto.t_52c33d066b'.tr(),
               isNarrow: isNarrow,
             ),
           ),
           const _AirplaneStatDivider(),
           Expanded(
             child: _AirplaneStat(
-              value: '+12 سنوات',
-              label: 'خبرة إبداعية',
+              value: 'auto.t_396a22256b'.tr(),
+              label: 'auto.t_8da83dfa81'.tr(),
               isNarrow: isNarrow,
             ),
           ),

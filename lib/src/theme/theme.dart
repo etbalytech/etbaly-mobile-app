@@ -4,11 +4,12 @@ import 'package:flutter/cupertino.dart';
 import 'text_theme.dart';
 import 'etbaly_colors.dart';
 import 'color_schemes.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Custom theme extension for spacing and other design tokens
 /// Enhanced design tokens matching web version (--radius-sm: 10px, --radius-md: 16px, --radius-lg: 24px, --radius-xl: 36px)
 class AppDesignTokens extends ThemeExtension<AppDesignTokens> {
-  const AppDesignTokens({
+  AppDesignTokens({
     required this.paddingSmall,
     required this.paddingMedium,
     required this.paddingLarge,
@@ -24,15 +25,15 @@ class AppDesignTokens extends ThemeExtension<AppDesignTokens> {
   final double paddingSmall;
   final double paddingMedium;
   final double paddingLarge;
-  final double borderRadiusSmall;   // 10px (web: --radius-sm)
-  final double borderRadiusMedium;  // 16px (web: --radius-md)
-  final double borderRadiusLarge;   // 24px (web: --radius-lg)
-  final double borderRadiusXLarge;  // 36px (web: --radius-xl)
+  final double borderRadiusSmall; // 10px (web: --radius-sm)
+  final double borderRadiusMedium; // 16px (web: --radius-md)
+  final double borderRadiusLarge; // 24px (web: --radius-lg)
+  final double borderRadiusXLarge; // 36px (web: --radius-xl)
   final double cardElevation;
   final Duration transitionDuration;
   final Curve transitionCurve;
 
-  static const fallback = AppDesignTokens(
+  static final fallback = AppDesignTokens(
     paddingSmall: 8,
     paddingMedium: 16,
     paddingLarge: 24,
@@ -41,7 +42,7 @@ class AppDesignTokens extends ThemeExtension<AppDesignTokens> {
     borderRadiusLarge: 24,
     borderRadiusXLarge: 36,
     cardElevation: 0,
-    transitionDuration: Duration(milliseconds: 300),
+    transitionDuration: const Duration(milliseconds: 300),
     transitionCurve: Curves.easeInOutCubic,
   );
 
@@ -82,12 +83,17 @@ class AppDesignTokens extends ThemeExtension<AppDesignTokens> {
       paddingSmall: lerpDouble(paddingSmall, other.paddingSmall, t)!,
       paddingMedium: lerpDouble(paddingMedium, other.paddingMedium, t)!,
       paddingLarge: lerpDouble(paddingLarge, other.paddingLarge, t)!,
-      borderRadiusSmall: lerpDouble(borderRadiusSmall, other.borderRadiusSmall, t)!,
-      borderRadiusMedium: lerpDouble(borderRadiusMedium, other.borderRadiusMedium, t)!,
-      borderRadiusLarge: lerpDouble(borderRadiusLarge, other.borderRadiusLarge, t)!,
-      borderRadiusXLarge: lerpDouble(borderRadiusXLarge, other.borderRadiusXLarge, t)!,
+      borderRadiusSmall:
+          lerpDouble(borderRadiusSmall, other.borderRadiusSmall, t)!,
+      borderRadiusMedium:
+          lerpDouble(borderRadiusMedium, other.borderRadiusMedium, t)!,
+      borderRadiusLarge:
+          lerpDouble(borderRadiusLarge, other.borderRadiusLarge, t)!,
+      borderRadiusXLarge:
+          lerpDouble(borderRadiusXLarge, other.borderRadiusXLarge, t)!,
       cardElevation: lerpDouble(cardElevation, other.cardElevation, t)!,
-      transitionDuration: t < 0.5 ? transitionDuration : other.transitionDuration,
+      transitionDuration:
+          t < 0.5 ? transitionDuration : other.transitionDuration,
       transitionCurve: t < 0.5 ? transitionCurve : other.transitionCurve,
     );
   }
@@ -100,12 +106,14 @@ class AppDesignTokens extends ThemeExtension<AppDesignTokens> {
   }
 }
 
-ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColors, [Locale? locale]) {
+ThemeData _buildTheme(
+    ColorScheme colorScheme, EtbalyColorsExtension etbalyColors,
+    [Locale? locale]) {
   final textTheme = buildTextTheme(locale);
   final appPalette = colorScheme.brightness == Brightness.dark
       ? AppPalettes.dark
       : AppPalettes.light;
-  
+
   return ThemeData(
     useMaterial3: true,
     primaryColor: etbalyColors.primary,
@@ -125,19 +133,19 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
       AppDesignTokens.fallback,
       appPalette,
     ],
-    
+
     // --- Basic Elements ---
     scaffoldBackgroundColor: colorScheme.surface,
     dividerTheme: DividerThemeData(
       color: colorScheme.outlineVariant,
-      thickness: 1,
-      space: 1,
+      thickness: 1.r,
+      space: 1.r,
     ),
     iconTheme: IconThemeData(
       color: colorScheme.onSurface,
-      size: 24,
+      size: 24.sp,
     ),
-    
+
     // --- Widget Themes ---
 
     // App Bar Theme
@@ -157,9 +165,10 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
       style: ElevatedButton.styleFrom(
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
-        minimumSize: const Size(88, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        minimumSize: Size(88.w, 48.h),
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
         elevation: 0,
       ).copyWith(
         elevation: WidgetStateProperty.resolveWith((states) {
@@ -171,25 +180,27 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
 
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size(88, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        minimumSize: Size(88.w, 48.h),
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       ),
     ),
 
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size(88, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: colorScheme.outline, width: 1.5),
+        minimumSize: Size(88.w, 48.h),
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        side: BorderSide(color: colorScheme.outline, width: 1.5.w),
       ),
     ),
 
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        minimumSize: const Size(88, 40),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        minimumSize: Size(88.w, 40.h),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
       ),
     ),
 
@@ -199,8 +210,8 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
       elevation: AppDesignTokens.fallback.cardElevation,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: colorScheme.outlineVariant, width: 1),
-        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 1.w),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       color: colorScheme.surfaceContainerLow,
     ),
@@ -210,25 +221,26 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
       filled: true,
       fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        
+        borderRadius: BorderRadius.circular(12.r),
         borderSide: BorderSide(color: colorScheme.outline),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         borderSide: BorderSide(color: colorScheme.outline),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: colorScheme.primary, width: 2.w),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         borderSide: BorderSide(color: colorScheme.error),
       ),
       floatingLabelStyle: TextStyle(color: colorScheme.primary),
-      labelStyle: textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
-      hintStyle: textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+      labelStyle: textTheme.labelMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+      hintStyle: textTheme.labelMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
     ),
 
     // Navigation Bar Theme
@@ -237,12 +249,14 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
       indicatorColor: colorScheme.secondaryContainer,
       elevation: 8,
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      height: 80,
+      height: 80.h,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return textTheme.labelSmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold);
+          return textTheme.labelSmall?.copyWith(
+              color: colorScheme.primary, fontWeight: FontWeight.bold);
         }
-        return textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant);
+        return textTheme.labelSmall
+            ?.copyWith(color: colorScheme.onSurfaceVariant);
       }),
     ),
 
@@ -251,8 +265,10 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
       backgroundColor: colorScheme.surface,
       indicatorColor: colorScheme.secondaryContainer,
       labelType: NavigationRailLabelType.all,
-      unselectedLabelTextStyle: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
-      selectedLabelTextStyle: textTheme.labelSmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
+      unselectedLabelTextStyle:
+          textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+      selectedLabelTextStyle: textTheme.labelSmall
+          ?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
     ),
 
     // Tab Bar Theme
@@ -270,30 +286,32 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
       backgroundColor: colorScheme.primary,
       foregroundColor: colorScheme.onPrimaryContainer,
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
     ),
 
     // Chip Theme
     chipTheme: ChipThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
       side: BorderSide(color: colorScheme.outlineVariant),
       backgroundColor: colorScheme.surfaceContainerLow,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       labelStyle: textTheme.labelMedium,
     ),
 
     // List Tile Theme
     listTileTheme: ListTileThemeData(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       visualDensity: VisualDensity.comfortable,
-      titleTextStyle: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-      subtitleTextStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+      titleTextStyle:
+          textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      subtitleTextStyle:
+          textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
     ),
 
     // Checkbox Theme
     checkboxTheme: CheckboxThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
     ),
 
     // Switch Theme
@@ -303,7 +321,9 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
         return colorScheme.outline;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return colorScheme.primaryContainer;
+        if (states.contains(WidgetState.selected)) {
+          return colorScheme.primaryContainer;
+        }
         return colorScheme.surfaceContainerHighest;
       }),
     ),
@@ -311,28 +331,30 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
     // SnackBar Theme
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       elevation: 4,
       backgroundColor: colorScheme.inverseSurface,
-      contentTextStyle: textTheme.bodyMedium?.copyWith(color: colorScheme.onInverseSurface),
+      contentTextStyle:
+          textTheme.bodyMedium?.copyWith(color: colorScheme.onInverseSurface),
     ),
 
     // Dialog Theme
     dialogTheme: DialogThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
       elevation: 0,
       backgroundColor: colorScheme.surface,
-      titleTextStyle: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      titleTextStyle:
+          textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       contentTextStyle: textTheme.bodyMedium,
     ),
 
     // Bottom Sheet Theme
-    bottomSheetTheme: const BottomSheetThemeData(
+    bottomSheetTheme: BottomSheetThemeData(
       showDragHandle: true,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
+          top: Radius.circular(28.r),
         ),
       ),
     ),
@@ -341,9 +363,11 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
     searchBarTheme: SearchBarThemeData(
       elevation: WidgetStateProperty.all(0),
       backgroundColor: WidgetStateProperty.all(colorScheme.surfaceContainerLow),
-      shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
-      padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 16)),
-      hintStyle: WidgetStateProperty.all(textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
+      shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r))),
+      padding: WidgetStateProperty.all(EdgeInsets.symmetric(horizontal: 16.w)),
+      hintStyle: WidgetStateProperty.all(
+          textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
     ),
 
     // Badge Theme
@@ -366,16 +390,17 @@ ThemeData _buildTheme(ColorScheme colorScheme, EtbalyColorsExtension etbalyColor
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
         color: colorScheme.inverseSurface.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
-      textStyle: textTheme.labelSmall?.copyWith(color: colorScheme.onInverseSurface),
+      textStyle:
+          textTheme.labelSmall?.copyWith(color: colorScheme.onInverseSurface),
     ),
   );
 }
 
 ThemeData buildLightTheme({String? primaryColorHex, Locale? locale}) {
   // Always use Etbaly purple #6f3ff5 as seed, ignore passed value
-  final seed = const Color(0xFF6f3ff5);
+  const seed = Color(0xFF6f3ff5);
   final colorScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.light,
@@ -385,7 +410,7 @@ ThemeData buildLightTheme({String? primaryColorHex, Locale? locale}) {
 
 ThemeData buildDarkTheme({String? primaryColorHex, Locale? locale}) {
   // Always use Etbaly purple #6f3ff5 as seed, ignore passed value
-  final seed = const Color(0xFF6f3ff5);
+  const seed = Color(0xFF6f3ff5);
   final colorScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.dark,
@@ -395,7 +420,7 @@ ThemeData buildDarkTheme({String? primaryColorHex, Locale? locale}) {
 
 CupertinoThemeData buildCupertinoTheme({String? primaryColorHex}) {
   // Always use Etbaly purple #6f3ff5
-  final seed = const Color(0xFF6f3ff5);
+  const seed = Color(0xFF6f3ff5);
 
   return CupertinoThemeData(
     applyThemeToAll: true,
@@ -406,46 +431,45 @@ CupertinoThemeData buildCupertinoTheme({String? primaryColorHex}) {
     barBackgroundColor: CupertinoColors.systemGrey6,
     textTheme: CupertinoTextThemeData(
       primaryColor: seed,
-      textStyle: const TextStyle(
+      textStyle: TextStyle(
         fontFamily: 'Tajawal',
-        fontSize: 17,
+        fontSize: 17.sp,
         letterSpacing: -0.41,
       ),
       actionTextStyle: TextStyle(
         fontFamily: 'Tajawal',
         color: seed,
-        fontSize: 17,
+        fontSize: 17.sp,
         fontWeight: FontWeight.w400,
       ),
-      navTitleTextStyle: const TextStyle(
+      navTitleTextStyle: TextStyle(
         fontFamily: 'Tajawal',
         fontWeight: FontWeight.w600,
-        fontSize: 17,
+        fontSize: 17.sp,
         letterSpacing: -0.41,
       ),
-      navLargeTitleTextStyle: const TextStyle(
+      navLargeTitleTextStyle: TextStyle(
         fontFamily: 'Tajawal',
         fontWeight: FontWeight.bold,
-        fontSize: 34,
+        fontSize: 34.sp,
         letterSpacing: 0.41,
       ),
-      tabLabelTextStyle: const TextStyle(
+      tabLabelTextStyle: TextStyle(
         fontFamily: 'Tajawal',
-        fontSize: 10,
+        fontSize: 10.sp,
         fontWeight: FontWeight.w500,
         letterSpacing: -0.24,
       ),
-      pickerTextStyle: const TextStyle(
+      pickerTextStyle: TextStyle(
         fontFamily: 'Tajawal',
-        fontSize: 21,
+        fontSize: 21.sp,
         letterSpacing: -0.41,
       ),
-      dateTimePickerTextStyle: const TextStyle(
+      dateTimePickerTextStyle: TextStyle(
         fontFamily: 'Tajawal',
-        fontSize: 21,
+        fontSize: 21.sp,
         letterSpacing: -0.41,
       ),
     ),
   );
 }
-

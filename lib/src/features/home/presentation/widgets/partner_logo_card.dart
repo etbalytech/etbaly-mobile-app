@@ -39,27 +39,27 @@ class _PartnerLogoCard extends StatelessWidget {
               height: cardHeight,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
                   color: Color.lerp(
                     const Color(0xE08B5CF6),
                     const Color(0x887C3AED),
                     sideAmount,
                   )!,
-                  width: 2 - (0.7 * sideAmount),
+                  width: 2.w - (0.7 * sideAmount),
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0x668B5CF6)
                         .withValues(alpha: 0.4 * (1 - sideAmount)),
-                    blurRadius: 34,
-                    spreadRadius: 2,
+                    blurRadius: 34.r,
+                    spreadRadius: 2.r,
                   ),
                   BoxShadow(
                     color: const Color(0x448B5CF6)
                         .withValues(alpha: 0.27 * (1 - sideAmount)),
-                    blurRadius: 0,
-                    spreadRadius: 3,
+                    blurRadius: 0.r,
+                    spreadRadius: 3.r,
                   ),
                 ],
               ),

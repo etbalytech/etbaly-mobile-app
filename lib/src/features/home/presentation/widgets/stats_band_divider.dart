@@ -6,8 +6,8 @@ class _StatsBandDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 1,
-      height: 50,
+      width: 1.w,
+      height: 50.h,
       color: const Color(0x335F4B7F),
     );
   }

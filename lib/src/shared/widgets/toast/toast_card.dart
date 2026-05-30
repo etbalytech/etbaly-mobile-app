@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../extensions/context_extension.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// ToastCard widget to display decent and rich looking toast.
 class ToastCard extends StatelessWidget {
@@ -25,26 +26,26 @@ class ToastCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: EdgeInsets.symmetric(horizontal: 20.w),
       decoration: BoxDecoration(
         color: color ?? context.theme.dialogTheme.backgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: context.theme.colorScheme.outline,
         ),
         boxShadow: [
           BoxShadow(
-            blurRadius: 10,
-            spreadRadius: 0,
+            blurRadius: 10.r,
+            spreadRadius: 0.r,
             offset: Offset.zero,
             color: shadowColor ?? Colors.black.withValues(alpha: 0.05),
           ),
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        contentPadding: EdgeInsets.symmetric(horizontal: 8.w),
         leading: Padding(
-          padding: const EdgeInsets.only(left: 10),
+          padding: EdgeInsets.only(left: 10.w),
           child: leading,
         ),
         trailing: trailing,
@@ -55,4 +56,3 @@ class ToastCard extends StatelessWidget {
     );
   }
 }
-

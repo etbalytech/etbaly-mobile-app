@@ -14,14 +14,16 @@ class AuthService {
       StreamController<Map<String, dynamic>?>.broadcast();
 
   /// Stream of auth state changes. Emits the current user map or null.
-  Stream<Map<String, dynamic>?> get authStateChanges => _authStateController.stream;
+  Stream<Map<String, dynamic>?> get authStateChanges =>
+      _authStateController.stream;
 
   FutureEither<Map<String, dynamic>?> login({
     required String email,
     required String password,
   }) async {
     return runTask(() async {
-      final response = await _dio.post<Map<String, dynamic>>('/auth/login', data: {
+      final response =
+          await _dio.post<Map<String, dynamic>>('/auth/login', data: {
         'email': email,
         'password': password,
       });
@@ -37,7 +39,8 @@ class AuthService {
     required String password,
   }) async {
     return runTask(() async {
-      final response = await _dio.post<Map<String, dynamic>>('/auth/signup', data: {
+      final response =
+          await _dio.post<Map<String, dynamic>>('/auth/signup', data: {
         'name': name,
         'email': email,
         'password': password,
