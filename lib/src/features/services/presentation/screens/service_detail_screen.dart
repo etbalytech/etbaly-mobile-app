@@ -22,14 +22,17 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
   late final _ServiceDetail _detail;
   late final Map<String, int> _quantities;
-
-  String? _selectedPackageId;
-  final _nameCtrl = TextEditingController();
-  final _waCtrl = TextEditingController();
-  final _notesCtrl = TextEditingController();
-  bool _isSubmitting = false;
+  final Set<String> _cartIds = {};
+  final _scrollCtrl = ScrollController();
+  final _summaryKey = GlobalKey();
 
   bool get _isArabic => context.locale.languageCode == 'ar';
+
+  List<_ServicePackage> get _cartItems =>
+      _detail.packages.where((p) => _cartIds.contains(p.id)).toList();
+
+  int get _grandTotal =>
+      _cartItems.fold(0, (sum, p) => sum + p.price * (_quantities[p.id] ?? 1));
 
   static String _assetImage(String slug) {
     final map = {'mobile-app': 'mobile'};
@@ -47,9 +50,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _waCtrl.dispose();
-    _notesCtrl.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -58,37 +59,40 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     if (next >= minQty) setState(() => _quantities[id] = next);
   }
 
-  void _toggleOrderForm(String pkgId) {
-    setState(() => _selectedPackageId = _selectedPackageId == pkgId ? null : pkgId);
+  void _toggleCart(String pkgId) {
+    setState(() {
+      if (_cartIds.contains(pkgId)) {
+        _cartIds.remove(pkgId);
+      } else {
+        _cartIds.add(pkgId);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _summaryKey.currentContext;
+          if (ctx != null) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutCubic,
+            );
+          }
+        });
+      }
+    });
   }
 
-  Future<void> _submitOrder(_ServicePackage pkg) async {
-    final name = _nameCtrl.text.trim();
-    final wa = _waCtrl.text.trim();
-    if (name.isEmpty || wa.isEmpty) return;
-    setState(() => _isSubmitting = true);
-    final qty = _quantities[pkg.id] ?? 1;
-    final total = pkg.price * qty;
-    final msg = _isArabic
-        ? 'طلب خدمة جديد:\n'
-            'الخدمة: ${_detail.title}\n'
-            'الباكدج: ${pkg.nameAr}\n'
-            'الكمية: $qty\n'
-            'الإجمالي: $total جنيه\n'
-            'الاسم: $name\n'
-            'واتساب: $wa'
-            '${_notesCtrl.text.trim().isNotEmpty ? '\nملاحظات: ${_notesCtrl.text.trim()}' : ''}'
-        : 'New Service Order:\n'
-            'Service: ${_detail.title}\n'
-            'Package: ${pkg.nameAr}\n'
-            'Quantity: $qty\n'
-            'Total: $total EGP\n'
-            'Name: $name\n'
-            'WhatsApp: $wa'
-            '${_notesCtrl.text.trim().isNotEmpty ? '\nNotes: ${_notesCtrl.text.trim()}' : ''}';
-    final uri = Uri.parse('https://wa.me/$_waNumber?text=${Uri.encodeComponent(msg)}');
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-    setState(() => _isSubmitting = false);
+  void _showCheckout() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _CheckoutSheet(
+        cartItems: _cartItems,
+        quantities: _quantities,
+        grandTotal: _grandTotal,
+        detail: _detail,
+        waNumber: _waNumber,
+        isArabic: _isArabic,
+      ),
+    );
   }
 
   @override
@@ -99,6 +103,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       child: Scaffold(
         backgroundColor: Color(0xFF070511),
         body: CustomScrollView(
+          controller: _scrollCtrl,
           physics: BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
@@ -122,7 +127,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                     SizedBox(height: 28.h),
                     _EditPolicyCard(imageUrl: _netImg(_detail.editPolicyImage!)),
                   ],
-                  // ② الباقات مع فورم الطلب الـ inline
+                  // ② الباقات
                   if (hasPackages) ...[
                     SizedBox(height: 32.h),
                     _PackagesSectionHeader(detail: _detail),
@@ -132,29 +137,24 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         pkg: pkg,
                         imageUrl: _netImg(pkg.image),
                         qty: _quantities[pkg.id] ?? pkg.minQty,
+                        isInCart: _cartIds.contains(pkg.id),
+                        onAdd: () => _toggleCart(pkg.id),
                         onIncrement: () => _changeQty(pkg.id, pkg.minQty, 1),
                         onDecrement: () => _changeQty(pkg.id, pkg.minQty, -1),
-                        isSelected: _selectedPackageId == pkg.id,
-                        onOrder: () => _toggleOrderForm(pkg.id),
                       ),
-                      if (_selectedPackageId == pkg.id)
-                        Padding(
-                          padding: EdgeInsets.only(top: 10.h, bottom: 4.h),
-                          child: _InlineOrderForm(
-                            pkg: pkg,
-                            qty: _quantities[pkg.id] ?? 1,
-                            nameCtrl: _nameCtrl,
-                            waCtrl: _waCtrl,
-                            notesCtrl: _notesCtrl,
-                            isSubmitting: _isSubmitting,
-                            onSubmit: () => _submitOrder(pkg),
-                            onClose: () => setState(() => _selectedPackageId = null),
-                          ),
-                        ),
                       SizedBox(height: 14.h),
                     ],
+                    // ③ ملخص الطلب – يظهر بس لما في حاجة في الكارت
+                    if (_cartIds.isNotEmpty)
+                      _OrderSummaryPanel(
+                        key: _summaryKey,
+                        cartItems: _cartItems,
+                        quantities: _quantities,
+                        grandTotal: _grandTotal,
+                        onCheckout: _showCheckout,
+                      ),
                   ],
-                  // ③ لو مفيش باقات: زرار طلب عام في الأسفل
+                  // ④ لو مفيش باقات: زرار طلب عام
                   if (!hasPackages) ...[
                     SizedBox(height: 28.h),
                     _OrderCtaCard(onTap: () => context.go(AppRoutes.contact)),
@@ -411,15 +411,15 @@ class _PackageCard extends StatelessWidget {
     required this.qty,
     required this.onIncrement,
     required this.onDecrement,
-    required this.isSelected,
-    required this.onOrder,
+    required this.isInCart,
+    required this.onAdd,
   });
 
   final _ServicePackage pkg;
   final String imageUrl;
   final int qty;
-  final VoidCallback onIncrement, onDecrement, onOrder;
-  final bool isSelected;
+  final VoidCallback onIncrement, onDecrement, onAdd;
+  final bool isInCart;
 
   @override
   Widget build(BuildContext context) {
@@ -429,12 +429,12 @@ class _PackageCard extends StatelessWidget {
         color: Color(0xFF0F0A1E),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: isSelected
+          color: isInCart
               ? Color(0xFFD4AF37).withValues(alpha: 0.7)
               : Colors.white.withValues(alpha: 0.07),
-          width: isSelected ? 1.5 : 1,
+          width: isInCart ? 1.5 : 1,
         ),
-        boxShadow: isSelected
+        boxShadow: isInCart
             ? [
                 BoxShadow(
                     color: Color(0xFFD4AF37).withValues(alpha: 0.12),
@@ -518,25 +518,25 @@ class _PackageCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: onOrder,
+                    onPressed: onAdd,
                     icon: Icon(
-                      isSelected ? Icons.close_rounded : Icons.add_shopping_cart_rounded,
+                      isInCart ? Icons.check_rounded : Icons.add_shopping_cart_rounded,
                       size: 17.sp,
                     ),
                     label: Text(
-                      isSelected ? 'auto.t_c10e1d96c4'.tr() : 'auto.t_af67816c17'.tr(),
+                      isInCart ? 'تم الإضافة ✓' : 'أضف للطلب',
                       style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.sp),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isSelected
-                          ? Colors.white.withValues(alpha: 0.08)
+                      backgroundColor: isInCart
+                          ? Color(0xFFD4AF37).withValues(alpha: 0.15)
                           : Color(0xFFD4AF37),
-                      foregroundColor: isSelected ? Colors.white70 : Colors.black,
+                      foregroundColor: isInCart ? Color(0xFFD4AF37) : Colors.black,
                       padding: EdgeInsets.symmetric(vertical: 13.h),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.r)),
-                      side: isSelected
-                          ? BorderSide(color: Colors.white.withValues(alpha: 0.15))
+                      side: isInCart
+                          ? BorderSide(color: Color(0xFFD4AF37).withValues(alpha: 0.5))
                           : BorderSide.none,
                     ),
                   ),
@@ -704,134 +704,6 @@ class _EditPolicyCard extends StatelessWidget {
   }
 }
 
-// ─── What's Included Section ──────────────────────────────────────────────────
-
-class _WhatIncludedSection extends StatelessWidget {
-  _WhatIncludedSection({required this.detail});
-
-  final _ServiceDetail detail;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(height: 1.h, color: Colors.white.withValues(alpha: 0.07)),
-        SizedBox(height: 24.h),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(999.r),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.layers_rounded, color: Colors.white54, size: 12.sp),
-              SizedBox(width: 6.w),
-              Text(
-                'auto.t_1711387d68'.tr(),
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(width: 4.w),
-              Icon(Icons.circle, color: Colors.white30, size: 4.sp),
-            ],
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Text(
-          'auto.t_5dbfac2282'.tr(),
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22.sp,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        SizedBox(height: 5.h),
-        Text(
-          'auto.t_cf29174de1'.tr(),
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.48),
-            fontSize: 13.sp,
-          ),
-        ),
-        SizedBox(height: 16.h),
-        ...detail.points.map(
-          (pt) => Padding(
-            padding: EdgeInsets.only(bottom: 12.h),
-            child: _PointCard(point: pt),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PointCard extends StatelessWidget {
-  _PointCard({required this.point});
-
-  final _DetailPoint point;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = point.accentGold ? Color(0xFFD4AF37) : Color(0xFF7C3AED);
-
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: Color(0xFF0F0A1E),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42.w,
-            height: 42.h,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10.r),
-              border: Border.all(color: accent.withValues(alpha: 0.28)),
-            ),
-            child: Icon(point.icon, color: accent, size: 20.sp),
-          ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  point.title,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  point.description,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.58),
-                    fontSize: 13.sp,
-                    height: 1.65,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ─── Order CTA Card ───────────────────────────────────────────────────────────
 
 class _OrderCtaCard extends StatelessWidget {
@@ -897,29 +769,24 @@ class _OrderCtaCard extends StatelessWidget {
   }
 }
 
-// ─── Inline Order Form ────────────────────────────────────────────────────────
+// ─── Order Summary Panel ──────────────────────────────────────────────────────
 
-class _InlineOrderForm extends StatelessWidget {
-  _InlineOrderForm({
-    required this.pkg,
-    required this.qty,
-    required this.nameCtrl,
-    required this.waCtrl,
-    required this.notesCtrl,
-    required this.isSubmitting,
-    required this.onSubmit,
-    required this.onClose,
+class _OrderSummaryPanel extends StatelessWidget {
+  _OrderSummaryPanel({
+    super.key,
+    required this.cartItems,
+    required this.quantities,
+    required this.grandTotal,
+    required this.onCheckout,
   });
 
-  final _ServicePackage pkg;
-  final int qty;
-  final TextEditingController nameCtrl, waCtrl, notesCtrl;
-  final bool isSubmitting;
-  final VoidCallback onSubmit, onClose;
+  final List<_ServicePackage> cartItems;
+  final Map<String, int> quantities;
+  final int grandTotal;
+  final VoidCallback onCheckout;
 
   @override
   Widget build(BuildContext context) {
-    final total = pkg.price * qty;
     return Container(
       padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
@@ -928,8 +795,8 @@ class _InlineOrderForm extends StatelessWidget {
         border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.35)),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFFD4AF37).withValues(alpha: 0.07),
-            blurRadius: 20.r,
+            color: Color(0xFFD4AF37).withValues(alpha: 0.08),
+            blurRadius: 24.r,
           ),
         ],
       ),
@@ -944,130 +811,374 @@ class _InlineOrderForm extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Color(0xFFD4AF37).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.3)),
                 ),
                 child: Icon(Icons.receipt_long_rounded,
                     color: Color(0xFFD4AF37), size: 18.sp),
               ),
               SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'auto.t_c9e3b5d812'.tr(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      pkg.nameAr,
-                      style: TextStyle(
-                        color: Color(0xFFD4AF37),
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+              Text(
+                'ملخص الطلب',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              // Total
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$total',
-                    style: TextStyle(
-                      color: Color(0xFFD4AF37),
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w900,
-                    ),
+              Spacer(),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Color(0xFFD4AF37).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999.r),
+                ),
+                child: Text(
+                  '${cartItems.length} خدمة',
+                  style: TextStyle(
+                    color: Color(0xFFD4AF37),
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w800,
                   ),
-                  Text(
-                    'auto.t_fb0989a821'.tr(),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
-                      fontSize: 11.sp,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
-          SizedBox(height: 18.h),
-          // Divider
+          SizedBox(height: 16.h),
           Container(height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
-          SizedBox(height: 18.h),
-          // Name field
-          _FormField(
-            controller: nameCtrl,
-            label: 'auto.t_1aff77e1a4'.tr(),
-            hint: 'auto.t_f82d4f8a9c'.tr(),
-            icon: Icons.person_outline_rounded,
-            keyboardType: TextInputType.name,
+          SizedBox(height: 14.h),
+          // Package rows
+          for (final pkg in cartItems) ...[
+            _SummaryRow(pkg: pkg, qty: quantities[pkg.id] ?? 1),
+            SizedBox(height: 10.h),
+          ],
+          Container(height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+          SizedBox(height: 14.h),
+          // Grand total
+          Row(
+            children: [
+              Text(
+                'الإجمالي الكلي',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Spacer(),
+              Text(
+                '$grandTotal',
+                style: TextStyle(
+                  color: Color(0xFFD4AF37),
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              SizedBox(width: 5.w),
+              Text(
+                'auto.t_fb0989a821'.tr(),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.45),
+                  fontSize: 12.sp,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 12.h),
-          // WhatsApp field
-          _FormField(
-            controller: waCtrl,
-            label: 'auto.t_f08db9baab'.tr(),
-            hint: '01xxxxxxxxx',
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-            isLtr: true,
-          ),
-          SizedBox(height: 12.h),
-          // Notes field
-          _FormField(
-            controller: notesCtrl,
-            label: 'auto.t_d6f9c8b7a1'.tr(),
-            hint: 'auto.t_e4c7d9b8f2'.tr(),
-            icon: Icons.notes_rounded,
-            maxLines: 3,
-          ),
-          SizedBox(height: 18.h),
-          // Submit button
+          SizedBox(height: 16.h),
+          // Checkout button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: isSubmitting ? null : onSubmit,
-              icon: isSubmitting
-                  ? SizedBox(
-                      width: 18.w,
-                      height: 18.h,
-                      child: CircularProgressIndicator(
-                          color: Colors.black, strokeWidth: 2),
-                    )
-                  : Icon(Icons.send_rounded, size: 17.sp),
+              onPressed: onCheckout,
+              icon: Icon(Icons.receipt_rounded, size: 18.sp),
               label: Text(
-                'auto.t_b2e8f4c9d7'.tr(),
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.sp),
+                'معاينة الفاتورة والدفع',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.sp),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFD4AF37),
                 foregroundColor: Colors.black,
-                disabledBackgroundColor: Color(0xFFD4AF37).withValues(alpha: 0.5),
                 padding: EdgeInsets.symmetric(vertical: 14.h),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.r)),
-              ),
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Center(
-            child: Text(
-              'auto.t_a3d7e5c912'.tr(),
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.38),
-                fontSize: 11.sp,
+                    borderRadius: BorderRadius.circular(12.r)),
               ),
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(duration: Duration(milliseconds: 280)).slideY(begin: -0.06);
+    ).animate().fadeIn(duration: Duration(milliseconds: 300)).slideY(begin: 0.08);
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  _SummaryRow({required this.pkg, required this.qty});
+
+  final _ServicePackage pkg;
+  final int qty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 32.w,
+          height: 32.h,
+          decoration: BoxDecoration(
+            color: Color(0xFFD4AF37).withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+            border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.4)),
+          ),
+          child: Center(
+            child: Text(
+              '$qty',
+              style: TextStyle(
+                color: Color(0xFFD4AF37),
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Text(
+            pkg.nameAr,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Text(
+          '${pkg.price * qty}',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        SizedBox(width: 4.w),
+        Text(
+          'auto.t_fb0989a821'.tr(),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.4),
+            fontSize: 11.sp,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Checkout Sheet ───────────────────────────────────────────────────────────
+
+class _CheckoutSheet extends StatefulWidget {
+  _CheckoutSheet({
+    required this.cartItems,
+    required this.quantities,
+    required this.grandTotal,
+    required this.detail,
+    required this.waNumber,
+    required this.isArabic,
+  });
+
+  final List<_ServicePackage> cartItems;
+  final Map<String, int> quantities;
+  final int grandTotal;
+  final _ServiceDetail detail;
+  final String waNumber;
+  final bool isArabic;
+
+  @override
+  State<_CheckoutSheet> createState() => _CheckoutSheetState();
+}
+
+class _CheckoutSheetState extends State<_CheckoutSheet> {
+  final _nameCtrl = TextEditingController();
+  final _waCtrl = TextEditingController();
+  final _notesCtrl = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _waCtrl.dispose();
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_nameCtrl.text.trim().isEmpty || _waCtrl.text.trim().isEmpty) return;
+    setState(() => _submitting = true);
+
+    final lines = StringBuffer();
+    lines.writeln('طلب خدمة جديد من ${widget.detail.title}');
+    lines.writeln('');
+    lines.writeln('الاسم: ${_nameCtrl.text.trim()}');
+    lines.writeln('واتساب: ${_waCtrl.text.trim()}');
+    if (_notesCtrl.text.trim().isNotEmpty) {
+      lines.writeln('ملاحظات: ${_notesCtrl.text.trim()}');
+    }
+    lines.writeln('');
+    lines.writeln('--- الباقات ---');
+    for (final pkg in widget.cartItems) {
+      final qty = widget.quantities[pkg.id] ?? 1;
+      lines.writeln('• ${pkg.nameAr} × $qty = ${pkg.price * qty} جنيه');
+    }
+    lines.writeln('');
+    lines.writeln('الإجمالي: ${widget.grandTotal} جنيه');
+
+    final encoded = Uri.encodeComponent(lines.toString());
+    final uri = Uri.parse('https://wa.me/${widget.waNumber}?text=$encoded');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    if (mounted) {
+      setState(() => _submitting = false);
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF0D0820),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.2)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          20.w,
+          20.h,
+          20.w,
+          MediaQuery.of(context).viewInsets.bottom + 24.h,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(999.r),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              // Title
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(9.r),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFD4AF37).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Icon(Icons.receipt_long_rounded,
+                        color: Color(0xFFD4AF37), size: 18.sp),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'تأكيد الطلب',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          '${widget.grandTotal} جنيه — ${widget.cartItems.length} خدمة',
+                          style: TextStyle(
+                            color: Color(0xFFD4AF37),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.h),
+              Container(height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+              SizedBox(height: 18.h),
+              _FormField(
+                controller: _nameCtrl,
+                label: 'auto.t_1aff77e1a4'.tr(),
+                hint: 'auto.t_f82d4f8a9c'.tr(),
+                icon: Icons.person_outline_rounded,
+                keyboardType: TextInputType.name,
+              ),
+              SizedBox(height: 12.h),
+              _FormField(
+                controller: _waCtrl,
+                label: 'auto.t_f08db9baab'.tr(),
+                hint: '01xxxxxxxxx',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+                isLtr: true,
+              ),
+              SizedBox(height: 12.h),
+              _FormField(
+                controller: _notesCtrl,
+                label: 'auto.t_d6f9c8b7a1'.tr(),
+                hint: 'auto.t_e4c7d9b8f2'.tr(),
+                icon: Icons.notes_rounded,
+                maxLines: 3,
+              ),
+              SizedBox(height: 20.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _submitting ? null : _submit,
+                  icon: _submitting
+                      ? SizedBox(
+                          width: 18.w,
+                          height: 18.h,
+                          child: CircularProgressIndicator(
+                              color: Colors.black, strokeWidth: 2),
+                        )
+                      : Icon(Icons.send_rounded, size: 17.sp),
+                  label: Text(
+                    'auto.t_b2e8f4c9d7'.tr(),
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.sp),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFD4AF37),
+                    foregroundColor: Colors.black,
+                    disabledBackgroundColor:
+                        Color(0xFFD4AF37).withValues(alpha: 0.5),
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r)),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Center(
+                child: Text(
+                  'auto.t_a3d7e5c912'.tr(),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.38),
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
