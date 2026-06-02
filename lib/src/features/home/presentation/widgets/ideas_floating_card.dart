@@ -14,7 +14,7 @@ class _IdeasFloatingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 132.w,
+      width: 124.w,
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: const Color(0xD6232036),

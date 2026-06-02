@@ -404,9 +404,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                   padding: EdgeInsets.fromLTRB(18.w, 24.h, 18.w, 34.h),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      const _HeroSection(),
-                      SizedBox(height: 26.h),
                       if (_industry == null) ...[
+                        const _HeroSection(),
+                        SizedBox(height: 26.h),
                         _ClassPdfSection(
                           onPreview: (key) => _viewClassPdf(context, key),
                           onDownload: (file) => _downloadClassPdf(
@@ -507,7 +507,7 @@ class _HeroSection extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(18.w, 34.h, 18.w, 24.h),
+      padding: EdgeInsets.fromLTRB(14.w, 34.h, 14.w, 24.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.r),
         gradient: const LinearGradient(
@@ -857,7 +857,7 @@ class _SpecialtiesSection extends StatelessWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 10.r,
               crossAxisSpacing: 10.r,
-              childAspectRatio: 1.02,
+              childAspectRatio: 0.88,
             ),
             itemBuilder: (context, index) {
               final specialty = industry.specialties[index];
@@ -1505,7 +1505,7 @@ class _PortfolioCtaSection extends StatelessWidget {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => context.go(AppRoutes.contact),
+              onTap: () => context.go(AppRoutes.startNow),
               borderRadius: BorderRadius.circular(999.r),
               child: Ink(
                 padding: const EdgeInsets.symmetric(
@@ -1842,7 +1842,7 @@ class _SpecialtyCard extends StatelessWidget {
               // Icon box
               Container(
                 width: 40.w,
-                height: 40.h,
+                height: 40.w,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(11.r),

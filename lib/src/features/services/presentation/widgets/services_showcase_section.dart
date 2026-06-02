@@ -138,6 +138,7 @@ class _EtbalyServicesShowcaseSectionState
       textDirection: TextDirection.rtl,
       child: EtbalyWebSectionShell(
         backgroundPainter: _ServicesPainter(),
+        margin: EdgeInsets.zero,
         child: Column(
           children: [
             EtbalyWebBadge(label: 'auto.t_9a552e5cc5'.tr()),

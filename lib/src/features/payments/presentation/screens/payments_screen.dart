@@ -208,16 +208,14 @@ class _PaymentHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTablet = context.width >= 700;
-    return SizedBox(
-      height: isTablet ? 380.h : 480.h,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          CustomPaint(painter: _PaymentBackgroundPainter()),
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.w, 42.h, 18.w, 28.h),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      children: [
+        Positioned.fill(child: CustomPaint(painter: _PaymentBackgroundPainter())),
+        Padding(
+          padding: EdgeInsets.fromLTRB(18.w, 18.h, 18.w, 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _Badge(
                   label: isArabic
@@ -258,8 +256,7 @@ class _PaymentHero extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
 

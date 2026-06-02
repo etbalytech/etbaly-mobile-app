@@ -9,7 +9,7 @@ class ServicesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EtbalyPage(
-      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 28.h),
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 28.h),
       separatorHeight: 0,
       children: const [
         EtbalyServicesShowcaseSection(),

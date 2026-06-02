@@ -117,6 +117,7 @@ flutter:
     - assets/images/about/
     - assets/images/about/team/
     - assets/images/about/contract/
+    - assets/images/packages/
     - assets/images/portfolio/
     - assets/images/portfolio/industries/
     - assets/images/portfolio/media/

@@ -24,8 +24,8 @@ class _IdeasActionButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: radius,
         child: Ink(
-          width: 150.w,
-          height: 58.h,
+          width: 128.w,
+          height: 44.h,
           decoration: BoxDecoration(
             color: filled ? const Color(0xFFE5C352) : Colors.transparent,
             borderRadius: radius,

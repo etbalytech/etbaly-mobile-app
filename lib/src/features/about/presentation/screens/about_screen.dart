@@ -379,7 +379,7 @@ class _MobileHeroMetric extends StatelessWidget {
     final colors = context.etbalyColors;
 
     return Container(
-      padding: EdgeInsets.all(12.r),
+      padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 10.r),
       decoration: BoxDecoration(
         color: Color(0x40110E1B),
         borderRadius: BorderRadius.circular(16.r),

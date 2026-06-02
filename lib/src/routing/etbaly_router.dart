@@ -17,6 +17,7 @@ import '../features/portfolio/presentation/screens/portfolio_screen.dart';
 import '../features/about/presentation/screens/about_screen.dart';
 import '../features/payments/presentation/screens/payments_screen.dart';
 import '../features/contact/presentation/screens/contact_screen.dart';
+import '../features/start_now/presentation/screens/start_now_page.dart';
 import '../features/services/presentation/screens/service_detail_screen.dart';
 import '../features/services/presentation/screens/why_choose_us_detail_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -146,13 +147,6 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
                 label: 'navigation.payments'.tr(),
                 route: AppRoutes.payments,
                 isActive: location == AppRoutes.payments,
-              ),
-              _buildNavItem(
-                context,
-                icon: Icons.send,
-                label: 'navigation.contact'.tr(),
-                route: AppRoutes.contact,
-                isActive: location == AppRoutes.contact,
               ),
             ],
           ),
@@ -736,6 +730,11 @@ final GoRouter etbalyRouter = GoRouter(
           path: AppRoutes.contact,
           name: 'contact',
           builder: (context, state) => const ContactScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.startNow,
+          name: 'startNow',
+          builder: (context, state) => const StartNowPage(),
         ),
       ],
     ),

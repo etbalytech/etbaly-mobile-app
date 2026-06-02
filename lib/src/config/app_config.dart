@@ -42,8 +42,6 @@ class AppConfig {
   }
 
   static String _getBaseUrl() {
-    // For demo purposes, use a placeholder URL
-    // In production, this would come from environment variables
     return 'https://api.etbaly.com';
   }
 }

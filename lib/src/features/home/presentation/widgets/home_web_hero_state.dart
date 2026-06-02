@@ -22,7 +22,6 @@ class _HomeWebHeroState extends State<_HomeWebHero>
   @override
   Widget build(BuildContext context) {
     final width = context.width;
-    final heroHeight = width < 390 ? 590.h : 560.h;
     final horizontalPadding = width < 390 ? 16.0 : 22.0;
 
     return Directionality(
@@ -32,7 +31,6 @@ class _HomeWebHeroState extends State<_HomeWebHero>
           top: Radius.circular(8.r),
         ),
         child: Container(
-          height: heroHeight,
           width: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -46,25 +44,30 @@ class _HomeWebHeroState extends State<_HomeWebHero>
             ),
           ),
           child: Stack(
-            fit: StackFit.expand,
             children: [
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  return CustomPaint(
-                    painter: _HeroBackgroundPainter(_controller.value),
-                  );
-                },
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) {
+                    return CustomPaint(
+                      painter: _HeroBackgroundPainter(_controller.value),
+                    );
+                  },
+                ),
               ),
-              _HeroGlow(
-                alignment: Alignment.topRight,
-                color: const Color(0x886F3FF5),
-                size: 230.sp,
+              Positioned.fill(
+                child: _HeroGlow(
+                  alignment: Alignment.topRight,
+                  color: const Color(0x886F3FF5),
+                  size: 230.sp,
+                ),
               ),
-              _HeroGlow(
-                alignment: Alignment.bottomLeft,
-                color: const Color(0x55B85CFF),
-                size: 260.sp,
+              Positioned.fill(
+                child: _HeroGlow(
+                  alignment: Alignment.bottomLeft,
+                  color: const Color(0x55B85CFF),
+                  size: 260.sp,
+                ),
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -74,7 +77,7 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                   24,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Align(
                       alignment: Alignment.topRight,
@@ -168,10 +171,10 @@ class _HomeWebHeroState extends State<_HomeWebHero>
     return (context.textTheme.displaySmall ?? const TextStyle()).copyWith(
       color: Colors.white,
       fontSize: width < 360
-          ? 34.sp
+          ? 26.sp
           : width < 390
-              ? 38.sp
-              : 46.sp,
+              ? 30.sp
+              : 34.sp,
       fontWeight: FontWeight.w900,
       height: 1.12,
       letterSpacing: 0,

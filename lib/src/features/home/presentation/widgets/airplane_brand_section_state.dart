@@ -32,7 +32,6 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
         ),
         child: Container(
           width: double.infinity,
-          height: isNarrow ? 790 : 740,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -45,15 +44,16 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
             ),
           ),
           child: Stack(
-            fit: StackFit.expand,
             children: [
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  return CustomPaint(
-                    painter: _AirplaneBackgroundPainter(_controller.value),
-                  );
-                },
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) {
+                    return CustomPaint(
+                      painter: _AirplaneBackgroundPainter(_controller.value),
+                    );
+                  },
+                ),
               ),
               _FloatingPlane(
                 animation: _controller,

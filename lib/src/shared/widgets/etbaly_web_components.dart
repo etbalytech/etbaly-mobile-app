@@ -26,7 +26,7 @@ class EtbalyWebSectionShell extends StatelessWidget {
         margin: margin,
         padding: EdgeInsets.symmetric(
           horizontal: (context.width < 390 ? 14 : 18).w,
-          vertical: (context.width < 600 ? 34 : 46).h,
+          vertical: (context.width < 600 ? 16 : 28).h,
         ),
         decoration: BoxDecoration(
           color: backgroundColor,
