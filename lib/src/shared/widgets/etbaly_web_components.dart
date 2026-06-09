@@ -62,25 +62,27 @@ class EtbalyWebBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     if (websiteStyle) {
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999.r),
-          border: Border.all(color: const Color(0x665C4A36)),
-          gradient: const LinearGradient(
+          border: Border.all(color: colors.borderColor),
+          gradient: LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
             colors: [
-              Color(0x44251D33),
-              Color(0x55402E2A),
-              Color(0x33251D33),
+              colors.bgCard.withValues(alpha: 0.78),
+              colors.badgeBg,
+              colors.bgCard.withValues(alpha: 0.70),
             ],
-            stops: [0, 0.58, 1],
+            stops: const [0, 0.58, 1],
           ),
           boxShadow: [
             BoxShadow(
-              color: EtbalyWebColors.shadow,
+              color: colors.cardShadow,
               blurRadius: 16.r,
               offset: Offset(0.w, 8.h),
             ),
@@ -114,7 +116,7 @@ class EtbalyWebBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 9.h),
       decoration: BoxDecoration(
-        color: EtbalyWebColors.darkPill,
+        color: colors.badgeBg,
         borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: accent.withValues(alpha: 0.34)),
       ),

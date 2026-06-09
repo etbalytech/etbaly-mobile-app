@@ -23,6 +23,7 @@ class _StatsBandItem extends StatelessWidget {
     final resolvedValue = isMobile ? compactValue : value;
     final resolvedLabel = isMobile ? compactLabel : label;
     final iconSize = isTight ? 38.0 : (isMobile ? 44.0 : 52.0);
+    final colors = context.etbalyColors;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -32,12 +33,12 @@ class _StatsBandItem extends StatelessWidget {
           height: iconSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0x33251D33),
-            border: Border.all(color: const Color(0x77D4AF37)),
+            color: colors.badgeBg,
+            border: Border.all(color: colors.gold.withValues(alpha: 0.46)),
           ),
           child: Icon(
             icon,
-            color: const Color(0xFFD4AF37),
+            color: colors.gold,
             size: isTight ? 19 : 22,
           ),
         ),
@@ -48,7 +49,7 @@ class _StatsBandItem extends StatelessWidget {
             resolvedValue,
             maxLines: 1,
             style: context.textTheme.headlineSmall?.copyWith(
-              color: const Color(0xFFD4AF37),
+              color: colors.gold,
               fontSize: isTight ? 22 : (isMobile ? 24 : 30),
               fontWeight: FontWeight.w900,
               height: 1,
@@ -62,7 +63,7 @@ class _StatsBandItem extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: context.textTheme.labelMedium?.copyWith(
-            color: const Color(0xFFC7B6FF),
+            color: colors.textMuted,
             fontSize: isTight ? 11 : 13,
             fontWeight: FontWeight.w700,
           ),

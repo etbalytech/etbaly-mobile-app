@@ -160,7 +160,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: EtbalyWebColors.sectionBlack,
+        backgroundColor: context.etbalyColors.bgMain,
         body: SafeArea(
           top: false,
           child: CustomScrollView(
@@ -210,7 +210,16 @@ class _PaymentHero extends StatelessWidget {
     final isTablet = context.width >= 700;
     return Stack(
       children: [
-        Positioned.fill(child: CustomPaint(painter: _PaymentBackgroundPainter())),
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _PaymentBackgroundPainter(
+              bgTop: context.etbalyColors.bgMain,
+              bgBottom: context.etbalyColors.bgSecondary,
+              gridColor: context.etbalyColors.primaryGlow,
+              lineColor: context.etbalyColors.primaryGlow,
+            ),
+          ),
+        ),
         Padding(
           padding: EdgeInsets.fromLTRB(18.w, 18.h, 18.w, 24.h),
           child: Column(
@@ -230,7 +239,7 @@ class _PaymentHero extends StatelessWidget {
                       : 'Choose the Right Payment Method',
                   textAlign: TextAlign.center,
                   style: context.textTheme.displaySmall?.copyWith(
-                    color: EtbalyWebColors.heading,
+                    color: context.etbalyColors.textMain,
                     fontSize: isTablet ? 42.sp : 32.sp,
                     fontWeight: FontWeight.w900,
                     height: 1.12,
@@ -245,7 +254,7 @@ class _PaymentHero extends StatelessWidget {
                         : 'We provide the fastest and easiest e-payment methods - transfer the amount and start with us instantly.',
                     textAlign: TextAlign.center,
                     style: context.textTheme.bodyLarge?.copyWith(
-                      color: EtbalyWebColors.body,
+                      color: context.etbalyColors.textMuted,
                       height: 1.7,
                     ),
                   ),
@@ -276,9 +285,9 @@ class _TrustRow extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: const Color(0x331D1830),
+        color: context.etbalyColors.badgeBg,
         borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: EtbalyWebColors.border),
+        border: Border.all(color: context.etbalyColors.borderColor),
       ),
       child: Wrap(
         alignment: WrapAlignment.center,
@@ -294,7 +303,7 @@ class _TrustRow extends StatelessWidget {
                 Text(
                   item.$2,
                   style: context.textTheme.labelMedium?.copyWith(
-                    color: EtbalyWebColors.body,
+                    color: context.etbalyColors.textMuted,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -333,7 +342,7 @@ class _StepsSection extends StatelessWidget {
         Text(
           'auto.t_74f77b5efa'.tr(),
           style: context.textTheme.labelLarge?.copyWith(
-            color: EtbalyWebColors.body,
+            color: context.etbalyColors.textMuted,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -386,9 +395,9 @@ class _StepCard extends StatelessWidget {
       constraints: BoxConstraints(minHeight: 76.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
-        color: const Color(0xBB0D0A17),
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: EtbalyWebColors.border),
+        border: Border.all(color: context.etbalyColors.borderColor),
       ),
       child: Row(
         children: [
@@ -402,7 +411,7 @@ class _StepCard extends StatelessWidget {
                   ? const LinearGradient(
                       colors: [Color(0xFFD4AF37), Color(0xFFB8860B)])
                   : null,
-              color: active ? null : const Color(0xFF262033),
+              color: active ? null : context.etbalyColors.bgSubtle,
               border: Border.all(color: EtbalyWebColors.goldBorder),
               boxShadow: active
                   ? [
@@ -429,7 +438,7 @@ class _StepCard extends StatelessWidget {
                 Text(
                   title,
                   style: context.textTheme.titleSmall?.copyWith(
-                    color: EtbalyWebColors.heading,
+                    color: context.etbalyColors.textMain,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -437,7 +446,7 @@ class _StepCard extends StatelessWidget {
                 Text(
                   subtitle,
                   style: context.textTheme.bodySmall?.copyWith(
-                    color: EtbalyWebColors.body,
+                    color: context.etbalyColors.textMuted,
                     height: 1.35,
                   ),
                 ),
@@ -518,7 +527,7 @@ class _PaymentCard extends StatelessWidget {
       constraints: BoxConstraints(minHeight: method.key == 'bank' ? 208 : 176),
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0xEE0E0A16),
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: method.accent.withValues(alpha: 0.82)),
       ),
@@ -552,7 +561,7 @@ class _PaymentCard extends StatelessWidget {
                         Text(
                           isArabic ? method.titleAr : method.titleEn,
                           style: context.textTheme.titleSmall?.copyWith(
-                            color: EtbalyWebColors.heading,
+                            color: context.etbalyColors.textMain,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -637,7 +646,7 @@ class _CopyField extends StatelessWidget {
               Text(
                 label,
                 style: context.textTheme.labelSmall?.copyWith(
-                  color: EtbalyWebColors.body,
+                  color: context.etbalyColors.textMuted,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -648,9 +657,9 @@ class _CopyField extends StatelessWidget {
         Container(
           height: 44.h,
           decoration: BoxDecoration(
-            color: const Color(0xFF281F43),
+            color: context.etbalyColors.bgSubtle,
             borderRadius: BorderRadius.circular(8.r),
-            border: Border.all(color: EtbalyWebColors.border),
+            border: Border.all(color: context.etbalyColors.borderColor),
           ),
           child: Row(
             textDirection: TextDirection.ltr,
@@ -666,7 +675,7 @@ class _CopyField extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.labelMedium?.copyWith(
-                            color: EtbalyWebColors.heading,
+                            color: context.etbalyColors.textMain,
                             fontWeight: FontWeight.w900,
                             fontFeatures: [const FontFeature.tabularFigures()],
                           ),
@@ -686,7 +695,7 @@ class _CopyField extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.labelMedium?.copyWith(
-                            color: EtbalyWebColors.heading,
+                            color: context.etbalyColors.textMain,
                             fontWeight: FontWeight.w900,
                             fontFeatures: [const FontFeature.tabularFigures()],
                           ),
@@ -713,9 +722,9 @@ class _CopyButton extends StatelessWidget {
     return IconButton(
       onPressed: onTap,
       icon: Icon(copied ? Icons.check : Icons.copy, size: 16.sp),
-      color: copied ? const Color(0xFF22C55E) : EtbalyWebColors.body,
+      color: copied ? const Color(0xFF22C55E) : context.etbalyColors.textMuted,
       style: IconButton.styleFrom(
-        backgroundColor: const Color(0xFF332757),
+        backgroundColor: context.etbalyColors.bgSubtle,
         fixedSize: Size(34.w, 34.h),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
       ),
@@ -733,9 +742,9 @@ class _InfoField extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
-        color: const Color(0xFF281F43),
+        color: context.etbalyColors.bgSubtle,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: EtbalyWebColors.border),
+        border: Border.all(color: context.etbalyColors.borderColor),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -747,7 +756,7 @@ class _InfoField extends StatelessWidget {
             child: Text(
               text,
               style: context.textTheme.bodySmall?.copyWith(
-                color: EtbalyWebColors.body,
+                color: context.etbalyColors.textMuted,
                 height: 1.55,
               ),
             ),
@@ -779,7 +788,7 @@ class _SecureNote extends StatelessWidget {
                   : 'All transfers are secure and encrypted - your data is safe.',
               textAlign: TextAlign.center,
               style: context.textTheme.bodySmall
-                  ?.copyWith(color: EtbalyWebColors.body),
+                  ?.copyWith(color: context.etbalyColors.textMuted),
             ),
           ),
         ],
@@ -863,13 +872,18 @@ class _FraudAlert extends StatelessWidget {
           Row(
             children: [
               const Expanded(child: Divider(color: Color(0x335B4B1D))),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                child: Text(
-                  'auto.t_c496311c70'.tr(),
-                  style: context.textTheme.labelSmall?.copyWith(
-                    color: EtbalyWebColors.gold,
-                    fontWeight: FontWeight.w900,
+              Flexible(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  child: Text(
+                    'auto.t_c496311c70'.tr(),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: EtbalyWebColors.gold,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
@@ -1109,9 +1123,9 @@ class _NeedHelpCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
-        color: const Color(0xCC11101D),
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: EtbalyWebColors.border),
+        border: Border.all(color: context.etbalyColors.borderColor),
       ),
       child: Row(
         children: [
@@ -1125,7 +1139,7 @@ class _NeedHelpCard extends StatelessWidget {
                 Text(
                   'auto.t_48b043613b'.tr(),
                   style: context.textTheme.titleMedium?.copyWith(
-                    color: EtbalyWebColors.heading,
+                    color: context.etbalyColors.textMain,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -1133,7 +1147,7 @@ class _NeedHelpCard extends StatelessWidget {
                 Text(
                   'auto.t_76a158e9e1'.tr(),
                   style: context.textTheme.bodySmall
-                      ?.copyWith(color: EtbalyWebColors.body),
+                      ?.copyWith(color: context.etbalyColors.textMuted),
                 ),
               ],
             ),
@@ -1254,7 +1268,17 @@ class _AlertBadge extends StatelessWidget {
 }
 
 class _PaymentBackgroundPainter extends CustomPainter {
-  _PaymentBackgroundPainter();
+  const _PaymentBackgroundPainter({
+    required this.bgTop,
+    required this.bgBottom,
+    required this.gridColor,
+    required this.lineColor,
+  });
+
+  final Color bgTop;
+  final Color bgBottom;
+  final Color gridColor;
+  final Color lineColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1262,15 +1286,15 @@ class _PaymentBackgroundPainter extends CustomPainter {
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF100821), Color(0xFF070511)],
+          colors: [bgTop, bgBottom],
         ).createShader(rect),
     );
 
     final gridPaint = Paint()
-      ..color = EtbalyWebColors.grid
+      ..color = gridColor
       ..strokeWidth = 1;
     for (var x = 0.0; x <= size.width; x += 48) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
@@ -1280,7 +1304,7 @@ class _PaymentBackgroundPainter extends CustomPainter {
     }
 
     final linePaint = Paint()
-      ..color = EtbalyWebColors.purpleLine.withValues(alpha: 0.55)
+      ..color = lineColor.withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4;
 
@@ -1295,17 +1319,15 @@ class _PaymentBackgroundPainter extends CustomPainter {
 
     final glow = Paint()
       ..shader = RadialGradient(
-        colors: [
-          EtbalyWebColors.gold.withValues(alpha: 0.13),
-          Colors.transparent
-        ],
+        colors: [EtbalyWebColors.gold.withValues(alpha: 0.13), Colors.transparent],
       ).createShader(Rect.fromCircle(
           center: Offset(size.width * 0.5, 20), radius: size.width * 0.6));
     canvas.drawCircle(Offset(size.width * 0.5, 20), size.width * 0.6, glow);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _PaymentBackgroundPainter old) =>
+      old.bgTop != bgTop || old.bgBottom != bgBottom;
 }
 
 class _PaymentMethod {

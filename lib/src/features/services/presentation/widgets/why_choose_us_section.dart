@@ -1,4 +1,5 @@
 import 'package:etbaly/src/imports/core_imports.dart';
+import 'package:etbaly/src/theme/etbaly_colors.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -47,10 +48,16 @@ class EtbalyWhyChooseUsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: EtbalyWebSectionShell(
-        backgroundPainter: _WhyChooseUsPainter(),
+        backgroundColor: colors.bgSecondary,
+        backgroundPainter: _WhyChooseUsPainter(
+          colors: colors,
+          isDark: context.isDarkMode,
+        ),
         child: Column(
           children: [
             EtbalyWebBadge(label: 'auto.t_312fc90033'.tr()),
@@ -59,7 +66,7 @@ class EtbalyWhyChooseUsSection extends StatelessWidget {
               'auto.t_c18fb71739'.tr(),
               textAlign: TextAlign.center,
               style: context.textTheme.displaySmall?.copyWith(
-                color: EtbalyWebColors.heading,
+                color: colors.textMain,
                 fontSize: context.width < 390 ? 42 : 50,
                 fontWeight: FontWeight.w900,
                 height: 1,
@@ -74,7 +81,7 @@ class EtbalyWhyChooseUsSection extends StatelessWidget {
                 'auto.t_aeb13335bf'.tr(),
                 textAlign: TextAlign.center,
                 style: context.textTheme.titleMedium?.copyWith(
-                  color: EtbalyWebColors.body,
+                  color: colors.textMuted,
                   fontSize: context.width < 390 ? 14 : 16,
                   height: 1.8,
                   fontWeight: FontWeight.w500,
@@ -102,6 +109,7 @@ class _WhyChooseUsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = context.width < 600;
+    final colors = context.etbalyColors;
 
     return GestureDetector(
       onTap: () => context.push('/why-choose-us/${item.slug}'),
@@ -112,12 +120,13 @@ class _WhyChooseUsCard extends StatelessWidget {
           vertical: isMobile ? 18 : 36,
         ),
         decoration: BoxDecoration(
-          color: EtbalyWebColors.card.withValues(alpha: 0.86),
-          borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(color: EtbalyWebColors.border),
+          color:
+              colors.bgCard.withValues(alpha: context.isDarkMode ? 0.88 : 0.96),
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(color: colors.borderColor),
           boxShadow: [
             BoxShadow(
-              color: EtbalyWebColors.shadow,
+              color: colors.cardShadow,
               blurRadius: 20.r,
               offset: Offset(0.w, 12.h),
             ),
@@ -172,7 +181,7 @@ class _WhyChooseUsMobileContent extends StatelessWidget {
                   item.title,
                   textAlign: TextAlign.right,
                   style: context.textTheme.titleMedium?.copyWith(
-                    color: EtbalyWebColors.heading,
+                    color: context.etbalyColors.textMain,
                     fontSize: context.width < 390 ? 17 : 18,
                     fontWeight: FontWeight.w900,
                     height: 1.25,
@@ -186,7 +195,7 @@ class _WhyChooseUsMobileContent extends StatelessWidget {
             item.description,
             textAlign: TextAlign.right,
             style: context.textTheme.bodyMedium?.copyWith(
-              color: EtbalyWebColors.body,
+              color: context.etbalyColors.textMuted,
               fontSize: context.width < 390 ? 12.5 : 13,
               height: 1.55,
               fontWeight: FontWeight.w500,
@@ -214,7 +223,7 @@ class _WhyChooseUsDesktopContent extends StatelessWidget {
           item.title,
           textAlign: TextAlign.center,
           style: context.textTheme.titleLarge?.copyWith(
-            color: EtbalyWebColors.heading,
+            color: context.etbalyColors.textMain,
             fontSize: 20.sp,
             fontWeight: FontWeight.w900,
             height: 1.25,
@@ -225,7 +234,7 @@ class _WhyChooseUsDesktopContent extends StatelessWidget {
           item.description,
           textAlign: TextAlign.center,
           style: context.textTheme.bodyMedium?.copyWith(
-            color: EtbalyWebColors.body,
+            color: context.etbalyColors.textMuted,
             fontSize: 14.sp,
             height: 1.75,
             fontWeight: FontWeight.w500,
@@ -247,6 +256,7 @@ class _WhyIconTile extends StatelessWidget {
     final haloSize = compact ? 62.0 : 104.0;
     final tileSize = compact ? 48.0 : 72.0;
     final radius = compact ? 13.0 : 17.0;
+    final colors = context.etbalyColors;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -257,10 +267,12 @@ class _WhyIconTile extends StatelessWidget {
           height: haloSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: EtbalyWebColors.gold.withValues(alpha: 0.025),
+            color: colors.gold
+                .withValues(alpha: context.isDarkMode ? 0.025 : 0.06),
             boxShadow: [
               BoxShadow(
-                color: EtbalyWebColors.gold.withValues(alpha: 0.09),
+                color: colors.gold
+                    .withValues(alpha: context.isDarkMode ? 0.09 : 0.11),
                 blurRadius: compact ? 16 : 26,
                 spreadRadius: compact ? 1 : 4,
               ),
@@ -271,17 +283,17 @@ class _WhyIconTile extends StatelessWidget {
           width: tileSize,
           height: tileSize,
           decoration: BoxDecoration(
-            color: EtbalyWebColors.iconTile,
+            color: colors.badgeBg,
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: EtbalyWebColors.goldBorder),
+            border: Border.all(color: colors.gold.withValues(alpha: 0.32)),
             boxShadow: [
               BoxShadow(
-                color: EtbalyWebColors.gold.withValues(alpha: 0.17),
+                color: colors.gold.withValues(alpha: 0.15),
                 blurRadius: compact ? 12 : 20,
                 offset: Offset(0, compact ? 5 : 9),
               ),
               BoxShadow(
-                color: const Color(0x55000000),
+                color: colors.cardShadow,
                 blurRadius: 10.r,
                 offset: Offset(0.w, 6.h),
               ),
@@ -296,7 +308,9 @@ class _WhyIconTile extends StatelessWidget {
                   width: compact ? 20 : 29,
                   height: compact ? 9 : 13,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withValues(
+                      alpha: context.isDarkMode ? 0.2 : 0.42,
+                    ),
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),
@@ -304,7 +318,7 @@ class _WhyIconTile extends StatelessWidget {
               Center(
                 child: Icon(
                   icon,
-                  color: EtbalyWebColors.gold,
+                  color: colors.gold,
                   size: compact ? 23 : 32,
                 ),
               ),
@@ -328,7 +342,7 @@ class _WhyParticle extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: EtbalyWebColors.gold.withValues(alpha: alpha),
+        color: context.etbalyColors.gold.withValues(alpha: alpha),
         shape: BoxShape.circle,
       ),
     );
@@ -350,12 +364,15 @@ class _WhyChooseUsData {
 }
 
 class _WhyChooseUsPainter extends CustomPainter {
-  _WhyChooseUsPainter();
+  _WhyChooseUsPainter({required this.colors, required this.isDark});
+
+  final EtbalyColorsExtension colors;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = EtbalyWebColors.grid
+      ..color = colors.primary.withValues(alpha: isDark ? 0.07 : 0.055)
       ..strokeWidth = 1;
     const step = 70.0;
     for (double x = 0; x <= size.width; x += step) {
@@ -365,10 +382,12 @@ class _WhyChooseUsPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    // Glow effect
     final glowPaint = Paint()
-      ..shader = const RadialGradient(
-        colors: [Color(0x553B1F75), Colors.transparent],
+      ..shader = RadialGradient(
+        colors: [
+          colors.primary.withValues(alpha: isDark ? 0.22 : 0.12),
+          Colors.transparent,
+        ],
       ).createShader(
         Rect.fromCircle(
           center: Offset(size.width, size.height * 0.5),
@@ -381,9 +400,8 @@ class _WhyChooseUsPainter extends CustomPainter {
       glowPaint,
     );
 
-    // Line decoration
     final linePaint = Paint()
-      ..color = EtbalyWebColors.purpleLine
+      ..color = colors.primary.withValues(alpha: isDark ? 0.5 : 0.32)
       ..strokeWidth = 2;
     canvas.drawLine(
       Offset(size.width * 0.15, size.height * 0.1),
@@ -393,5 +411,6 @@ class _WhyChooseUsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _WhyChooseUsPainter oldDelegate) =>
+      oldDelegate.colors != colors || oldDelegate.isDark != isDark;
 }

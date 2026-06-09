@@ -13,11 +13,13 @@ class _AirplaneStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       children: [
         ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFE4B7FF), Color(0xFFA855F7)],
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [colors.primaryLight, colors.primary],
           ).createShader(bounds),
           child: SizedBox(
             height: isNarrow ? 30 : 36,
@@ -45,7 +47,7 @@ class _AirplaneStat extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.textTheme.labelSmall?.copyWith(
-            color: const Color(0xFFAAA1BC),
+            color: colors.textMuted,
             fontSize: isNarrow ? 10 : null,
             fontWeight: FontWeight.w600,
           ),
@@ -56,8 +58,8 @@ class _AirplaneStat extends StatelessWidget {
           width: isNarrow ? 58 : 74,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999.r),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
+            gradient: LinearGradient(
+              colors: [colors.primary, colors.primaryLight],
             ),
           ),
         ),

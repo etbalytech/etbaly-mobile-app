@@ -12,21 +12,26 @@ class App extends StatelessWidget {
   }
 
   Widget _buildMaterialApp(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Etbaly',
-      debugShowCheckedModeBanner: false,
-      theme: buildLightTheme(locale: context.locale),
-      darkTheme: buildDarkTheme(locale: context.locale),
-      themeMode: ThemeMode.dark, // Default to dark mode like web version
-      routerConfig: etbalyRouter,
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      builder: (context, child) {
-        final safeChild = child ?? const SizedBox.shrink();
-        Widget current = safeChild;
-        current = SkeletonWrapper(child: current);
-        return current;
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.instance.themeMode,
+      builder: (context, themeMode, _) {
+        return MaterialApp.router(
+          title: 'Etbaly',
+          debugShowCheckedModeBanner: false,
+          theme: buildLightTheme(locale: context.locale),
+          darkTheme: buildDarkTheme(locale: context.locale),
+          themeMode: themeMode,
+          routerConfig: etbalyRouter,
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          builder: (context, child) {
+            final safeChild = child ?? const SizedBox.shrink();
+            Widget current = safeChild;
+            current = SkeletonWrapper(child: current);
+            return current;
+          },
+        );
       },
     );
   }

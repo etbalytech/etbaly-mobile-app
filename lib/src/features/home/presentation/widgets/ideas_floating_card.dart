@@ -13,21 +13,24 @@ class _IdeasFloatingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       width: 124.w,
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: const Color(0xD6232036),
+        color:
+            colors.bgCard.withValues(alpha: context.isDarkMode ? 0.86 : 0.94),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0x553D365C)),
+        border: Border.all(color: colors.borderColor),
         boxShadow: [
-          BoxShadow(color: const Color(0x66000000), blurRadius: 20.r),
+          BoxShadow(color: colors.cardShadow, blurRadius: 20.r),
         ],
       ),
       child: Row(
         textDirection: TextDirection.ltr,
         children: [
-          Icon(icon, color: const Color(0xFFD4AF37), size: 30.sp),
+          Icon(icon, color: colors.gold, size: 30.sp),
           SizedBox(width: 10.w),
           Expanded(
             child: Column(
@@ -38,7 +41,7 @@ class _IdeasFloatingCard extends StatelessWidget {
                   value,
                   maxLines: 1,
                   style: context.textTheme.titleMedium?.copyWith(
-                    color: const Color(0xFFF0E9FF),
+                    color: colors.textMain,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -47,7 +50,7 @@ class _IdeasFloatingCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.labelSmall?.copyWith(
-                    color: const Color(0xFFC0B5DE),
+                    color: colors.textMuted,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

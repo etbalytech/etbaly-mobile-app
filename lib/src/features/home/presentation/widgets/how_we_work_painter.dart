@@ -1,12 +1,18 @@
 part of '../screens/home_page.dart';
 
 class _HowWeWorkPainter extends CustomPainter {
-  const _HowWeWorkPainter();
+  const _HowWeWorkPainter({
+    required this.colors,
+    required this.isDark,
+  });
+
+  final EtbalyColorsExtension colors;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = EtbalyWebColors.grid
+      ..color = colors.primary.withValues(alpha: isDark ? 0.07 : 0.055)
       ..strokeWidth = 1;
     const step = 72.0;
     for (double x = 0; x <= size.width; x += step) {
@@ -17,8 +23,11 @@ class _HowWeWorkPainter extends CustomPainter {
     }
 
     final leftGlow = Paint()
-      ..shader = const RadialGradient(
-        colors: [Color(0x663B1F75), Colors.transparent],
+      ..shader = RadialGradient(
+        colors: [
+          colors.primary.withValues(alpha: isDark ? 0.38 : 0.12),
+          Colors.transparent,
+        ],
       ).createShader(
         Rect.fromCircle(
           center: Offset(0, size.height * 0.18),
@@ -29,7 +38,7 @@ class _HowWeWorkPainter extends CustomPainter {
         Offset(0, size.height * 0.18), size.width * 0.7, leftGlow);
 
     final linePaint = Paint()
-      ..color = EtbalyWebColors.purpleLine
+      ..color = colors.primary.withValues(alpha: isDark ? 0.54 : 0.28)
       ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
@@ -49,7 +58,7 @@ class _HowWeWorkPainter extends CustomPainter {
     );
 
     final dashPaint = Paint()
-      ..color = EtbalyWebColors.gold.withValues(alpha: 0.34)
+      ..color = colors.gold.withValues(alpha: isDark ? 0.34 : 0.26)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
     final dashPath = Path()
@@ -72,5 +81,6 @@ class _HowWeWorkPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _HowWeWorkPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _HowWeWorkPainter oldDelegate) =>
+      oldDelegate.colors != colors || oldDelegate.isDark != isDark;
 }

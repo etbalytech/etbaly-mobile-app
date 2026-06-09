@@ -23,6 +23,8 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
   Widget build(BuildContext context) {
     final width = context.width;
     final isNarrow = width < 390;
+    final colors = context.etbalyColors;
+    final isDark = context.isDarkMode;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -32,15 +34,21 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
         ),
         child: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF0D051F),
-                Color(0xFF080313),
-                Color(0xFF100624),
-              ],
+              colors: isDark
+                  ? const [
+                      Color(0xFF0D051F),
+                      Color(0xFF080313),
+                      Color(0xFF100624),
+                    ]
+                  : [
+                      colors.bgSecondary,
+                      colors.bgSubtle,
+                      colors.bgSecondary,
+                    ],
             ),
           ),
           child: Stack(
@@ -50,7 +58,11 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
                   animation: _controller,
                   builder: (context, _) {
                     return CustomPaint(
-                      painter: _AirplaneBackgroundPainter(_controller.value),
+                      painter: _AirplaneBackgroundPainter(
+                        progress: _controller.value,
+                        colors: colors,
+                        isDark: isDark,
+                      ),
                     );
                   },
                 ),
@@ -85,7 +97,7 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
                       'auto.t_1eba09a3c1'.tr(),
                       textAlign: TextAlign.center,
                       style: context.textTheme.displaySmall?.copyWith(
-                        color: Colors.white,
+                        color: colors.textMain,
                         fontSize: isNarrow ? 36 : 42,
                         fontWeight: FontWeight.w900,
                         height: 1.22,
@@ -100,7 +112,7 @@ class _AirplaneBrandSectionState extends State<_AirplaneBrandSection>
                       'auto.t_b1974a8b2b'.tr(),
                       textAlign: TextAlign.center,
                       style: context.textTheme.titleSmall?.copyWith(
-                        color: const Color(0xFFC0BACD),
+                        color: colors.textMuted,
                         fontSize: isNarrow ? 14 : 15,
                         fontWeight: FontWeight.w600,
                         height: 1.8,

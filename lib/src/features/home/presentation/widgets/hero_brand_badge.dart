@@ -5,16 +5,18 @@ class _HeroBrandBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       padding: EdgeInsets.all(3.r),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999.r),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF8D63FF), Color(0xFF5B27D9), Color(0xFF1A123D)],
+        gradient: LinearGradient(
+          colors: [colors.primaryLight, colors.primary, colors.primaryDark],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0x776F3FF5),
+            color: colors.primaryGlowStrong,
             blurRadius: 18.r,
             spreadRadius: 1.r,
           ),
@@ -23,9 +25,10 @@ class _HeroBrandBadge extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: const Color(0xDDEDEAF8),
+          color:
+              colors.bgCard.withValues(alpha: context.isDarkMode ? 0.92 : 0.96),
           borderRadius: BorderRadius.circular(999.r),
-          border: Border.all(color: const Color(0x55FFFFFF)),
+          border: Border.all(color: colors.borderSubtle),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -33,7 +36,7 @@ class _HeroBrandBadge extends StatelessWidget {
             Text(
               'auto.t_135dd3f6f1'.tr(),
               style: context.textTheme.titleSmall?.copyWith(
-                color: const Color(0xFF19102F),
+                color: colors.textMain,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -45,8 +48,7 @@ class _HeroBrandBadge extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xEEFFFFFF),
                 borderRadius: BorderRadius.circular(999.r),
-                border:
-                    Border.all(color: const Color(0xFFD4AF37), width: 1.2.w),
+                border: Border.all(color: colors.gold, width: 1.2.w),
               ),
               clipBehavior: Clip.antiAlias,
               child: Image.asset(

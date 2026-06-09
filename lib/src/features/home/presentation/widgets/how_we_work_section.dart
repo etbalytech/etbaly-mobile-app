@@ -3,7 +3,7 @@ part of '../screens/home_page.dart';
 class _HowWeWorkSection extends StatelessWidget {
   const _HowWeWorkSection();
 
-  static final _waves = [
+  List<_WorkWaveData> _buildWaves() => [
     _WorkWaveData(
       number: '01',
       title: 'auto.t_589d94f99d'.tr(),
@@ -115,10 +115,15 @@ class _HowWeWorkSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = context.width < 600;
+    final colors = context.etbalyColors;
+    final waves = _buildWaves();
 
     return EtbalyWebSectionShell(
-      backgroundColor: EtbalyWebColors.sectionDeep,
-      backgroundPainter: const _HowWeWorkPainter(),
+      backgroundColor: colors.bgSecondary,
+      backgroundPainter: _HowWeWorkPainter(
+        colors: colors,
+        isDark: context.isDarkMode,
+      ),
       child: Column(
         children: [
           EtbalyWebBadge(
@@ -135,7 +140,7 @@ class _HowWeWorkSection extends StatelessWidget {
                 TextSpan(
                   text: 'auto.t_599e52aefb'.tr(),
                   style: context.textTheme.displaySmall?.copyWith(
-                    color: EtbalyWebColors.gold,
+                    color: colors.gold,
                     fontSize: context.width < 390 ? 34 : 42,
                     fontWeight: FontWeight.w900,
                     height: 1.12,
@@ -145,7 +150,7 @@ class _HowWeWorkSection extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
             style: context.textTheme.displaySmall?.copyWith(
-              color: EtbalyWebColors.heading,
+              color: colors.textMain,
               fontSize: context.width < 390 ? 34 : 42,
               fontWeight: FontWeight.w900,
               height: 1.12,
@@ -158,16 +163,16 @@ class _HowWeWorkSection extends StatelessWidget {
             'auto.t_567c4dafc2'.tr(),
             textAlign: TextAlign.center,
             style: context.textTheme.titleMedium?.copyWith(
-              color: EtbalyWebColors.body,
+              color: colors.textMuted,
               fontSize: context.width < 390 ? 14 : 16,
               height: 1.7,
               fontWeight: FontWeight.w600,
             ),
           ),
           SizedBox(height: isMobile ? 34 : 46),
-          for (var i = 0; i < _waves.length; i++) ...[
-            _ProcessWave(wave: _waves[i]),
-            if (i != _waves.length - 1) SizedBox(height: isMobile ? 30 : 42),
+          for (var i = 0; i < waves.length; i++) ...[
+            _ProcessWave(wave: waves[i]),
+            if (i != waves.length - 1) SizedBox(height: isMobile ? 30 : 42),
           ],
         ],
       ),

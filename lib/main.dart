@@ -7,6 +7,8 @@ Future<void> main() async {
 
   await EasyLocalization.ensureInitialized();
 
+  await StorageService.instance.init();
+  await ThemeService.instance.init();
   await AppConfig.init();
   FlutterNativeSplash.remove();
 

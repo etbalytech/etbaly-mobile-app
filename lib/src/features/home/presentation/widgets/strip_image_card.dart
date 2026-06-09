@@ -16,6 +16,7 @@ class _StripImageCard extends StatelessWidget {
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     final cacheWidth = (width * pixelRatio).round();
     final cacheHeight = (width * 0.92 * pixelRatio).round();
+    final colors = context.etbalyColors;
 
     return GestureDetector(
       onTap: onTap,
@@ -24,9 +25,9 @@ class _StripImageCard extends StatelessWidget {
         height: width * 0.92,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0x553D365C)),
+          border: Border.all(color: colors.borderColor),
           boxShadow: [
-            BoxShadow(color: const Color(0x55000000), blurRadius: 16.r),
+            BoxShadow(color: colors.cardShadow, blurRadius: 16.r),
           ],
         ),
         clipBehavior: Clip.antiAlias,

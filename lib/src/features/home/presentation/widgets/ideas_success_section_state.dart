@@ -23,6 +23,8 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
   Widget build(BuildContext context) {
     final width = context.width;
     final isNarrow = width < 390;
+    final colors = context.etbalyColors;
+    final isDark = context.isDarkMode;
     final logo3dHeight = (width * 0.72).clamp(254.0, 300.0);
     final logoStats = SizedBox(
       height: isNarrow ? 390.h : 415.h,
@@ -35,7 +37,11 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
               animation: _controller,
               builder: (context, _) {
                 return CustomPaint(
-                  painter: _IdeasSuccessWaveBackdropPainter(_controller.value),
+                  painter: _IdeasSuccessWaveBackdropPainter(
+                    progress: _controller.value,
+                    colors: colors,
+                    isDark: isDark,
+                  ),
                 );
               },
             ),
@@ -109,14 +115,14 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
                   TextSpan(text: 'auto.t_eeb51b1fec'.tr()),
                   TextSpan(
                     text: 'auto.t_cf4ac7828f'.tr(),
-                    style: const TextStyle(color: Color(0xFFD4AF37)),
+                    style: TextStyle(color: colors.gold),
                   ),
                   TextSpan(text: 'auto.t_30c70d285b'.tr()),
                 ],
               ),
               textAlign: TextAlign.right,
               style: context.textTheme.displaySmall?.copyWith(
-                color: const Color(0xFFF2EEFF),
+                color: colors.textMain,
                 fontSize: isNarrow ? 26.sp : 30.sp,
                 fontWeight: FontWeight.w900,
                 height: 1.22,
@@ -131,7 +137,7 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
               'auto.t_03a56f3980'.tr(),
               textAlign: TextAlign.right,
               style: context.textTheme.titleMedium?.copyWith(
-                color: const Color(0xFFD3CDE2),
+                color: colors.textMuted,
                 fontWeight: FontWeight.w600,
                 height: 1.6,
               ),
@@ -171,11 +177,13 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
         borderRadius: BorderRadius.circular(8.r),
         child: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF12072B), Color(0xFF090316)],
+              colors: isDark
+                  ? const [Color(0xFF12072B), Color(0xFF090316)]
+                  : [colors.bgSecondary, colors.bgSubtle],
             ),
           ),
           child: Stack(
@@ -185,8 +193,11 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
                   animation: _controller,
                   builder: (context, _) {
                     return CustomPaint(
-                      painter:
-                          _IdeasSuccessBackgroundPainter(_controller.value),
+                      painter: _IdeasSuccessBackgroundPainter(
+                        progress: _controller.value,
+                        colors: colors,
+                        isDark: isDark,
+                      ),
                     );
                   },
                 ),

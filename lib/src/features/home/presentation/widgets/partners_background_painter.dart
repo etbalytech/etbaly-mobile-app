@@ -1,10 +1,18 @@
 part of '../screens/home_page.dart';
 
 class _PartnersBackgroundPainter extends CustomPainter {
+  _PartnersBackgroundPainter({
+    required this.colors,
+    required this.isDark,
+  });
+
+  final EtbalyColorsExtension colors;
+  final bool isDark;
+
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = const Color(0x1A6F3FF5)
+      ..color = colors.primary.withValues(alpha: isDark ? 0.10 : 0.05)
       ..strokeWidth = 1;
     const step = 72.0;
     for (double x = 0; x <= size.width; x += step) {
@@ -15,8 +23,11 @@ class _PartnersBackgroundPainter extends CustomPainter {
     }
 
     final glowPaint = Paint()
-      ..shader = const RadialGradient(
-        colors: [Color(0x335B21B6), Colors.transparent],
+      ..shader = RadialGradient(
+        colors: [
+          colors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+          Colors.transparent,
+        ],
       ).createShader(
         Rect.fromCircle(
           center: Offset(size.width * 0.5, size.height * 0.44),
@@ -31,5 +42,6 @@ class _PartnersBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _PartnersBackgroundPainter oldDelegate) =>
+      oldDelegate.colors != colors || oldDelegate.isDark != isDark;
 }

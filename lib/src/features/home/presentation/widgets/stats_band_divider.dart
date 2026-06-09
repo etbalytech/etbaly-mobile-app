@@ -8,7 +8,7 @@ class _StatsBandDivider extends StatelessWidget {
     return Container(
       width: 1.w,
       height: 50.h,
-      color: const Color(0x335F4B7F),
+      color: context.etbalyColors.borderColor.withValues(alpha: 0.7),
     );
   }
 }

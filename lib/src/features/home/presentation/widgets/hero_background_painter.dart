@@ -1,9 +1,15 @@
 part of '../screens/home_page.dart';
 
 class _HeroBackgroundPainter extends CustomPainter {
-  _HeroBackgroundPainter(this.progress);
+  _HeroBackgroundPainter({
+    required this.progress,
+    required this.colors,
+    required this.isDark,
+  });
 
   final double progress;
+  final EtbalyColorsExtension colors;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -15,7 +21,7 @@ class _HeroBackgroundPainter extends CustomPainter {
 
   void _paintGrid(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0x246F3FF5)
+      ..color = colors.primary.withValues(alpha: isDark ? 0.14 : 0.055)
       ..strokeWidth = 1;
     const step = 48.0;
     final shift = progress * step;
@@ -30,10 +36,14 @@ class _HeroBackgroundPainter extends CustomPainter {
 
   void _paintBeams(Canvas canvas, Size size) {
     final beamPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Colors.transparent, Color(0x88B9A3FF), Colors.transparent],
+        colors: [
+          Colors.transparent,
+          colors.primaryLight.withValues(alpha: isDark ? 0.54 : 0.24),
+          Colors.transparent,
+        ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 1.4;
@@ -53,7 +63,7 @@ class _HeroBackgroundPainter extends CustomPainter {
 
   void _paintParticles(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xAFC084FC)
+      ..color = colors.primaryLight.withValues(alpha: isDark ? 0.66 : 0.26)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
     for (var i = 0; i < 18; i++) {
@@ -77,8 +87,12 @@ class _HeroBackgroundPainter extends CustomPainter {
         ..moveTo(x, y)
         ..lineTo(x + 120, y - 38);
       final paint = Paint()
-        ..shader = const LinearGradient(
-          colors: [Colors.transparent, Color(0xAAC084FC), Color(0x006F3FF5)],
+        ..shader = LinearGradient(
+          colors: [
+            Colors.transparent,
+            colors.primaryLight.withValues(alpha: isDark ? 0.66 : 0.24),
+            colors.primary.withValues(alpha: 0),
+          ],
         ).createShader(Rect.fromLTWH(x, y - 42, 130, 42))
         ..strokeWidth = i == 0 ? 2.2 : 1.4
         ..strokeCap = StrokeCap.round;
@@ -88,6 +102,8 @@ class _HeroBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HeroBackgroundPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress ||
+        oldDelegate.colors != colors ||
+        oldDelegate.isDark != isDark;
   }
 }

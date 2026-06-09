@@ -1,10 +1,11 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, prefer_const_constructors_in_immutables
 
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
+import 'package:etbaly/src/theme/etbaly_colors.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -25,27 +26,35 @@ class ServiceDetailScreen extends StatefulWidget {
 
 class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   static const _baseUrl = 'https://etba3ly-dm.com/';
+  static const _ordersApiUrl = 'https://etba3ly-dm.com/api-services/orders.php';
   static const _waNumber = '201010285020';
 
   late final Map<String, int> _quantities;
   final Set<String> _cartIds = {};
   final _scrollCtrl = ScrollController();
   final _summaryKey = GlobalKey();
-  late final DateTime _comingSoonTarget;
-  late Duration _comingSoonRemaining;
-  Timer? _comingSoonTimer;
 
   // ads-specific: which geographic category is expanded
   String? _selectedAdsCategoryId;
+
+  // mobile-app API state
+  List<_ServicePackage>? _apiPackages;
+  bool _loadingPackages = false;
 
   bool get _isArabic => context.locale.languageCode == 'ar';
 
   _ServiceDetail get _detail => _details[widget.slug] ?? _details['design']!;
 
+  // for mobile-app: API packages when loaded, else static fallback
+  List<_ServicePackage> get _effectivePackages =>
+      widget.slug == 'mobile-app' && _apiPackages != null
+          ? _apiPackages!
+          : _detail.packages;
+
   // all packages available for this service (includes ads sub-packages)
   List<_ServicePackage> get _allPackages => widget.slug == 'ads'
       ? _adsCategories.expand((c) => c.packages).toList()
-      : _detail.packages;
+      : _effectivePackages;
 
   List<_ServicePackage> get _cartItems =>
       _allPackages.where((p) => _cartIds.contains(p.id)).toList();
@@ -67,20 +76,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     super.initState();
     final detail = _detail;
     _quantities = {for (final p in detail.packages) p.id: p.minQty};
-    _comingSoonTarget = DateTime(2026, 5, 24).add(
-      const Duration(hours: 720),
-    );
-    _comingSoonRemaining = _comingSoonTarget.difference(DateTime.now());
-    if (widget.slug == 'mobile-app') {
-      _comingSoonTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        final next = _comingSoonTarget.difference(DateTime.now());
-        if (mounted) {
-          setState(() {
-            _comingSoonRemaining = next.isNegative ? Duration.zero : next;
-          });
-        }
-      });
-    }
     if (widget.slug == 'ads') {
       for (final cat in _adsCategories) {
         for (final p in cat.packages) {
@@ -88,11 +83,53 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         }
       }
     }
+    _fetchPackages();
+  }
+
+  Future<void> _fetchPackages() async {
+    if (widget.slug != 'mobile-app') return;
+    if (mounted) setState(() => _loadingPackages = true);
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ));
+      final response = await dio.get<dynamic>(
+        'https://etba3ly-dm.com/api-services/services.php',
+        queryParameters: {'slug': 'mobile-app'},
+      );
+      final data = response.data as Map<String, dynamic>? ?? {};
+      final list =
+          (data['packages'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      if (list.isEmpty) throw Exception('empty_packages');
+      final packages = list.map((p) {
+        final price =
+            ((p['price'] ?? p['price_egypt'] ?? 0) as num).toInt();
+        return _ServicePackage(
+          id: (p['slug'] ?? p['id'].toString()) as String,
+          nameAr: (p['name_ar'] ?? '') as String,
+          nameEn: p['name_en'] as String?,
+          descAr: (p['desc_ar'] ?? '') as String,
+          descEn: p['desc_en'] as String?,
+          price: price,
+          image: (p['image'] ?? '') as String,
+        );
+      }).toList();
+      if (!mounted) return;
+      setState(() {
+        _apiPackages = packages;
+        _loadingPackages = false;
+        for (final pkg in packages) {
+          _quantities.putIfAbsent(pkg.id, () => pkg.minQty);
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingPackages = false);
+    }
   }
 
   @override
   void dispose() {
-    _comingSoonTimer?.cancel();
     _scrollCtrl.dispose();
     super.dispose();
   }
@@ -128,6 +165,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => _CheckoutSheet(
+        serviceSlug: widget.slug,
         cartItems: _cartItems,
         quantities: _quantities,
         grandTotal: _grandTotal,
@@ -140,16 +178,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.slug == 'mobile-app') {
-      return Directionality(
-        textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
-        child: _MobileAppComingSoonScreen(
-          remaining: _comingSoonRemaining,
-          onBack: () => context.pop(),
-        ),
-      );
-    }
-
     if (widget.slug == 'boost') {
       return Directionality(
         textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -164,11 +192,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       );
     }
 
-    final hasPackages = _detail.packages.isNotEmpty;
+    final hasPackages = widget.slug == 'mobile-app'
+        ? (_loadingPackages || _effectivePackages.isNotEmpty)
+        : _detail.packages.isNotEmpty;
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: Color(0xFF070511),
+        backgroundColor: context.etbalyColors.bgMain,
         body: CustomScrollView(
           controller: _scrollCtrl,
           physics: BouncingScrollPhysics(),
@@ -197,23 +227,40 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                       imageUrl: _netImg(_detail.editPolicyImage!),
                     ),
                   ],
+                  // ① ب — النشرة الإخبارية (SEO only)
+                  if (widget.slug == 'seo') ...[
+                    SizedBox(height: 28.h),
+                    _SeoPromoSection(isArabic: _isArabic),
+                  ],
                   // ② الباقات
                   if (hasPackages) ...[
                     SizedBox(height: 32.h),
                     _PackagesSectionHeader(detail: _detail),
                     SizedBox(height: 14.h),
-                    for (final pkg in _detail.packages) ...[
-                      _PackageCard(
-                        pkg: pkg,
-                        assetImage: _packageAsset(pkg.image),
-                        imageUrl: _netImg(pkg.image),
-                        qty: _quantities[pkg.id] ?? pkg.minQty,
-                        isInCart: _cartIds.contains(pkg.id),
-                        onAdd: () => _toggleCart(pkg.id),
-                        onIncrement: () => _changeQty(pkg.id, pkg.minQty, 1),
-                        onDecrement: () => _changeQty(pkg.id, pkg.minQty, -1),
+                    if (widget.slug == 'mobile-app' && _loadingPackages) ...[
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 40.h),
+                          child: CircularProgressIndicator(
+                            color: context.etbalyColors.gold,
+                            strokeWidth: 2.5,
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 14.h),
+                    ] else ...[
+                      for (final pkg in _effectivePackages) ...[
+                        _PackageCard(
+                          pkg: pkg,
+                          assetImage: _packageAsset(pkg.image),
+                          imageUrl: _netImg(pkg.image),
+                          qty: _quantities[pkg.id] ?? pkg.minQty,
+                          isInCart: _cartIds.contains(pkg.id),
+                          onAdd: () => _toggleCart(pkg.id),
+                          onIncrement: () => _changeQty(pkg.id, pkg.minQty, 1),
+                          onDecrement: () => _changeQty(pkg.id, pkg.minQty, -1),
+                        ),
+                        SizedBox(height: 14.h),
+                      ],
                     ],
                     // ③ ملخص الطلب – يظهر بس لما في حاجة في الكارت
                     if (_cartIds.isNotEmpty)
@@ -295,14 +342,15 @@ class _HeroSection extends StatelessWidget {
           Image.asset(
             assetImage,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => ColoredBox(color: Color(0xFF12082A)),
+            errorBuilder: (_, __, ___) =>
+                ColoredBox(color: context.etbalyColors.bgSubtle),
           ),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0x55000000), Color(0xFF070511)],
+                colors: [Color(0x55000000), context.etbalyColors.bgMain],
                 stops: [0.0, 1.0],
               ),
             ),
@@ -352,6 +400,7 @@ class _HeroSection extends StatelessWidget {
 
 // ─── Info Section ─────────────────────────────────────────────────────────────
 
+// ignore: unused_element
 class _MobileAppComingSoonScreen extends StatelessWidget {
   const _MobileAppComingSoonScreen({
     required this.remaining,
@@ -369,7 +418,7 @@ class _MobileAppComingSoonScreen extends StatelessWidget {
     final seconds = remaining.inSeconds.remainder(60);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0E18),
+      backgroundColor: context.etbalyColors.bgMain,
       body: Stack(
         children: [
           Positioned.fill(
@@ -404,7 +453,7 @@ class _MobileAppComingSoonScreen extends StatelessWidget {
                         ),
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: const Color(0xFFB9A3FF),
+                          color: context.etbalyColors.textMuted,
                           fontSize: 17.sp,
                           height: 1.8,
                           fontWeight: FontWeight.w500,
@@ -594,7 +643,7 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
   Future<void> _showCategoryPicker() async {
     final value = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF16152A),
+      backgroundColor: context.etbalyColors.bgSecondary,
       builder: (_) => _BoostPickerSheet<String>(
         title: _isArabic ? 'اختر الفئة' : 'Choose category',
         items: _categories,
@@ -614,7 +663,7 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
   Future<void> _showServicePicker() async {
     final value = await showModalBottomSheet<_BoostSmmService>(
       context: context,
-      backgroundColor: const Color(0xFF16152A),
+      backgroundColor: context.etbalyColors.bgSecondary,
       isScrollControlled: true,
       builder: (_) => _BoostPickerSheet<_BoostSmmService>(
         title: _isArabic ? 'اختر الخدمة' : 'Choose service',
@@ -651,12 +700,20 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0E18),
+      backgroundColor: colors.bgMain,
       body: Stack(
         children: [
           Positioned.fill(
-              child: CustomPaint(painter: _ComingSoonBackgroundPainter())),
+            child: CustomPaint(
+              painter: _BoostBackgroundPainter(
+                colors: colors,
+                isDark: context.isDarkMode,
+              ),
+            ),
+          ),
           SafeArea(
             child: ListView(
               physics: BouncingScrollPhysics(),
@@ -712,7 +769,7 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
                         ? 'الحد الأدنى: ${_selectedService!.min} - الحد الأقصى: ${_selectedService!.max}'
                         : 'Min: ${_selectedService!.min} - Max: ${_selectedService!.max}',
                     style: TextStyle(
-                        color: const Color(0xFF8B7DC8), fontSize: 12.sp),
+                        color: context.etbalyColors.textLight, fontSize: 12.sp),
                   ),
                   _BoostFieldLabel(_isArabic ? 'متوسط الوقت' : 'Average time'),
                   _BoostReadonlyBox(_avgTime),
@@ -725,7 +782,7 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
                 Text(
                   _isArabic ? 'بيانات التواصل' : 'Contact details',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.textMain,
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w900,
                   ),
@@ -766,16 +823,17 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
                         padding: EdgeInsets.symmetric(
                             horizontal: 10.w, vertical: 14.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF16152A),
+                          color: context.etbalyColors.bgSecondary,
                           borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: const Color(0xFF2A2448)),
+                          border: Border.all(
+                              color: context.etbalyColors.borderSubtle),
                         ),
                         child: Text(
                           _isArabic ? 'نفس الموبايل' : 'Same as mobile',
                           style: TextStyle(
                             color: _sameAsMobile
                                 ? const Color(0xFFD4AF37)
-                                : const Color(0xFF8B7DC8),
+                                : colors.textLight,
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w800,
                           ),
@@ -804,7 +862,7 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6F3FF5),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFF252040),
+                    disabledBackgroundColor: context.etbalyColors.bgSubtle,
                     padding: EdgeInsets.symmetric(vertical: 15.h),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14.r)),
@@ -822,26 +880,27 @@ class _BoostServiceScreenState extends State<_BoostServiceScreen> {
 class _BoostHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       children: [
         Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: const Color(0xFF6F3FF5).withValues(alpha: 0.16),
+            color: colors.badgeBg,
             borderRadius: BorderRadius.circular(999.r),
-            border: Border.all(
-                color: const Color(0xFF6F3FF5).withValues(alpha: 0.42)),
+            border: Border.all(color: colors.primary.withValues(alpha: 0.34)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               FaIcon(FontAwesomeIcons.rocket,
-                  color: const Color(0xFFB9A3FF), size: 13.sp),
+                  color: colors.primary, size: 13.sp),
               SizedBox(width: 8.w),
               Text(
                 _serviceLocaleText(context, 'خدمات التعزيز', 'Boost services'),
                 style: TextStyle(
-                  color: const Color(0xFFB9A3FF),
+                  color: colors.primary,
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w900,
                 ),
@@ -858,7 +917,7 @@ class _BoostHero extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: const Color(0xFFEDE8FF),
+            color: colors.textMain,
             fontSize: 31.sp,
             height: 1.2,
             fontWeight: FontWeight.w900,
@@ -873,7 +932,7 @@ class _BoostHero extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: const Color(0xFF8B7DC8),
+            color: colors.textMuted,
             fontSize: 14.sp,
             height: 1.8,
             fontWeight: FontWeight.w500,
@@ -902,11 +961,76 @@ class _BoostHero extends StatelessWidget {
           ],
         ),
         SizedBox(height: 32.h),
-        Container(
-            height: 1, color: const Color(0xFF6F3FF5).withValues(alpha: 0.25)),
+        Container(height: 1, color: colors.borderColor),
       ],
     );
   }
+}
+
+class _BoostBackgroundPainter extends CustomPainter {
+  _BoostBackgroundPainter({required this.colors, required this.isDark});
+
+  final EtbalyColorsExtension colors;
+  final bool isDark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bg = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? const [
+                Color(0xFF221447),
+                Color(0xFF0F0E18),
+                Color(0xFF171029),
+              ]
+            : [
+                colors.bgMain,
+                colors.bgSecondary,
+                colors.bgSubtle,
+              ],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, bg);
+
+    final dotPaint = Paint()
+      ..color = colors.primary.withValues(alpha: isDark ? 0.045 : 0.035);
+    const step = 22.0;
+    for (double x = 0; x < size.width; x += step) {
+      for (double y = 0; y < size.height; y += step) {
+        canvas.drawCircle(Offset(x, y), 0.8, dotPaint);
+      }
+    }
+
+    final stripePaint = Paint()
+      ..color = colors.primary.withValues(alpha: isDark ? 0.16 : 0.055);
+    final stripe = Path()
+      ..moveTo(size.width * -0.1, size.height * 0.02)
+      ..lineTo(size.width * 1.1, size.height * 0.34)
+      ..lineTo(size.width * 1.1, size.height * 0.52)
+      ..lineTo(size.width * -0.1, size.height * 0.20)
+      ..close();
+    canvas.drawPath(stripe, stripePaint);
+
+    final linePaint = Paint()
+      ..color = colors.primary.withValues(alpha: isDark ? 0.42 : 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1;
+    canvas.drawLine(
+      Offset(size.width * 0.02, size.height * 0.18),
+      Offset(size.width * 0.20, size.height * 0.04),
+      linePaint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.72, size.height * 0.86),
+      Offset(size.width * 0.98, size.height * 0.66),
+      linePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BoostBackgroundPainter oldDelegate) =>
+      oldDelegate.colors != colors || oldDelegate.isDark != isDark;
 }
 
 class _BoostStat extends StatelessWidget {
@@ -922,7 +1046,7 @@ class _BoostStat extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            color: const Color(0xFFB9A3FF),
+            color: context.etbalyColors.textMuted,
             fontSize: 18.sp,
             fontWeight: FontWeight.w900,
           ),
@@ -931,7 +1055,7 @@ class _BoostStat extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: const Color(0xFF8B7DC8),
+            color: context.etbalyColors.textLight,
             fontSize: 11.sp,
             fontWeight: FontWeight.w700,
           ),
@@ -948,7 +1072,7 @@ class _BoostStatSeparator extends StatelessWidget {
       width: 1,
       height: 34.h,
       margin: EdgeInsets.symmetric(horizontal: 16.w),
-      color: const Color(0xFF2A2448),
+      color: context.etbalyColors.borderSubtle,
     );
   }
 }
@@ -972,9 +1096,6 @@ class _BoostBackButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.arrow_forward_rounded,
-                color: const Color(0xFFD4AF37), size: 18.sp),
-            SizedBox(width: 10.w),
             Text(
               _serviceLocaleText(
                 context,
@@ -987,6 +1108,9 @@ class _BoostBackButton extends StatelessWidget {
                 fontWeight: FontWeight.w900,
               ),
             ),
+            SizedBox(width: 10.w),
+            Icon(Icons.arrow_forward_rounded,
+                color: const Color(0xFFD4AF37), size: 18.sp),
           ],
         ),
       ),
@@ -1024,24 +1148,27 @@ class _BoostTabs extends StatelessWidget {
                   ? LinearGradient(
                       colors: [Color(0xFFB9A3FF), Color(0xFF6F3FF5)])
                   : null,
-              color: active ? null : const Color(0xFF16152A),
+              color: active ? null : context.etbalyColors.bgSubtle,
               borderRadius: BorderRadius.circular(10.r),
               border: Border.all(
-                color:
-                    active ? const Color(0xFF6F3FF5) : const Color(0xFF2A2448),
+                color: active
+                    ? context.etbalyColors.primary
+                    : context.etbalyColors.borderSubtle,
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FaIcon(tab.icon,
-                    color: active ? Colors.white : const Color(0xFF8B7DC8),
+                    color:
+                        active ? Colors.white : context.etbalyColors.textLight,
                     size: 16.sp),
                 SizedBox(width: 8.w),
                 Text(
                   tab.localizedName(context),
                   style: TextStyle(
-                    color: active ? Colors.white : const Color(0xFF8B7DC8),
+                    color:
+                        active ? Colors.white : context.etbalyColors.textLight,
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w900,
                   ),
@@ -1064,18 +1191,19 @@ class _BoostSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       onChanged: onChanged,
-      style: TextStyle(color: Colors.white, fontSize: 14.sp),
+      style: TextStyle(color: context.etbalyColors.textMain, fontSize: 14.sp),
       decoration: InputDecoration(
         hintText: _serviceLocaleText(context, 'بحث', 'Search'),
-        hintStyle: TextStyle(color: const Color(0xFF8B7DC8), fontSize: 14.sp),
+        hintStyle:
+            TextStyle(color: context.etbalyColors.textLight, fontSize: 14.sp),
         prefixIcon: Icon(Icons.search_rounded,
-            color: const Color(0xFF8B7DC8), size: 20.sp),
+            color: context.etbalyColors.textLight, size: 20.sp),
         filled: true,
-        fillColor: const Color(0xFF16152A),
+        fillColor: context.etbalyColors.bgSubtle,
         contentPadding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 18.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(999.r),
-          borderSide: BorderSide(color: const Color(0xFF2A2448)),
+          borderSide: BorderSide(color: context.etbalyColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(999.r),
@@ -1098,7 +1226,7 @@ class _BoostFieldLabel extends StatelessWidget {
         label,
         textAlign: TextAlign.right,
         style: TextStyle(
-          color: const Color(0xFF8B7DC8),
+          color: context.etbalyColors.textLight,
           fontSize: 12.sp,
           fontWeight: FontWeight.w900,
         ),
@@ -1120,15 +1248,17 @@ class _BoostSelectButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
         decoration: BoxDecoration(
-          color: const Color(0xFF16152A),
+          color: colors.bgSecondary,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: const Color(0xFF2A2448)),
+          border: Border.all(color: colors.borderSubtle),
         ),
         child: Row(
           children: [
@@ -1138,7 +1268,7 @@ class _BoostSelectButton extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: placeholder ? const Color(0xFF8B7DC8) : Colors.white,
+                  color: placeholder ? colors.textLight : colors.textMain,
                   fontSize: 13.sp,
                   height: 1.5,
                   fontWeight: FontWeight.w700,
@@ -1146,7 +1276,7 @@ class _BoostSelectButton extends StatelessWidget {
               ),
             ),
             Icon(Icons.keyboard_arrow_down_rounded,
-                color: const Color(0xFF8B7DC8), size: 22.sp),
+                color: colors.textLight, size: 22.sp),
           ],
         ),
       ),
@@ -1176,16 +1306,17 @@ class _BoostTextField extends StatelessWidget {
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: onChanged,
-      style: TextStyle(color: Colors.white, fontSize: 14.sp),
+      style: TextStyle(color: context.etbalyColors.textMain, fontSize: 14.sp),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: const Color(0xFF8B7DC8), fontSize: 13.sp),
+        hintStyle:
+            TextStyle(color: context.etbalyColors.textLight, fontSize: 13.sp),
         filled: true,
-        fillColor: const Color(0xFF16152A),
+        fillColor: context.etbalyColors.bgSubtle,
         contentPadding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: const Color(0xFF2A2448)),
+          borderSide: BorderSide(color: context.etbalyColors.borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -1202,19 +1333,20 @@ class _BoostReadonlyBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 15.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF16152A),
+        color: context.etbalyColors.bgSecondary,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFF2A2448)),
+        border: Border.all(color: context.etbalyColors.borderSubtle),
       ),
       child: Text(
         value,
         style: TextStyle(
-          color:
-              value.isEmpty ? const Color(0xFF8B7DC8) : const Color(0xFFD4AF37),
+          color: value.isEmpty ? colors.textLight : const Color(0xFFD4AF37),
           fontSize: 14.sp,
           fontWeight: FontWeight.w900,
         ),
@@ -1238,6 +1370,8 @@ class _BoostPickerSheet<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
@@ -1248,7 +1382,7 @@ class _BoostPickerSheet<T> extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                  color: Colors.white,
+                  color: colors.textMain,
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w900),
             ),
@@ -1263,13 +1397,13 @@ class _BoostPickerSheet<T> extends StatelessWidget {
                   final subtitle = itemSubtitle(item);
                   return ListTile(
                     onTap: () => Navigator.pop(context, item),
-                    tileColor: const Color(0xFF1E1B30),
+                    tileColor: context.etbalyColors.bgCard,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.r)),
                     title: Text(
                       itemTitle(item),
                       style: TextStyle(
-                          color: Colors.white,
+                          color: colors.textMain,
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w800),
                     ),
@@ -1580,12 +1714,20 @@ class _BrandPlanServiceScreenState extends State<_BrandPlanServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0E18),
+      backgroundColor: colors.bgMain,
       body: Stack(
         children: [
           Positioned.fill(
-              child: CustomPaint(painter: _ComingSoonBackgroundPainter())),
+            child: CustomPaint(
+              painter: _BoostBackgroundPainter(
+                colors: colors,
+                isDark: context.isDarkMode,
+              ),
+            ),
+          ),
           SafeArea(
             child: ListView(
               physics: BouncingScrollPhysics(),
@@ -1724,7 +1866,7 @@ class _BrandHero extends StatelessWidget {
               context, 'خدمات خطة براند مخصصة', 'Custom brand plan services'),
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: const Color(0xFFEDE8FF),
+            color: context.etbalyColors.textMain,
             fontSize: 31.sp,
             height: 1.18,
             fontWeight: FontWeight.w900,
@@ -1739,7 +1881,7 @@ class _BrandHero extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: const Color(0xFFB9A3FF),
+            color: context.etbalyColors.textMuted,
             fontSize: 14.sp,
             height: 1.7,
             fontWeight: FontWeight.w500,
@@ -1753,10 +1895,12 @@ class _BrandHero extends StatelessWidget {
 class _BrandEditPolicyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B30),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(20.r),
         border:
             Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.26)),
@@ -1781,7 +1925,7 @@ class _BrandEditPolicyCard extends StatelessWidget {
           Text(
             _serviceLocaleText(context, 'سياسة التعديلات', 'Revision policy'),
             style: TextStyle(
-                color: Colors.white,
+                color: colors.textMain,
                 fontSize: 22.sp,
                 fontWeight: FontWeight.w900),
           ),
@@ -1793,7 +1937,7 @@ class _BrandEditPolicyCard extends StatelessWidget {
               'We provide one free revision after delivery to fine-tune the final result. Extra revisions may include fees depending on the requested changes.',
             ),
             style: TextStyle(
-                color: const Color(0xFFB9A3FF), fontSize: 14.sp, height: 1.75),
+                color: colors.textMuted, fontSize: 14.sp, height: 1.75),
           ),
         ],
       ),
@@ -1833,6 +1977,8 @@ class _BrandImagesGrid extends StatelessWidget {
 class _BrandCalculatorHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       children: [
         Container(
@@ -1867,7 +2013,7 @@ class _BrandCalculatorHeader extends StatelessWidget {
               context, 'خطة براند مخصصة Customised', 'Customised brand plan'),
           textAlign: TextAlign.center,
           style: TextStyle(
-              color: Colors.white,
+              color: colors.textMain,
               fontSize: 28.sp,
               fontWeight: FontWeight.w900),
         ),
@@ -1888,8 +2034,8 @@ class _BrandCalculatorHeader extends StatelessWidget {
             'Choose your plan items and calculate the total instantly',
           ),
           textAlign: TextAlign.center,
-          style: TextStyle(
-              color: const Color(0xFFB9A3FF), fontSize: 14.sp, height: 1.6),
+          style:
+              TextStyle(color: colors.textMuted, fontSize: 14.sp, height: 1.6),
         ),
       ],
     );
@@ -1912,6 +2058,8 @@ class _BrandAdsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return _BrandCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1937,7 +2085,7 @@ class _BrandAdsCard extends StatelessWidget {
                       _serviceLocaleText(context, 'إعلانات فيسبوك وانستجرام',
                           'Facebook and Instagram ads'),
                       style: TextStyle(
-                          color: Colors.white,
+                          color: colors.textMain,
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w900),
                     ),
@@ -1949,7 +2097,7 @@ class _BrandAdsCard extends StatelessWidget {
                         'Minimum 5 days - minimum ad spend 1,200 EGP',
                       ),
                       style: TextStyle(
-                          color: const Color(0xFFB9A3FF),
+                          color: colors.textMuted,
                           fontSize: 12.sp,
                           height: 1.4),
                     ),
@@ -1982,7 +2130,7 @@ class _BrandAdsCard extends StatelessWidget {
               _serviceLocaleText(
                   context, 'إجمالي الصرف الإعلاني', 'Total ad spend'),
               style: TextStyle(
-                  color: const Color(0xFFB9A3FF),
+                  color: colors.textMuted,
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w800)),
           SizedBox(height: 8.h),
@@ -2015,6 +2163,8 @@ class _BrandAddonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return GestureDetector(
       onTap: onToggle,
       child: _BrandCard(
@@ -2044,15 +2194,13 @@ class _BrandAddonCard extends StatelessWidget {
             SizedBox(height: 18.h),
             Text(title,
                 style: TextStyle(
-                    color: Colors.white,
+                    color: colors.textMain,
                     fontSize: 17.sp,
                     fontWeight: FontWeight.w900)),
             SizedBox(height: 7.h),
             Text(desc,
                 style: TextStyle(
-                    color: const Color(0xFFB9A3FF),
-                    fontSize: 13.sp,
-                    height: 1.5)),
+                    color: colors.textMuted, fontSize: 13.sp, height: 1.5)),
             SizedBox(height: 14.h),
             if (enabled) ...[
               _BrandStepper(
@@ -2078,7 +2226,7 @@ class _BrandAddonCard extends StatelessWidget {
                       text: _serviceLocaleText(
                           context, ' ج.م / اشتراك', ' EGP / subscription'),
                       style: TextStyle(
-                          color: const Color(0xFFB9A3FF),
+                          color: colors.textMuted,
                           fontWeight: FontWeight.w800,
                           fontSize: 12.sp)),
                 ],
@@ -2149,7 +2297,7 @@ class _BrandSummaryCard extends StatelessWidget {
                 label: 'UGC × $ugcQty',
                 value: _serviceLocaleText(
                     context, '${ugcQty * 600} ج.م', '${ugcQty * 600} EGP')),
-          Divider(color: const Color(0xFF332D55), height: 24.h),
+          Divider(color: context.etbalyColors.borderColor, height: 24.h),
           _BrandSummaryRow(
               label: _serviceLocaleText(context, 'المجموع', 'Subtotal'),
               value: _serviceLocaleText(
@@ -2185,9 +2333,22 @@ class _BrandFinalCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       padding: EdgeInsets.all(22.r),
-      color: const Color(0xFF0A0812),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: colors.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: colors.cardShadow,
+            blurRadius: 24.r,
+            offset: Offset(0.w, 12.h),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -2196,7 +2357,7 @@ class _BrandFinalCta extends StatelessWidget {
                 context, 'هل أنت مستعد لتنطلق?', 'Ready to get started?'),
             textAlign: TextAlign.right,
             style: TextStyle(
-                color: Colors.white,
+                color: colors.textMain,
                 fontSize: 27.sp,
                 fontWeight: FontWeight.w900),
           ),
@@ -2209,7 +2370,7 @@ class _BrandFinalCta extends StatelessWidget {
             ),
             textAlign: TextAlign.right,
             style: TextStyle(
-                color: const Color(0xFFB9A3FF), fontSize: 14.sp, height: 1.6),
+                color: colors.textMuted, fontSize: 14.sp, height: 1.6),
           ),
           SizedBox(height: 22.h),
           _GoldActionButton(
@@ -2230,18 +2391,25 @@ class _BrandCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B30),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: active
-              ? const Color(0xFFD4AF37)
-              : const Color(0xFF6F3FF5).withValues(alpha: 0.25),
+          color: active ? const Color(0xFFD4AF37) : colors.borderColor,
           width: active ? 1.5 : 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.cardShadow,
+            blurRadius: 20.r,
+            offset: Offset(0.w, 10.h),
+          ),
+        ],
       ),
       child: child,
     );
@@ -2265,12 +2433,14 @@ class _BrandStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
             style: TextStyle(
-                color: const Color(0xFFB9A3FF),
+                color: colors.textMuted,
                 fontSize: 13.sp,
                 fontWeight: FontWeight.w900)),
         SizedBox(height: 8.h),
@@ -2283,13 +2453,13 @@ class _BrandStepper extends StatelessWidget {
               height: 44.h,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFF16152A),
+                color: colors.bgSecondary,
                 borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: const Color(0xFF332D55)),
+                border: Border.all(color: colors.borderColor),
               ),
               child: Text('$value',
                   style: TextStyle(
-                      color: Colors.white,
+                      color: colors.textMain,
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w900)),
             ),
@@ -2298,8 +2468,7 @@ class _BrandStepper extends StatelessWidget {
           ],
         ),
         SizedBox(height: 6.h),
-        Text(note,
-            style: TextStyle(color: const Color(0xFF8B7DC8), fontSize: 11.sp)),
+        Text(note, style: TextStyle(color: colors.textLight, fontSize: 11.sp)),
       ],
     );
   }
@@ -2319,7 +2488,7 @@ class _StepBtn extends StatelessWidget {
         width: 42.w,
         height: 42.w,
         decoration: BoxDecoration(
-          color: const Color(0xFF16152A),
+          color: context.etbalyColors.bgSecondary,
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
               color: const Color(0xFFD4AF37).withValues(alpha: 0.45)),
@@ -2370,9 +2539,10 @@ class _BrandSummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
     final color = total
         ? const Color(0xFFD4AF37)
-        : (muted ? const Color(0xFFB9A3FF) : Colors.white);
+        : (muted ? colors.textMuted : colors.textMain);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
@@ -2507,7 +2677,7 @@ class _OrbitLogo extends StatelessWidget {
             padding: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF252040),
+              color: context.etbalyColors.bgSubtle,
               border: Border.all(color: const Color(0xFFD4AF37), width: 2),
               boxShadow: [
                 BoxShadow(
@@ -2585,7 +2755,7 @@ class _TimeTile extends StatelessWidget {
           height: 62.h,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFF252040).withValues(alpha: 0.78),
+            color: context.etbalyColors.bgSubtle.withValues(alpha: 0.78),
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
                 color: const Color(0xFFB9A3FF).withValues(alpha: 0.18)),
@@ -2604,7 +2774,7 @@ class _TimeTile extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: const Color(0xFFB9A3FF),
+            color: context.etbalyColors.textMuted,
             fontSize: 12.sp,
             fontWeight: FontWeight.w700,
           ),
@@ -2651,12 +2821,12 @@ class _ProgressSection extends StatelessWidget {
             Row(
               children: [
                 FaIcon(FontAwesomeIcons.code,
-                    color: const Color(0xFFB9A3FF), size: 13.sp),
+                    color: context.etbalyColors.textMuted, size: 13.sp),
                 SizedBox(width: 8.w),
                 Text(
                   _serviceLocaleText(context, 'نسبة الإنجاز', 'Progress'),
                   style: TextStyle(
-                    color: const Color(0xFFB9A3FF),
+                    color: context.etbalyColors.textMuted,
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w800,
                   ),
@@ -2710,7 +2880,7 @@ class HomeButton extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: const Color(0xFF332D55),
+          color: context.etbalyColors.borderColor,
           borderRadius: BorderRadius.circular(999.r),
           border: Border.all(
               color: const Color(0xFFB9A3FF).withValues(alpha: 0.16)),
@@ -2721,14 +2891,14 @@ class HomeButton extends StatelessWidget {
             Text(
               'الصفحة الرئيسية',
               style: TextStyle(
-                color: const Color(0xFFEDE8FF),
+                color: context.etbalyColors.textMain,
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w900,
               ),
             ),
             SizedBox(width: 10.w),
             Icon(Icons.arrow_forward_rounded,
-                color: const Color(0xFFB9A3FF), size: 20.sp),
+                color: context.etbalyColors.textMuted, size: 20.sp),
           ],
         ),
       ),
@@ -2825,6 +2995,8 @@ class _InfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2858,7 +3030,7 @@ class _InfoSection extends StatelessWidget {
         Text(
           detail.title,
           style: TextStyle(
-            color: Colors.white,
+            color: colors.textMain,
             fontSize: 28.sp,
             fontWeight: FontWeight.w900,
             height: 1.2,
@@ -2868,7 +3040,7 @@ class _InfoSection extends StatelessWidget {
         Text(
           detail.description,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.62),
+            color: colors.textMuted,
             fontSize: 14.sp,
             height: 1.75,
           ),
@@ -2911,10 +3083,12 @@ class _PackagesSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(height: 1.h, color: Colors.white.withValues(alpha: 0.07)),
+        Container(height: 1.h, color: colors.borderColor),
         SizedBox(height: 24.h),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
@@ -2946,7 +3120,7 @@ class _PackagesSectionHeader extends StatelessWidget {
         Text(
           detail.packageTitle(context),
           style: TextStyle(
-            color: Colors.white,
+            color: colors.textMain,
             fontSize: 22.sp,
             fontWeight: FontWeight.w900,
           ),
@@ -2955,7 +3129,7 @@ class _PackagesSectionHeader extends StatelessWidget {
         Text(
           'auto.t_71e720e707'.tr(),
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.48),
+            color: colors.textMuted,
             fontSize: 13.sp,
           ),
         ),
@@ -2987,15 +3161,17 @@ class _PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return AnimatedContainer(
       duration: Duration(milliseconds: 220),
       decoration: BoxDecoration(
-        color: Color(0xFF0F0A1E),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: isInCart
               ? Color(0xFFD4AF37).withValues(alpha: 0.7)
-              : Colors.white.withValues(alpha: 0.07),
+              : colors.borderColor,
           width: isInCart ? 1.5 : 1,
         ),
         boxShadow: isInCart
@@ -3027,7 +3203,7 @@ class _PackageCard extends StatelessWidget {
                 Text(
                   pkg.name(context),
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.textMain,
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w900,
                   ),
@@ -3036,7 +3212,7 @@ class _PackageCard extends StatelessWidget {
                 Text(
                   pkg.desc(context),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.58),
+                    color: colors.textMuted,
                     fontSize: 13.sp,
                     height: 1.65,
                   ),
@@ -3060,7 +3236,7 @@ class _PackageCard extends StatelessWidget {
                       child: Text(
                         'auto.t_fb0989a821'.tr(),
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.48),
+                          color: colors.textLight,
                           fontSize: 12.sp,
                         ),
                       ),
@@ -3133,6 +3309,8 @@ class _ServiceDetailImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Image.asset(
       assetImage,
       fit: fit,
@@ -3141,13 +3319,13 @@ class _ServiceDetailImage extends StatelessWidget {
         imageUrl: networkImage,
         fit: fit,
         width: double.infinity,
-        placeholder: (_, __) => ColoredBox(color: Color(0xFF1A1035)),
+        placeholder: (_, __) => ColoredBox(color: colors.bgSubtle),
         errorWidget: (_, __, ___) => ColoredBox(
-          color: Color(0xFF1A1035),
+          color: colors.bgSubtle,
           child: Center(
             child: Icon(
               fallbackIcon,
-              color: Colors.white24,
+              color: colors.textLight,
               size: 40.sp,
             ),
           ),
@@ -3170,11 +3348,13 @@ class _QtyControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Color(0xFF1A1035),
+        color: colors.bgSubtle,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -3189,7 +3369,7 @@ class _QtyControl extends StatelessWidget {
               '$qty',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textMain,
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w900,
               ),
@@ -3219,6 +3399,8 @@ class _QtyBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return GestureDetector(
       onTap: disabled ? null : onTap,
       child: SizedBox(
@@ -3227,7 +3409,9 @@ class _QtyBtn extends StatelessWidget {
         child: Icon(
           icon,
           size: 18.sp,
-          color: disabled ? Colors.white.withValues(alpha: 0.2) : Colors.white,
+          color: disabled
+              ? colors.textLight.withValues(alpha: 0.45)
+              : colors.textMain,
         ),
       ),
     );
@@ -3247,11 +3431,13 @@ class _EditPolicyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF0F0A1E),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(color: colors.borderColor),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -3285,7 +3471,7 @@ class _EditPolicyCard extends StatelessWidget {
                     Text(
                       'auto.t_5a6ac77983'.tr(),
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textMain,
                         fontSize: 17.sp,
                         fontWeight: FontWeight.w900,
                       ),
@@ -3296,7 +3482,7 @@ class _EditPolicyCard extends StatelessWidget {
                 Text(
                   'auto.t_9e16e6281a'.tr(),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.62),
+                    color: colors.textMuted,
                     height: 1.75,
                     fontSize: 13.sp,
                   ),
@@ -3384,6 +3570,9 @@ class _ServiceCtaBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+    final isDark = context.isDarkMode;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(22.w, 28.h, 22.w, 28.h),
@@ -3392,18 +3581,32 @@ class _ServiceCtaBanner extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [Color(0xFF1A0A38), Color(0xFF0F0820), Color(0xFF0A0618)],
+          colors: isDark
+              ? [Color(0xFF1A0A38), Color(0xFF0F0820), Color(0xFF0A0618)]
+              : [
+                  colors.bgCard,
+                  colors.bgSubtle,
+                  colors.gold.withValues(alpha: 0.14),
+                ],
         ),
-        border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.22)),
+        border: Border.all(
+          color: isDark
+              ? Color(0xFFD4AF37).withValues(alpha: 0.22)
+              : colors.gold.withValues(alpha: 0.38),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFFD4AF37).withValues(alpha: 0.06),
+            color: isDark
+                ? Color(0xFFD4AF37).withValues(alpha: 0.06)
+                : colors.cardShadow,
             blurRadius: 32.r,
           ),
         ],
       ),
       child: CustomPaint(
-        painter: _CtaGridPainter(),
+        painter: _CtaGridPainter(
+          color: colors.primary.withValues(alpha: isDark ? 0.08 : 0.10),
+        ),
         child: Column(
           children: [
             Container(
@@ -3436,7 +3639,7 @@ class _ServiceCtaBanner extends StatelessWidget {
               'auto.t_b3e8f9c2d1'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textMain,
                 fontSize: 26.sp,
                 fontWeight: FontWeight.w900,
                 height: 1.2,
@@ -3447,7 +3650,7 @@ class _ServiceCtaBanner extends StatelessWidget {
               'auto.t_a4d7c8e9f2'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.58),
+                color: colors.textMuted,
                 fontSize: 13.sp,
                 height: 1.65,
               ),
@@ -3492,10 +3695,14 @@ class _ServiceCtaBanner extends StatelessWidget {
 }
 
 class _CtaGridPainter extends CustomPainter {
+  _CtaGridPainter({required this.color});
+
+  final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0x0FD4AF37)
+      ..color = color
       ..strokeWidth = 1;
     const step = 48.0;
     for (double x = 0; x <= size.width; x += step) {
@@ -3507,7 +3714,8 @@ class _CtaGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CtaGridPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 // ─── Order Summary Panel ──────────────────────────────────────────────────────
@@ -3528,11 +3736,12 @@ class _OrderSummaryPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
     final totalQty = cartItems.fold(0, (s, p) => s + (quantities[p.id] ?? 1));
     return Container(
       padding: EdgeInsets.all(18.r),
       decoration: BoxDecoration(
-        color: Color(0xFF0D0820),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.35)),
         boxShadow: [
@@ -3563,7 +3772,7 @@ class _OrderSummaryPanel extends StatelessWidget {
               Text(
                 _serviceLocaleText(context, 'ملخص الطلب', 'Order summary'),
                 style: TextStyle(
-                  color: Colors.white,
+                  color: colors.textMain,
                   fontSize: 17.sp,
                   fontWeight: FontWeight.w900,
                 ),
@@ -3588,14 +3797,14 @@ class _OrderSummaryPanel extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16.h),
-          Container(height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+          Container(height: 1.h, color: colors.borderColor),
           SizedBox(height: 14.h),
           // Package rows
           for (final pkg in cartItems) ...[
             _SummaryRow(pkg: pkg, qty: quantities[pkg.id] ?? 1),
             SizedBox(height: 10.h),
           ],
-          Container(height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+          Container(height: 1.h, color: colors.borderColor),
           SizedBox(height: 14.h),
           // Grand total
           Row(
@@ -3603,7 +3812,7 @@ class _OrderSummaryPanel extends StatelessWidget {
               Text(
                 _serviceLocaleText(context, 'الإجمالي الكلي', 'Grand total'),
                 style: TextStyle(
-                  color: Colors.white,
+                  color: colors.textMain,
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w900,
                 ),
@@ -3621,7 +3830,7 @@ class _OrderSummaryPanel extends StatelessWidget {
               Text(
                 'auto.t_fb0989a821'.tr(),
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: colors.textLight,
                   fontSize: 12.sp,
                 ),
               ),
@@ -3665,6 +3874,8 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Row(
       children: [
         Container(
@@ -3691,7 +3902,7 @@ class _SummaryRow extends StatelessWidget {
           child: Text(
             pkg.name(context),
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: colors.textMain,
               fontSize: 13.sp,
               fontWeight: FontWeight.w700,
             ),
@@ -3700,7 +3911,7 @@ class _SummaryRow extends StatelessWidget {
         Text(
           '${pkg.price * qty}',
           style: TextStyle(
-            color: Colors.white,
+            color: colors.textMain,
             fontSize: 14.sp,
             fontWeight: FontWeight.w800,
           ),
@@ -3709,7 +3920,7 @@ class _SummaryRow extends StatelessWidget {
         Text(
           'auto.t_fb0989a821'.tr(),
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
+            color: colors.textLight,
             fontSize: 11.sp,
           ),
         ),
@@ -3722,6 +3933,7 @@ class _SummaryRow extends StatelessWidget {
 
 class _CheckoutSheet extends StatefulWidget {
   _CheckoutSheet({
+    required this.serviceSlug,
     required this.cartItems,
     required this.quantities,
     required this.grandTotal,
@@ -3730,6 +3942,7 @@ class _CheckoutSheet extends StatefulWidget {
     required this.isArabic,
   });
 
+  final String serviceSlug;
   final List<_ServicePackage> cartItems;
   final Map<String, int> quantities;
   final int grandTotal;
@@ -3748,8 +3961,14 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
   final _emailCtrl = TextEditingController();
   final _companyCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final Set<String> _selectedPlatforms = {};
   bool _sameAsPhone = false;
   bool _submitting = false;
+
+  List<_PlatformOption> get _platformOptions =>
+      _platformOptionsFor(widget.serviceSlug);
+  bool get _requiresPlatforms => _platformOptions.isNotEmpty;
+  bool _apiSubmitHandled = false;
 
   @override
   void initState() {
@@ -3774,6 +3993,134 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
 
   Future<void> _submit() async {
     final waNum = _sameAsPhone ? _phoneCtrl.text.trim() : _waCtrl.text.trim();
+    final name = _nameCtrl.text.trim();
+    final mobile = _phoneCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final description = _notesCtrl.text.trim();
+    final mobileRegex = RegExp(r'^01[0-9]{9}$');
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
+    String? error;
+    if (name.isEmpty || name.split(RegExp(r'\s+')).length < 2) {
+      error = widget.isArabic
+          ? 'ادخل الاسم الكامل (اسمين على الأقل)'
+          : 'Enter at least first and last name';
+    } else if (!mobileRegex.hasMatch(mobile)) {
+      error = widget.isArabic
+          ? 'رقم الموبايل غير صحيح (11 رقم يبدأ بـ 01)'
+          : 'Invalid mobile number';
+    } else if (!mobileRegex.hasMatch(waNum)) {
+      error = widget.isArabic
+          ? 'رقم الواتساب غير صحيح (11 رقم يبدأ بـ 01)'
+          : 'Invalid WhatsApp number';
+    } else if (email.isEmpty || !emailRegex.hasMatch(email)) {
+      error = widget.isArabic
+          ? 'البريد الإلكتروني مطلوب وبصيغة صحيحة'
+          : 'A valid email address is required';
+    } else if (_requiresPlatforms && _selectedPlatforms.isEmpty) {
+      error = widget.serviceSlug == 'mobile-app'
+          ? (widget.isArabic
+              ? 'اختر نظام واحد على الأقل'
+              : 'Select at least one system')
+          : (widget.isArabic
+              ? 'اختر منصة واحدة على الأقل'
+              : 'Select at least one platform');
+    } else if (description.length < 10) {
+      error = widget.isArabic
+          ? 'برجاء وصف طلبك بالتفصيل'
+          : 'Please describe your request';
+    }
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+      );
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      final payload = <String, dynamic>{
+        'service_slug': widget.serviceSlug,
+        'full_name': name,
+        'mobile': mobile,
+        'whatsapp': waNum,
+        'email': email,
+        'company': _companyCtrl.text.trim(),
+        'description': description,
+        'packages': widget.cartItems.map((pkg) {
+          final qty = widget.quantities[pkg.id] ?? 1;
+          final subtotal = pkg.price * qty;
+          return {
+            'id': pkg.id,
+            'slug': pkg.id,
+            'name_ar': pkg.nameAr,
+            'name_en': pkg.nameEn ?? pkg.nameAr,
+            'qty': qty,
+            'price': pkg.price,
+            'subtotal': subtotal,
+          };
+        }).toList(),
+        'grand_total': widget.grandTotal,
+      };
+
+      if (_selectedPlatforms.isNotEmpty) {
+        payload['platforms'] = _selectedPlatforms.toList();
+      }
+      final adsRegion = _adsRegionFor(widget.cartItems);
+      if (adsRegion != null) {
+        payload['ads_region'] = adsRegion;
+      }
+
+      final response = await Dio().post<dynamic>(
+        _ServiceDetailScreenState._ordersApiUrl,
+        data: payload,
+        options: Options(
+          headers: const {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      final data = response.data;
+      final invoice = data is Map ? data['invoice_number']?.toString() : null;
+
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            invoice == null
+                ? (widget.isArabic
+                    ? 'تم إنشاء الطلب بنجاح'
+                    : 'Order created successfully')
+                : (widget.isArabic
+                    ? 'تم إنشاء الطلب بنجاح - فاتورة $invoice'
+                    : 'Order created successfully - Invoice $invoice'),
+          ),
+          backgroundColor: const Color(0xFF1B8A4B),
+        ),
+      );
+      Navigator.of(context).pop();
+      context.go(AppRoutes.payments);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.isArabic
+                ? 'حدث خطأ أثناء إنشاء الطلب. جرب مرة أخرى.'
+                : 'Could not create the order. Please try again.',
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
+    _apiSubmitHandled = true;
+    if (_apiSubmitHandled) return;
+    /*
+
     if (_nameCtrl.text.trim().isEmpty ||
         _phoneCtrl.text.trim().isEmpty ||
         waNum.isEmpty) {
@@ -3822,15 +4169,18 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
       setState(() => _submitting = false);
       Navigator.of(context).pop();
     }
+    */
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Directionality(
       textDirection: widget.isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Container(
         decoration: BoxDecoration(
-          color: Color(0xFF0D0820),
+          color: colors.bgCard,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           border: Border.all(color: Color(0xFFD4AF37).withValues(alpha: 0.2)),
         ),
@@ -3851,7 +4201,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                   width: 40.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: colors.borderColor,
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),
@@ -3877,7 +4227,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                         Text(
                           widget.isArabic ? 'تأكيد الطلب' : 'Confirm order',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: colors.textMain,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w900,
                           ),
@@ -3902,8 +4252,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                 ],
               ),
               SizedBox(height: 20.h),
-              Container(
-                  height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+              Container(height: 1.h, color: colors.borderColor),
               SizedBox(height: 14.h),
               // ─── ملخص الخدمات المختارة ───────────────────────────────
               if (widget.cartItems.isNotEmpty) ...[
@@ -3925,7 +4274,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                           child: Text(
                             pkg.name(context),
                             style: TextStyle(
-                                color: Colors.white70, fontSize: 13.sp),
+                                color: colors.textMuted, fontSize: 13.sp),
                           ),
                         ),
                         Text(
@@ -3940,14 +4289,13 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                     ),
                   ),
                 ],
-                Container(
-                    height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+                Container(height: 1.h, color: colors.borderColor),
                 SizedBox(height: 10.h),
                 Row(
                   children: [
                     Text(widget.isArabic ? 'الإجمالي' : 'Total',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: colors.textMain,
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w800)),
                     Spacer(),
@@ -3960,8 +4308,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                   ],
                 ),
                 SizedBox(height: 16.h),
-                Container(
-                    height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+                Container(height: 1.h, color: colors.borderColor),
                 SizedBox(height: 14.h),
               ],
               // ─── البيانات الشخصية ────────────────────────────────────
@@ -4019,7 +4366,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                         }),
                         activeColor: Color(0xFFD4AF37),
                         checkColor: Colors.black,
-                        side: BorderSide(color: Colors.white30),
+                        side: BorderSide(color: colors.borderColor),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4.r)),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -4029,7 +4376,8 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                     SizedBox(width: 8.w),
                     Text(
                       widget.isArabic ? 'نفس رقم الموبايل' : 'Same as mobile',
-                      style: TextStyle(color: Colors.white70, fontSize: 13.sp),
+                      style:
+                          TextStyle(color: colors.textMuted, fontSize: 13.sp),
                     ),
                   ],
                 ),
@@ -4054,6 +4402,41 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                     : 'Your company or business name',
                 icon: Icons.business_outlined,
               ),
+              if (_platformOptions.isNotEmpty) ...[
+                SizedBox(height: 14.h),
+                _FormSectionLabel(
+                  icon: widget.serviceSlug == 'mobile-app'
+                      ? Icons.devices_rounded
+                      : Icons.public_rounded,
+                  title: widget.serviceSlug == 'mobile-app'
+                      ? (widget.isArabic
+                          ? 'الأنظمة المستهدفة'
+                          : 'Target systems')
+                      : (widget.isArabic
+                          ? 'المنصات المستهدفة'
+                          : 'Target platforms'),
+                ),
+                SizedBox(height: 10.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: [
+                    for (final platform in _platformOptions)
+                      _PlatformChoiceChip(
+                        option: platform,
+                        selected: _selectedPlatforms.contains(platform.id),
+                        isArabic: widget.isArabic,
+                        onTap: () => setState(() {
+                          if (_selectedPlatforms.contains(platform.id)) {
+                            _selectedPlatforms.remove(platform.id);
+                          } else {
+                            _selectedPlatforms.add(platform.id);
+                          }
+                        }),
+                      ),
+                  ],
+                ),
+              ],
               SizedBox(height: 14.h),
               // ─── تفاصيل الطلب ────────────────────────────────────────
               _FormSectionLabel(
@@ -4084,7 +4467,9 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                         )
                       : Icon(Icons.send_rounded, size: 17.sp),
                   label: Text(
-                    'auto.t_b2e8f4c9d7'.tr(),
+                    widget.isArabic
+                        ? 'إنشاء الطلب والمتابعة للدفع'
+                        : 'Create order and continue to payment',
                     style:
                         TextStyle(fontWeight: FontWeight.w900, fontSize: 15.sp),
                   ),
@@ -4104,7 +4489,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                 child: Text(
                   'auto.t_a3d7e5c912'.tr(),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.38),
+                    color: colors.textLight,
                     fontSize: 11.sp,
                   ),
                 ),
@@ -4115,6 +4500,441 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
       ),
     );
   }
+}
+
+class _PlatformOption {
+  const _PlatformOption({
+    required this.id,
+    required this.nameAr,
+    required this.nameEn,
+    required this.icon,
+  });
+
+  final String id;
+  final String nameAr;
+  final String nameEn;
+  final IconData icon;
+
+  String label(bool isArabic) => isArabic ? nameAr : nameEn;
+}
+
+class _PlatformChoiceChip extends StatelessWidget {
+  const _PlatformChoiceChip({
+    required this.option,
+    required this.selected,
+    required this.isArabic,
+    required this.onTap,
+  });
+
+  final _PlatformOption option;
+  final bool selected;
+  final bool isArabic;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+    final accent = _platformColor(option.id);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(999.r),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: selected
+              ? accent.withValues(alpha: 0.14)
+              : colors.bgSubtle.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(999.r),
+          border: Border.all(
+            color: selected ? accent : colors.borderColor,
+            width: selected ? 1.4 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(option.icon,
+                size: 14.sp, color: selected ? accent : colors.textMuted),
+            SizedBox(width: 7.w),
+            Text(
+              option.label(isArabic),
+              style: TextStyle(
+                color: selected ? colors.textMain : colors.textMuted,
+                fontSize: 12.sp,
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── SEO Promo Section ────────────────────────────────────────────────────────
+
+class _SeoPromoSection extends StatelessWidget {
+  const _SeoPromoSection({required this.isArabic});
+
+  final bool isArabic;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTablet = context.width >= 720;
+
+    final card1 = _SeoPromoCard(
+      badge: isArabic ? 'الجرائد الإلكترونية' : 'Online Newspapers',
+      badgeIcon: Icons.public,
+      badgeIsGold: false,
+      imagePath: 'assets/images/packages/seo/seo_1.webp',
+      caption: isArabic
+          ? 'أكثر من 24 جريدة إلكترونية متاحة لنشر محتواك'
+          : 'Over 24 online newspapers available to publish your content',
+    );
+
+    final card2 = _SeoPromoCard(
+      badge: isArabic ? 'نشر إعلامي' : 'Media Publishing',
+      badgeIcon: Icons.newspaper,
+      badgeIsGold: true,
+      imagePath: 'assets/images/packages/seo/seo_2.webp',
+      caption: isArabic
+          ? 'انشر خبرك وكن الأول في نتائج محركات البحث'
+          : 'Publish your news and rank #1 on search engines',
+    );
+
+    final divider = _SeoPromoDivider(vertical: isTablet);
+
+    if (isTablet) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: card1),
+            divider,
+            Expanded(child: card2),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        card1,
+        divider,
+        card2,
+      ],
+    );
+  }
+}
+
+class _SeoPromoCard extends StatelessWidget {
+  const _SeoPromoCard({
+    required this.badge,
+    required this.badgeIcon,
+    required this.badgeIsGold,
+    required this.imagePath,
+    required this.caption,
+  });
+
+  final String badge, imagePath, caption;
+  final IconData badgeIcon;
+  final bool badgeIsGold;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+    final accent = badgeIsGold ? colors.gold : colors.primary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: colors.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: colors.cardShadow,
+            blurRadius: 14.r,
+            offset: Offset(0, 6.h),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Badge
+          Padding(
+            padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 10.h),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 11.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  border:
+                      Border.all(color: accent.withValues(alpha: 0.30)),
+                  borderRadius: BorderRadius.circular(999.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(badgeIcon, color: accent, size: 12.sp),
+                    SizedBox(width: 5.w),
+                    Text(
+                      badge,
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Image
+          Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => SizedBox(
+              height: 180.h,
+              child: ColoredBox(color: colors.bgSubtle),
+            ),
+          ),
+          // Caption
+          Container(
+            padding:
+                EdgeInsets.symmetric(horizontal: 12.w, vertical: 11.h),
+            decoration: BoxDecoration(
+              color: colors.bgSubtle,
+              border: Border(
+                  top: BorderSide(color: colors.borderSubtle)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle_outline,
+                    color: colors.primary, size: 15.sp),
+                SizedBox(width: 7.w),
+                Expanded(
+                  child: Text(
+                    caption,
+                    style: TextStyle(
+                      color: colors.textMain,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SeoPromoDivider extends StatelessWidget {
+  const _SeoPromoDivider({required this.vertical});
+
+  final bool vertical;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
+    if (vertical) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Container(
+                width: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      colors.borderColor,
+                      colors.borderColor,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 30.w,
+              height: 30.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors.bgSubtle,
+                border: Border.all(color: colors.borderColor),
+              ),
+              child:
+                  Icon(Icons.add, color: colors.textMuted, size: 14.sp),
+            ),
+            Expanded(
+              child: Container(
+                width: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      colors.borderColor,
+                      colors.borderColor,
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // horizontal
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 14.h),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.transparent, colors.borderColor],
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 30.w,
+            height: 30.w,
+            margin: EdgeInsets.symmetric(horizontal: 12.w),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colors.bgSubtle,
+              border: Border.all(color: colors.borderColor),
+            ),
+            child: Icon(Icons.add, color: colors.textMuted, size: 14.sp),
+          ),
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [colors.borderColor, Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+List<_PlatformOption> _platformOptionsFor(String serviceSlug) {
+  if (serviceSlug == 'web') return const [];
+  if (serviceSlug == 'mobile-app') {
+    return const [
+      _PlatformOption(
+        id: 'android',
+        nameAr: 'أندرويد',
+        nameEn: 'Android',
+        icon: FontAwesomeIcons.android,
+      ),
+      _PlatformOption(
+        id: 'ios',
+        nameAr: 'iOS (آيفون)',
+        nameEn: 'iOS (iPhone)',
+        icon: FontAwesomeIcons.apple,
+      ),
+      _PlatformOption(
+        id: 'flutter',
+        nameAr: 'فلاتر (متعدد)',
+        nameEn: 'Flutter (Cross)',
+        icon: FontAwesomeIcons.mobileScreen,
+      ),
+    ];
+  }
+  if (!{
+    'design',
+    'social',
+    'ads',
+    'video',
+    'seo',
+    'moderator',
+  }.contains(serviceSlug)) {
+    return const [];
+  }
+
+  return const [
+    _PlatformOption(
+      id: 'facebook',
+      nameAr: 'فيسبوك',
+      nameEn: 'Facebook',
+      icon: FontAwesomeIcons.facebookF,
+    ),
+    _PlatformOption(
+      id: 'instagram',
+      nameAr: 'انستجرام',
+      nameEn: 'Instagram',
+      icon: FontAwesomeIcons.instagram,
+    ),
+    _PlatformOption(
+      id: 'tiktok',
+      nameAr: 'تيك توك',
+      nameEn: 'TikTok',
+      icon: FontAwesomeIcons.tiktok,
+    ),
+    _PlatformOption(
+      id: 'snapchat',
+      nameAr: 'سناب شات',
+      nameEn: 'Snapchat',
+      icon: FontAwesomeIcons.snapchat,
+    ),
+    _PlatformOption(
+      id: 'youtube',
+      nameAr: 'يوتيوب',
+      nameEn: 'YouTube',
+      icon: FontAwesomeIcons.youtube,
+    ),
+    _PlatformOption(
+      id: 'google',
+      nameAr: 'جوجل',
+      nameEn: 'Google',
+      icon: FontAwesomeIcons.google,
+    ),
+    _PlatformOption(
+      id: 'telegram',
+      nameAr: 'تيليجرام',
+      nameEn: 'Telegram',
+      icon: FontAwesomeIcons.telegram,
+    ),
+  ];
+}
+
+String? _adsRegionFor(List<_ServicePackage> packages) {
+  if (packages.isEmpty) return null;
+  final hasInternational = packages.any((pkg) => pkg.id.startsWith('intl-'));
+  final hasEgypt = packages.any((pkg) => pkg.id.startsWith('eg-'));
+  if (hasInternational && !hasEgypt) return 'arab-eu';
+  if (hasEgypt && !hasInternational) return 'egypt';
+  return null;
 }
 
 class _FormField extends StatelessWidget {
@@ -4139,6 +4959,8 @@ class _FormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -4154,7 +4976,7 @@ class _FormField extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: enabled ? Colors.white70 : Colors.white38,
+                color: enabled ? colors.textMuted : colors.textLight,
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w700,
               ),
@@ -4169,33 +4991,31 @@ class _FormField extends StatelessWidget {
           enabled: enabled,
           textDirection: isLtr ? TextDirection.ltr : null,
           style: TextStyle(
-              color: enabled ? Colors.white : Colors.white38, fontSize: 14.sp),
+              color: enabled ? colors.textMain : colors.textLight,
+              fontSize: 14.sp),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: colors.textLight,
               fontSize: 13.sp,
             ),
             filled: true,
             fillColor: enabled
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.white.withValues(alpha: 0.02),
+                ? colors.bgSubtle
+                : colors.bgSubtle.withValues(alpha: 0.45),
             contentPadding:
                 EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
-              borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+              borderSide: BorderSide(color: colors.borderColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
-              borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+              borderSide: BorderSide(color: colors.borderColor),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
-              borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+              borderSide: BorderSide(color: colors.borderSubtle),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
@@ -4216,6 +5036,8 @@ class _FormSectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -4226,14 +5048,14 @@ class _FormSectionLabel extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                  color: Colors.white70,
+                  color: colors.textMuted,
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w800),
             ),
           ],
         ),
         SizedBox(height: 8.h),
-        Container(height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+        Container(height: 1.h, color: colors.borderColor),
       ],
     );
   }
@@ -4528,21 +5350,21 @@ Map<String, _ServiceDetail> get _details => <String, _ServiceDetail>{
             nameAr: 'تطبيق تجارة إلكترونية',
             nameEn: 'E-commerce mobile app',
             descAr:
-                'تطبيق متجر إلكتروني متكامل مع بوابة دفع وسلة مشتريات ولوحة تحكم.',
+                'تطبيق متكامل مع تفاصيل المنتجات، طرق دفع متعددة، إشعارات، لوحة تحكم شاملة وإدارة المنتجات والطلبات.',
             descEn:
-                'A complete store app with payment gateway, cart, and admin dashboard.',
-            price: 15000,
+                'Full app with product details, multiple payment methods, notifications, comprehensive admin dashboard, and order/product management.',
+            price: 7000,
             image: 'packages/mobile/2.webp',
           ),
           _ServicePackage(
             id: 'mobile-booking',
-            nameAr: 'تطبيق حجز وإدارة',
-            nameEn: 'Booking and management app',
+            nameAr: 'تطبيق حجز وإدارة متكامل',
+            nameEn: 'Enterprise booking & management app',
             descAr:
-                'تطبيق حجوزات متكامل مع إشعارات فورية وإدارة مواعيد وتقارير.',
+                'تطبيق كامل مع كل طرق الدفع، تتبع الطلبات والمندوب، إشعارات فورية، لوحة تحكم متقدمة، إدارة المنتجات والمخزون، رفع على المتاجر.',
             descEn:
-                'A booking app with real-time notifications, schedule management, and reports.',
-            price: 12000,
+                'Complete app with all payments, order & delivery tracking, instant notifications, advanced dashboard, inventory management, and store deployment.',
+            price: 9000,
             image: 'packages/mobile/3.webp',
           ),
         ],
@@ -4749,17 +5571,17 @@ Map<String, _ServiceDetail> get _details => <String, _ServiceDetail>{
         description: 'auto.t_68540d252d'.tr(),
         icon: Icons.support_agent,
         editPolicyImage: 'packages/design/edit-policy.webp',
-        packagesSectionTitle: 'باقة إدارة التفاعل',
-        packagesSectionTitleEn: 'Engagement management package',
+        packagesSectionTitle: 'اختر خدمة Moderator المناسبة',
+        packagesSectionTitleEn: 'Choose Your Moderator Services',
         packages: [
           _ServicePackage(
             id: 'moderator-service',
             nameAr: 'خدمة Moderator',
             nameEn: 'Moderator service',
             descAr:
-                'إدارة احترافية للرسائل والتعليقات والرد على العملاء بسرعة لتحسين تجربة العملاء وزيادة المبيعات.',
+                'إدارة تفاعلات حساباتك على السوشيال ميديا بشكل احترافي لضمان تجربة إيجابية لجمهورك.',
             descEn:
-                'Professional management for messages, comments, and fast customer replies to improve experience and sales.',
+                'Professional management of your social media interactions to ensure a positive experience for your audience.',
             price: 4000,
             image: 'packages/moderator/moderator.webp',
           ),
@@ -5085,11 +5907,13 @@ class _AdsCategoriesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section header
-        Container(height: 1.h, color: Colors.white.withValues(alpha: 0.07)),
+        Container(height: 1.h, color: colors.borderColor),
         SizedBox(height: 24.h),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
@@ -5121,7 +5945,7 @@ class _AdsCategoriesSection extends StatelessWidget {
           _serviceLocaleText(context, 'إعلانات داخل مصر أم خارجها?',
               'Ads inside Egypt or internationally?'),
           style: TextStyle(
-              color: Colors.white,
+              color: colors.textMain,
               fontSize: 22.sp,
               fontWeight: FontWeight.w900),
         ),
@@ -5132,8 +5956,7 @@ class _AdsCategoriesSection extends StatelessWidget {
             'اضغط على الكارت المناسب لك وستظهر لك باقات كل منصة مع أسعارها',
             'Tap the right card to show each platform package and pricing.',
           ),
-          style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.48), fontSize: 13.sp),
+          style: TextStyle(color: colors.textMuted, fontSize: 13.sp),
         ),
         SizedBox(height: 18.h),
         for (final cat in categories) ...[
@@ -5180,15 +6003,17 @@ class _AdsCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return AnimatedContainer(
       duration: Duration(milliseconds: 250),
       decoration: BoxDecoration(
-        color: Color(0xFF0F0A1E),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: isExpanded
               ? Color(0xFFD4AF37).withValues(alpha: 0.7)
-              : Colors.white.withValues(alpha: 0.07),
+              : colors.borderColor,
           width: isExpanded ? 1.5 : 1,
         ),
         boxShadow: isExpanded
@@ -5221,7 +6046,7 @@ class _AdsCategoryCard extends StatelessWidget {
                 Text(
                   category.name(context),
                   style: TextStyle(
-                      color: Colors.white,
+                      color: colors.textMain,
                       fontSize: 17.sp,
                       fontWeight: FontWeight.w900),
                 ),
@@ -5229,9 +6054,7 @@ class _AdsCategoryCard extends StatelessWidget {
                 Text(
                   category.desc(context),
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.58),
-                      fontSize: 13.sp,
-                      height: 1.6),
+                      color: colors.textMuted, fontSize: 13.sp, height: 1.6),
                 ),
                 SizedBox(height: 12.h),
                 // Feature chips
@@ -5300,8 +6123,7 @@ class _AdsCategoryCard extends StatelessWidget {
                 // Platform packages (expanded)
                 if (isExpanded) ...[
                   SizedBox(height: 16.h),
-                  Container(
-                      height: 1.h, color: Colors.white.withValues(alpha: 0.06)),
+                  Container(height: 1.h, color: colors.borderColor),
                   SizedBox(height: 14.h),
                   for (final pkg in category.packages) ...[
                     _PlatformPackageCard(
@@ -5344,17 +6166,16 @@ class _PlatformPackageCard extends StatelessWidget {
     final pid = pkg.platformId ?? 'default';
     final pColor = _platformColor(pid);
     final pIcon = _platformIcon(pid);
+    final colors = context.etbalyColors;
 
     return AnimatedContainer(
       duration: Duration(milliseconds: 200),
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: Color(0xFF0D0820),
+        color: colors.bgSubtle,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isInCart
-              ? pColor.withValues(alpha: 0.6)
-              : Colors.white.withValues(alpha: 0.07),
+          color: isInCart ? pColor.withValues(alpha: 0.6) : colors.borderColor,
           width: isInCart ? 1.5 : 1,
         ),
       ),
@@ -5387,7 +6208,7 @@ class _PlatformPackageCard extends StatelessWidget {
                     Text(
                       pkg.name(context),
                       style: TextStyle(
-                          color: Colors.white,
+                          color: colors.textMain,
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w800),
                       maxLines: 1,
@@ -5396,9 +6217,8 @@ class _PlatformPackageCard extends StatelessWidget {
                     SizedBox(height: 2.h),
                     Text(
                       pkg.desc(context),
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.48),
-                          fontSize: 11.sp),
+                      style:
+                          TextStyle(color: colors.textMuted, fontSize: 11.sp),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -5420,7 +6240,7 @@ class _PlatformPackageCard extends StatelessWidget {
                   ),
                   Text(
                     'auto.t_fb0989a821'.tr(),
-                    style: TextStyle(color: Colors.white38, fontSize: 10.sp),
+                    style: TextStyle(color: colors.textLight, fontSize: 10.sp),
                   ),
                 ],
               ),
@@ -5490,11 +6310,13 @@ class _CompactQtyControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Color(0xFF1A1035),
+        color: colors.bgSubtle,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -5506,7 +6328,7 @@ class _CompactQtyControl extends StatelessWidget {
               '$qty',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textMain,
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w900,
               ),

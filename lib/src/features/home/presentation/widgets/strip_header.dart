@@ -5,20 +5,22 @@ class _StripHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Row(
       children: [
-        const Expanded(child: Divider(color: Color(0x55D4AF37))),
+        Expanded(child: Divider(color: colors.gold.withValues(alpha: 0.35))),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 18.w),
           child: Text(
             'auto.t_4ab7f5f8c1'.tr(),
             style: context.textTheme.labelLarge?.copyWith(
-              color: const Color(0xFFD4AF37),
+              color: colors.gold,
               fontWeight: FontWeight.w900,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: Color(0x55D4AF37))),
+        Expanded(child: Divider(color: colors.gold.withValues(alpha: 0.35))),
       ],
     );
   }

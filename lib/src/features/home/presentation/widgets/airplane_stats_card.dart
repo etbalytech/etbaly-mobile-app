@@ -7,6 +7,8 @@ class _AirplaneStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
@@ -14,9 +16,17 @@ class _AirplaneStatsCard extends StatelessWidget {
         vertical: isNarrow ? 18 : 22,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xA0100B1D),
+        color:
+            colors.bgCard.withValues(alpha: context.isDarkMode ? 0.74 : 0.88),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0x553D236C)),
+        border: Border.all(color: colors.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: colors.cardShadow,
+            blurRadius: 20.r,
+            offset: Offset(0.w, 10.h),
+          ),
+        ],
       ),
       child: Row(
         children: [

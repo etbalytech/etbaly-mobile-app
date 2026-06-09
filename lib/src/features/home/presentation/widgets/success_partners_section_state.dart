@@ -61,6 +61,7 @@ class _SuccessPartnersSectionState extends State<_SuccessPartnersSection> {
     final isNarrow = width < 390;
     final activeDotGroup = _activeIndex ~/ _logosPerGroup;
     final dotCount = (_totalLogos / _logosPerGroup).ceil();
+    final colors = context.etbalyColors;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -68,17 +69,24 @@ class _SuccessPartnersSectionState extends State<_SuccessPartnersSection> {
         borderRadius: BorderRadius.circular(8.r),
         child: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF080313), Color(0xFF05020E)],
+              colors: context.isDarkMode
+                  ? const [Color(0xFF080313), Color(0xFF05020E)]
+                  : [colors.bgSecondary, colors.bgSubtle],
             ),
           ),
           child: Stack(
             children: [
               Positioned.fill(
-                child: CustomPaint(painter: _PartnersBackgroundPainter()),
+                child: CustomPaint(
+                  painter: _PartnersBackgroundPainter(
+                    colors: colors,
+                    isDark: context.isDarkMode,
+                  ),
+                ),
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -99,7 +107,7 @@ class _SuccessPartnersSectionState extends State<_SuccessPartnersSection> {
                       textAlign: TextAlign.center,
                       text: TextSpan(
                         style: context.textTheme.headlineMedium?.copyWith(
-                          color: Colors.white,
+                          color: colors.textMain,
                           fontSize: isNarrow ? 29 : 34,
                           fontWeight: FontWeight.w900,
                           height: 1.35,
@@ -109,7 +117,7 @@ class _SuccessPartnersSectionState extends State<_SuccessPartnersSection> {
                           TextSpan(text: 'auto.t_b9fd26d1cd'.tr()),
                           TextSpan(
                             text: 'auto.t_387648f9e4'.tr(),
-                            style: const TextStyle(color: Color(0xFFD879F9)),
+                            style: TextStyle(color: colors.primary),
                           ),
                           TextSpan(text: 'auto.t_880033d8fc'.tr()),
                         ],

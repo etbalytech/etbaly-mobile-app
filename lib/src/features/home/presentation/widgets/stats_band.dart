@@ -5,12 +5,14 @@ class _StatsBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       padding: EdgeInsets.symmetric(vertical: 18.h),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Color(0x55D4AF37)),
-          bottom: BorderSide(color: Color(0x55D4AF37)),
+          top: BorderSide(color: colors.gold.withValues(alpha: 0.35)),
+          bottom: BorderSide(color: colors.gold.withValues(alpha: 0.35)),
         ),
       ),
       child: Row(

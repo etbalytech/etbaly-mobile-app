@@ -26,12 +26,6 @@ extension _PortfolioSpecialtyLocale on PortfolioSpecialty {
 }
 
 extension _PortfolioMediaLocale on PortfolioMedia {
-  String localizedTitle(BuildContext context) =>
-      context.locale.languageCode == 'en' ? titleEn : titleAr;
-
-  String localizedDesc(BuildContext context) =>
-      context.locale.languageCode == 'en' ? descEn : descAr;
-
   String localizedTag(BuildContext context) =>
       context.locale.languageCode == 'en' ? tagEn : tagAr;
 }
@@ -297,7 +291,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       barrierColor: Colors.black87,
       builder: (_) => _ReelDialog(
         url: _url(media.videoUrl),
-        title: media.localizedTitle(context),
+        title: context.locale.languageCode == 'ar' ? media.titleAr : media.titleEn,
       ),
     );
   }
@@ -320,7 +314,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
             return Dialog(
               insetPadding: EdgeInsets.all(14.r),
-              backgroundColor: const Color(0xFF05040B),
+              backgroundColor: context.etbalyColors.bgMain,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18.r),
               ),
@@ -385,14 +379,18 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFF070511),
+        backgroundColor: context.etbalyColors.bgMain,
         body: SafeArea(
           top: false,
           child: AnimatedBuilder(
             animation: _bgController,
             builder: (context, child) {
               return CustomPaint(
-                painter: _PortfolioBackgroundPainter(_bgController.value),
+                painter: _PortfolioBackgroundPainter(
+                  _bgController.value,
+                  bgTop: context.etbalyColors.bgMain,
+                  bgMid: context.etbalyColors.bgSecondary,
+                ),
                 child: child,
               );
             },
@@ -472,6 +470,8 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                           reels: _reels,
                           photosVisible: _photosVisible,
                           reelsVisible: _reelsVisible,
+                          categoryNameAr: _specialty?.nameAr ?? _industry!.nameAr,
+                          categoryNameEn: _specialty?.nameEn ?? _industry!.nameEn,
                           onTab: (tab) => setState(() => _tab = tab),
                           onMorePhotos: () => setState(
                             () => _photosVisible =
@@ -510,10 +510,10 @@ class _HeroSection extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(14.w, 34.h, 14.w, 24.h),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22.r),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF161024), Color(0xFF0B0814)],
+          colors: [colors.bgCard, colors.bgSecondary],
         ),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.22)),
       ),
@@ -684,7 +684,7 @@ class _ClassCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xF20B0914),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: color.withValues(alpha: 0.36)),
         boxShadow: [
@@ -713,7 +713,7 @@ class _ClassCard extends StatelessWidget {
             width: double.infinity,
             padding: EdgeInsets.fromLTRB(18.w, 22.h, 18.w, 18.h),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D0A18),
+              color: colors.bgSubtle,
               border: Border(
                 top: BorderSide(
                   color: colors.primaryLight.withValues(alpha: 0.16),
@@ -901,7 +901,7 @@ class _CustomIndustrySection extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(18.w, 20.h, 18.w, 18.h),
       decoration: BoxDecoration(
-        color: const Color(0xC90B0914),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(18.r),
         border: Border.all(
           color: submitted
@@ -1093,7 +1093,7 @@ class _CustomIndustryInput extends StatelessWidget {
     return Container(
       height: 44.h,
       decoration: BoxDecoration(
-        color: const Color(0xAA151024),
+        color: colors.bgSubtle,
         borderRadius: BorderRadius.circular(999.r),
         border: Border.all(
           color: hasError
@@ -1249,6 +1249,8 @@ class _MediaSection extends StatelessWidget {
     required this.reels,
     required this.photosVisible,
     required this.reelsVisible,
+    required this.categoryNameAr,
+    required this.categoryNameEn,
     required this.onTab,
     required this.onMorePhotos,
     required this.onMoreReels,
@@ -1263,6 +1265,8 @@ class _MediaSection extends StatelessWidget {
   final List<PortfolioMedia> reels;
   final int photosVisible;
   final int reelsVisible;
+  final String categoryNameAr;
+  final String categoryNameEn;
   final ValueChanged<String> onTab;
   final VoidCallback onMorePhotos;
   final VoidCallback onMoreReels;
@@ -1328,6 +1332,8 @@ class _MediaSection extends StatelessWidget {
                   isReel: tab == 'reels',
                   color: colorOf(item.accentColor),
                   imagePath: assetOf(item.thumbnail),
+                  categoryNameAr: categoryNameAr,
+                  categoryNameEn: categoryNameEn,
                   onTap: () => tab == 'reels' ? onReel(item) : onImage(item),
                 );
               },
@@ -1417,7 +1423,7 @@ class _ReviewSection extends StatelessWidget {
                 hintText: 'auto.t_bf35722b2f'.tr(),
                 hintStyle: TextStyle(color: colors.textMuted),
                 filled: true,
-                fillColor: const Color(0x990B0914),
+                fillColor: colors.bgSubtle,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14.r),
                   borderSide: BorderSide(color: colors.borderColor),
@@ -1465,7 +1471,7 @@ class _PortfolioCtaSection extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 42.h),
       decoration: BoxDecoration(
-        color: const Color(0xEE1A1628),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(22.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.2)),
         boxShadow: [
@@ -1564,13 +1570,13 @@ class _Panel extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: const Color(0xDD141020),
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(22.r),
         border: Border.all(
           color: context.etbalyColors.primaryLight.withValues(alpha: 0.18),
         ),
         boxShadow: [
-          BoxShadow(color: const Color(0x66000000), blurRadius: 28.r),
+          BoxShadow(color: context.etbalyColors.cardShadow, blurRadius: 28.r),
         ],
       ),
       child: child,
@@ -1701,7 +1707,7 @@ class _IndustryImageButton extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(10.r),
           decoration: BoxDecoration(
-            color: const Color(0xAA0B0914),
+            color: context.etbalyColors.bgCard,
             borderRadius: BorderRadius.circular(20.r),
             border: Border.all(color: color.withValues(alpha: 0.32)),
             boxShadow: [
@@ -1832,7 +1838,7 @@ class _SpecialtyCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(12.r),
           decoration: BoxDecoration(
-            color: const Color(0xAA0B0914),
+            color: colors.bgCard,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: color.withValues(alpha: 0.24)),
           ),
@@ -1937,6 +1943,8 @@ class _MediaCard extends StatelessWidget {
     required this.isReel,
     required this.color,
     required this.imagePath,
+    required this.categoryNameAr,
+    required this.categoryNameEn,
     required this.onTap,
   });
 
@@ -1945,7 +1953,49 @@ class _MediaCard extends StatelessWidget {
   final bool isReel;
   final Color color;
   final String imagePath;
+  final String categoryNameAr;
+  final String categoryNameEn;
   final VoidCallback onTap;
+
+  static const _descsAr = [
+    'تصميم احترافي في المجال',
+    'إدارة محتوى مميز للعلامة',
+    'حملة تسويقية قوية لزيادة التفاعل',
+    'تصميم إبداعي يعكس هوية العلامة',
+    'تطوير محتوى بصري احترافي',
+    'استراتيجية سوشيال ميديا فعالة',
+    'تصميم يعزز حضور العلامة التجارية',
+    'حملة إعلانية موجهة للجمهور',
+    'محتوى مبتكر يبرز قوة المجال',
+    'تصميم جذاب يرفع معدل التفاعل',
+  ];
+
+  static const _descsEn = [
+    'Professional design in the field',
+    'Creative content strategy for the brand',
+    'High-performing campaign for the field',
+    'Brand-focused design for the audience',
+    'Visual content development',
+    'Effective social media strategy',
+    'Engaging design for the audience',
+    'Targeted campaign for the field',
+    'Creative visuals for the field',
+    'High engagement design',
+  ];
+
+  String _title(BuildContext context) {
+    final num = index + 1;
+    return context.locale.languageCode == 'ar'
+        ? 'تصميم مميز $num'
+        : 'Design Preview $num';
+  }
+
+  String _desc(BuildContext context) {
+    final isAr = context.locale.languageCode == 'ar';
+    final name = isAr ? categoryNameAr : categoryNameEn;
+    final list = isAr ? _descsAr : _descsEn;
+    return '${list[index % list.length]} - $name';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1957,7 +2007,7 @@ class _MediaCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xCC0B0914),
+            color: colors.bgCard,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: color.withValues(alpha: 0.24)),
           ),
@@ -2026,7 +2076,7 @@ class _MediaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      media.localizedTitle(context),
+                      _title(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.labelLarge?.copyWith(
@@ -2036,7 +2086,7 @@ class _MediaCard extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      media.localizedDesc(context),
+                      _desc(context),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.labelSmall?.copyWith(
@@ -2069,11 +2119,12 @@ class _Breadcrumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
+    final isAr = context.locale.languageCode == 'ar';
     return _Panel(
       child: Row(
         children: [
           _IconAction(
-            icon: Icons.arrow_back_rounded,
+            icon: isAr ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
             color: colors.gold,
             onTap: onBack,
           ),
@@ -2129,7 +2180,7 @@ class _TabButton extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
-            color: active ? colors.gold : const Color(0xAA0B0914),
+            color: active ? colors.gold : colors.bgSubtle,
             borderRadius: BorderRadius.circular(14.r),
             border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
           ),
@@ -2300,7 +2351,7 @@ class _HeroStat extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 8.w),
       decoration: BoxDecoration(
-        color: const Color(0x990B0914),
+        color: colors.bgSubtle,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.18)),
       ),
@@ -2344,7 +2395,7 @@ class _SmallPill extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
       decoration: BoxDecoration(
-        color: const Color(0xDD0B0914),
+        color: context.etbalyColors.bgSubtle,
         borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
@@ -2356,7 +2407,7 @@ class _SmallPill extends StatelessWidget {
           Text(
             label,
             style: context.textTheme.labelSmall?.copyWith(
-              color: Colors.white,
+              color: context.etbalyColors.textMain,
               fontWeight: FontWeight.w900,
               fontSize: 10.sp,
             ),
@@ -2404,7 +2455,7 @@ class _EmptyState extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
-        color: const Color(0xAA0B0914),
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Text(
@@ -2840,17 +2891,19 @@ class _AnimatedPdfPreviewState extends State<_AnimatedPdfPreview>
 }
 
 class _PortfolioBackgroundPainter extends CustomPainter {
-  _PortfolioBackgroundPainter(this.progress);
+  _PortfolioBackgroundPainter(this.progress, {required this.bgTop, required this.bgMid});
 
   final double progress;
+  final Color bgTop;
+  final Color bgMid;
 
   @override
   void paint(Canvas canvas, Size size) {
     final bg = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF070511), Color(0xFF100D1C), Color(0xFF070511)],
+        colors: [bgTop, bgMid, bgTop],
       ).createShader(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, bg);
 
@@ -2882,8 +2935,8 @@ class _PortfolioBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PortfolioBackgroundPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _PortfolioBackgroundPainter old) =>
+      old.progress != progress || old.bgTop != bgTop;
 }
 
 IconData _iconFor(String icon) {

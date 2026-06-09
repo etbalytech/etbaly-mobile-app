@@ -5,12 +5,14 @@ class _PartnersBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 9.h),
       decoration: BoxDecoration(
-        color: const Color(0x226F3FF5),
+        color: colors.badgeBg,
         borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: const Color(0x663D236C)),
+        border: Border.all(color: colors.borderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -19,10 +21,10 @@ class _PartnersBadge extends StatelessWidget {
             width: 9.w,
             height: 9.h,
             decoration: BoxDecoration(
-              color: const Color(0xFF7C3AED),
+              color: colors.primary,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: const Color(0x887C3AED), blurRadius: 12.r),
+                BoxShadow(color: colors.primaryGlowStrong, blurRadius: 12.r),
               ],
             ),
           ),
@@ -30,7 +32,7 @@ class _PartnersBadge extends StatelessWidget {
           Text(
             'auto.t_1092848358'.tr(),
             style: context.textTheme.labelLarge?.copyWith(
-              color: const Color(0xFFA78BFA),
+              color: colors.primary,
               fontWeight: FontWeight.w800,
             ),
           ),

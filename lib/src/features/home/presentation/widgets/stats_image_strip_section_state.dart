@@ -72,6 +72,8 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
   Widget build(BuildContext context) {
     final width = context.width;
     final isNarrow = width < 390;
+    final colors = context.etbalyColors;
+    final isDark = context.isDarkMode;
     _imageWidth = isNarrow ? 230.0 : 270.0;
     final segmentWidth = (_imageWidth + 18) * _imageCount;
     _ensureMarquee(segmentWidth);
@@ -87,11 +89,13 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
         borderRadius: BorderRadius.circular(8.r),
         child: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF130A2D), Color(0xFF090513)],
+              colors: isDark
+                  ? const [Color(0xFF130A2D), Color(0xFF090513)]
+                  : [colors.bgSecondary, colors.bgSubtle],
             ),
           ),
           child: Stack(
@@ -101,8 +105,11 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
                   child: AnimatedBuilder(
                     animation: _bgController,
                     builder: (context, _) => CustomPaint(
-                      painter:
-                          _StatsStripBackgroundPainter(_bgController.value),
+                      painter: _StatsStripBackgroundPainter(
+                        progress: _bgController.value,
+                        colors: colors,
+                        isDark: isDark,
+                      ),
                     ),
                   ),
                 ),

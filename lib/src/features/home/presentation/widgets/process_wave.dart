@@ -9,6 +9,7 @@ class _ProcessWave extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = context.width < 600;
     final waveTextWidth = context.width < 900 ? 300.0 : 420.0;
+    final colors = context.etbalyColors;
     final waveText = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -18,7 +19,7 @@ class _ProcessWave extends StatelessWidget {
           textAlign: TextAlign.right,
           textDirection: TextDirection.rtl,
           style: context.textTheme.headlineSmall?.copyWith(
-            color: EtbalyWebColors.heading,
+            color: colors.textMain,
             fontSize: isMobile ? 24 : 26,
             fontWeight: FontWeight.w900,
             height: 1.2,
@@ -30,7 +31,7 @@ class _ProcessWave extends StatelessWidget {
           textAlign: TextAlign.right,
           textDirection: TextDirection.rtl,
           style: context.textTheme.bodyMedium?.copyWith(
-            color: EtbalyWebColors.body,
+            color: colors.textMuted,
             fontSize: isMobile ? 13 : 15,
             height: 1.6,
             fontWeight: FontWeight.w600,

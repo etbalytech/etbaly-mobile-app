@@ -9,7 +9,7 @@ class _AirplaneStatDivider extends StatelessWidget {
       width: 1.w,
       height: 92.h,
       margin: EdgeInsets.symmetric(horizontal: 8.w),
-      color: const Color(0x553D236C),
+      color: context.etbalyColors.borderColor.withValues(alpha: 0.7),
     );
   }
 }

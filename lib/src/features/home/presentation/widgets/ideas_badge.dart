@@ -6,18 +6,20 @@ class _IdeasBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEnglish = context.locale.languageCode == 'en';
+    final colors = context.etbalyColors;
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: context.width - 44.w),
       child: Container(
         padding: EdgeInsets.fromLTRB(16.w, 10.h, 14.w, 10.h),
         decoration: BoxDecoration(
-          color: const Color(0xCC241B2E),
+          color:
+              colors.bgCard.withValues(alpha: context.isDarkMode ? 0.82 : 0.94),
           borderRadius: BorderRadius.circular(999.r),
-          border: Border.all(color: const Color(0x667B6A86)),
+          border: Border.all(color: colors.borderColor),
           boxShadow: [
             BoxShadow(
-              color: const Color(0x5520182C),
+              color: colors.cardShadow,
               blurRadius: 18.r,
               offset: Offset(0.w, 8.h),
             ),
@@ -49,7 +51,7 @@ class _IdeasBadge extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: context.textTheme.labelMedium?.copyWith(
-                  color: const Color(0xFFD4AF37),
+                  color: colors.gold,
                   fontSize: isEnglish ? 12.sp : 13.sp,
                   fontWeight: FontWeight.w900,
                   height: 1,

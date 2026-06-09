@@ -8,6 +8,8 @@ class _PartnerDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -16,7 +18,9 @@ class _PartnerDot extends StatelessWidget {
         width: active ? 30 : 9,
         height: 9.h,
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF7C3AED) : const Color(0x553D236C),
+          color: active
+              ? colors.primary
+              : colors.borderColor.withValues(alpha: 0.55),
           borderRadius: BorderRadius.circular(999.r),
         ),
       ),

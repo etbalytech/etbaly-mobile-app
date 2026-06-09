@@ -1,14 +1,20 @@
 part of '../screens/home_page.dart';
 
 class _StatsStripBackgroundPainter extends CustomPainter {
-  _StatsStripBackgroundPainter(this.progress);
+  _StatsStripBackgroundPainter({
+    required this.progress,
+    required this.colors,
+    required this.isDark,
+  });
 
   final double progress;
+  final EtbalyColorsExtension colors;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = const Color(0x176F3FF5)
+      ..color = colors.primary.withValues(alpha: isDark ? 0.09 : 0.05)
       ..strokeWidth = 1;
     const step = 64.0;
     for (double x = 0; x <= size.width; x += step) {
@@ -19,7 +25,7 @@ class _StatsStripBackgroundPainter extends CustomPainter {
     }
 
     final beamPaint = Paint()
-      ..color = const Color(0x887D5DFF)
+      ..color = colors.primary.withValues(alpha: isDark ? 0.52 : 0.26)
       ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
@@ -34,8 +40,11 @@ class _StatsStripBackgroundPainter extends CustomPainter {
     );
 
     final glowLeft = Paint()
-      ..shader = const RadialGradient(
-        colors: [Color(0x665B21B6), Colors.transparent],
+      ..shader = RadialGradient(
+        colors: [
+          colors.primary.withValues(alpha: isDark ? 0.40 : 0.12),
+          Colors.transparent,
+        ],
       ).createShader(
         Rect.fromCircle(
           center: Offset(0, size.height * 0.1),
@@ -45,7 +54,8 @@ class _StatsStripBackgroundPainter extends CustomPainter {
     canvas.drawCircle(
         Offset(0, size.height * 0.1), size.width * 0.65, glowLeft);
 
-    final sparkPaint = Paint()..color = const Color(0x99D4AF37);
+    final sparkPaint = Paint()
+      ..color = colors.gold.withValues(alpha: isDark ? 0.60 : 0.28);
     for (var i = 0; i < 12; i++) {
       final seed = i * 0.211;
       final x = size.width * ((seed * 4.9) % 1);
@@ -58,6 +68,8 @@ class _StatsStripBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _StatsStripBackgroundPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress ||
+        oldDelegate.colors != colors ||
+        oldDelegate.isDark != isDark;
   }
 }

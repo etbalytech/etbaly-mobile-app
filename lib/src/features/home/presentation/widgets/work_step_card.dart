@@ -10,14 +10,16 @@ class _WorkStepCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = context.width < 600;
     final isNarrow = context.width < 390;
+    final colors = context.etbalyColors;
 
     return Container(
       constraints: BoxConstraints(minHeight: isMobile ? 176 : 280),
       padding: EdgeInsets.all(isMobile ? (isNarrow ? 14.r : 16.r) : 24.r),
       decoration: BoxDecoration(
-        color: EtbalyWebColors.card.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: accent.withValues(alpha: 0.16)),
+        color:
+            colors.bgCard.withValues(alpha: context.isDarkMode ? 0.90 : 0.96),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
             color: accent.withValues(alpha: 0.06),
@@ -26,7 +28,7 @@ class _WorkStepCard extends StatelessWidget {
             offset: Offset(0.w, 16.h),
           ),
           BoxShadow(
-            color: EtbalyWebColors.shadow,
+            color: colors.cardShadow,
             blurRadius: 20.r,
             offset: Offset(0.w, 12.h),
           ),
@@ -103,7 +105,7 @@ class _WorkStepCard extends StatelessWidget {
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,
                     style: context.textTheme.titleLarge?.copyWith(
-                      color: EtbalyWebColors.heading,
+                      color: colors.textMain,
                       fontSize: isMobile ? (isNarrow ? 20 : 21) : 24,
                       fontWeight: FontWeight.w900,
                       height: 1.22,
@@ -115,7 +117,7 @@ class _WorkStepCard extends StatelessWidget {
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,
                     style: context.textTheme.bodyMedium?.copyWith(
-                      color: EtbalyWebColors.body,
+                      color: colors.textMuted,
                       fontSize: isNarrow ? 13 : 14,
                       height: isMobile ? 1.65 : 1.9,
                       fontWeight: FontWeight.w500,

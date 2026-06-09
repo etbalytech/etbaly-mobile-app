@@ -107,7 +107,7 @@ class _StartNowPageState extends State<StartNowPage> {
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F0E18),
+        backgroundColor: context.etbalyColors.bgMain,
         body: SafeArea(
           top: false,
           child: CustomScrollView(
@@ -159,13 +159,13 @@ class _StartNowPageState extends State<StartNowPage> {
                 _isArabic ? 'نوع الخدمة' : 'Service type',
                 textAlign: TextAlign.left,
                 style:
-                    _mutedStyle(fontSize: 12.sp, fontWeight: FontWeight.w800),
+                    _mutedStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w800),
               ),
             ),
             Text(
               _selectedService.title.text(_isArabic),
               textAlign: TextAlign.end,
-              style: _mainStyle(fontSize: 13.sp, fontWeight: FontWeight.w900),
+              style: _mainStyle(context, fontSize: 13.sp, fontWeight: FontWeight.w900),
             ),
           ],
         ),
@@ -764,10 +764,11 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.etbalyColors;
     return Container(
       padding: EdgeInsets.only(bottom: 24.h),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFF332D55))),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.borderColor)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -788,6 +789,7 @@ class _HeroHeader extends StatelessWidget {
                 Text(
                   isArabic ? 'ابدأ الآن' : 'Start now',
                   style: _mainStyle(
+                    context,
                     color: const Color(0xFFB9A3FF),
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w900,
@@ -802,7 +804,7 @@ class _HeroHeader extends StatelessWidget {
                 ? 'خلينا نجهز مشروعك صح من أول Brief'
                 : 'Let us brief your project properly',
             style: _mainStyle(
-                fontSize: 30.sp, fontWeight: FontWeight.w900, height: 1.12),
+                context, fontSize: 30.sp, fontWeight: FontWeight.w900, height: 1.12),
           ),
           SizedBox(height: 14.h),
           Text(
@@ -810,7 +812,7 @@ class _HeroHeader extends StatelessWidget {
                 ? 'اختار نوع الخدمة، املأ البيانات المهمة، وارفع اللوجو لو موجود. الفورم مصمم عشان يختصر وقت التواصل ويخلي فريقنا يبدأ بصورة واضحة.'
                 : 'Choose a service, add the important details, and upload your logo if available. This form helps our team start with a clear picture.',
             style: _mutedStyle(
-                fontSize: 14.sp, height: 1.65, fontWeight: FontWeight.w600),
+                context, fontSize: 14.sp, height: 1.65, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 16.h),
           Wrap(
@@ -842,11 +844,12 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.etbalyColors;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        border: Border.all(color: const Color(0xFF332D55)),
+        color: c.bgSubtle,
+        border: Border.all(color: c.borderColor),
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Row(
@@ -855,7 +858,7 @@ class _MetaChip extends StatelessWidget {
           Icon(icon, color: const Color(0xFFD4AF37), size: 17.sp),
           SizedBox(width: 8.w),
           Text(label,
-              style: _mainStyle(fontSize: 12.sp, fontWeight: FontWeight.w900)),
+              style: _mainStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w900)),
         ],
       ),
     );
@@ -877,6 +880,7 @@ class _ServiceTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.etbalyColors;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -887,11 +891,11 @@ class _ServiceTab extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive
                 ? service.accent.withValues(alpha: 0.10)
-                : const Color(0xFF1E1B30),
+                : c.bgCard,
             border: Border.all(
               color: isActive
                   ? service.accent.withValues(alpha: 0.60)
-                  : const Color(0xFF332D55),
+                  : c.borderColor,
             ),
             borderRadius: BorderRadius.circular(10.r),
             boxShadow: isActive
@@ -917,7 +921,7 @@ class _ServiceTab extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: _mainStyle(
-                          fontSize: 13.sp, fontWeight: FontWeight.w900),
+                          context, fontSize: 13.sp, fontWeight: FontWeight.w900),
                     ),
                     SizedBox(height: 2.h),
                     Text(
@@ -925,7 +929,7 @@ class _ServiceTab extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: _mutedStyle(
-                          fontSize: 11.sp, fontWeight: FontWeight.w700),
+                          context, fontSize: 11.sp, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -973,10 +977,11 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.etbalyColors;
     final progress = total == 0 ? 0.0 : completed / total;
     return Container(
       padding: EdgeInsets.all(18.r),
-      decoration: _panelDecoration(radius: 12.r),
+      decoration: _panelDecoration(context, radius: 12.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -984,13 +989,13 @@ class _SummaryCard extends StatelessWidget {
           SizedBox(height: 12.h),
           Text(
             service.title.text(isArabic),
-            style: _mainStyle(fontSize: 16.sp, fontWeight: FontWeight.w900),
+            style: _mainStyle(context, fontSize: 16.sp, fontWeight: FontWeight.w900),
           ),
           SizedBox(height: 7.h),
           Text(
             service.description.text(isArabic),
             style: _mutedStyle(
-                fontSize: 12.sp, height: 1.6, fontWeight: FontWeight.w600),
+                context, fontSize: 12.sp, height: 1.6, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 16.h),
           Row(
@@ -999,12 +1004,13 @@ class _SummaryCard extends StatelessWidget {
                 child: Text(
                   isArabic ? 'تقدم البيانات' : 'Brief progress',
                   style:
-                      _mutedStyle(fontSize: 12.sp, fontWeight: FontWeight.w800),
+                      _mutedStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w800),
                 ),
               ),
               Text(
                 '$completed/$total',
                 style: _mainStyle(
+                  context,
                   color: const Color(0xFFB9A3FF),
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w900,
@@ -1019,7 +1025,7 @@ class _SummaryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(999.r),
               child: LinearProgressIndicator(
                 value: progress.clamp(0, 1),
-                backgroundColor: const Color(0xFF252040),
+                backgroundColor: c.bgSubtle,
                 valueColor: const AlwaysStoppedAnimation(Color(0xFFD4AF37)),
               ),
             ),
@@ -1050,27 +1056,33 @@ class _WhatsAppButton extends StatelessWidget {
             border: Border.all(color: const Color(0x4725D366)),
             borderRadius: BorderRadius.circular(10.r),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.chat_bubble_outline,
-                  color: const Color(0xFF25D366), size: 19.sp),
-              SizedBox(width: 8.w),
-              Flexible(
-                child: Text(
-                  isArabic
-                      ? 'محتاج مساعدة؟ كلمنا واتساب'
-                      : 'Need help? WhatsApp us',
-                  textAlign: TextAlign.center,
-                  style: _mainStyle(
-                    color: const Color(0xFF25D366),
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w900,
+          child: Builder(builder: (context) {
+            final isDark = context.isDarkMode;
+            final textColor =
+                isDark ? const Color(0xFF25D366) : Colors.white;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.chat_bubble_outline,
+                    color: textColor, size: 19.sp),
+                SizedBox(width: 8.w),
+                Flexible(
+                  child: Text(
+                    isArabic
+                        ? 'محتاج مساعدة؟ كلمنا واتساب'
+                        : 'Need help? WhatsApp us',
+                    textAlign: TextAlign.center,
+                    style: _mainStyle(
+                      context,
+                      color: textColor,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
         ),
       ),
     );
@@ -1094,7 +1106,7 @@ class _FormBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(20.r),
-      decoration: _panelDecoration(radius: 14.r),
+      decoration: _panelDecoration(context, radius: 14.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1113,6 +1125,7 @@ class _FormBlock extends StatelessWidget {
                 child: Text(
                   number,
                   style: _mainStyle(
+                    context,
                     color: const Color(0xFFB9A3FF),
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w900,
@@ -1126,11 +1139,12 @@ class _FormBlock extends StatelessWidget {
                   children: [
                     Text(title,
                         style: _mainStyle(
-                            fontSize: 16.sp, fontWeight: FontWeight.w900)),
+                            context, fontSize: 16.sp, fontWeight: FontWeight.w900)),
                     SizedBox(height: 4.h),
                     Text(
                       subtitle,
                       style: _mutedStyle(
+                          context,
                           fontSize: 12.sp,
                           height: 1.45,
                           fontWeight: FontWeight.w600),
@@ -1182,8 +1196,8 @@ class _TextFieldBox extends StatelessWidget {
           keyboardType: keyboardType,
           maxLines: maxLines,
           minLines: maxLines > 1 ? maxLines : 1,
-          style: _mainStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
-          decoration: _inputDecoration(hint, hasError: error != null),
+          style: _mainStyle(context, fontSize: 13.sp, fontWeight: FontWeight.w600),
+          decoration: _inputDecoration(context, hint, hasError: error != null),
         ),
         if (error != null) _InlineError(error!),
       ],
@@ -1214,6 +1228,7 @@ class _SelectBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.etbalyColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1230,9 +1245,9 @@ class _SelectBox extends StatelessWidget {
               )
               .toList(),
           onChanged: onChanged,
-          dropdownColor: const Color(0xFF252040),
-          style: _mainStyle(fontSize: 13.sp, fontWeight: FontWeight.w700),
-          decoration: _inputDecoration(hint, hasError: error != null),
+          dropdownColor: c.bgCard,
+          style: _mainStyle(context, fontSize: 13.sp, fontWeight: FontWeight.w700),
+          decoration: _inputDecoration(context, hint, hasError: error != null),
         ),
         if (error != null) _InlineError(error!),
       ],
@@ -1250,14 +1265,15 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.etbalyColors;
     return Row(
       children: [
         Expanded(
           child: Text(
             label,
             style: _mainStyle(
-              color:
-                  hasError ? const Color(0xFFEF4444) : const Color(0xFFEDE8FF),
+              context,
+              color: hasError ? const Color(0xFFEF4444) : c.textMain,
               fontSize: 12.sp,
               fontWeight: FontWeight.w900,
             ),
@@ -1267,6 +1283,7 @@ class _FieldLabel extends StatelessWidget {
           Text(
             '*',
             style: _mainStyle(
+              context,
               color: const Color(0xFFEF4444),
               fontSize: 13.sp,
               fontWeight: FontWeight.w900,
@@ -1287,6 +1304,7 @@ class _ChoicePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.etbalyColors;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1295,10 +1313,10 @@ class _ChoicePill extends StatelessWidget {
         child: Ink(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           decoration: BoxDecoration(
-            color: selected ? const Color(0x126F3FF5) : const Color(0xFF252040),
+            color: selected ? const Color(0x126F3FF5) : c.bgSubtle,
             border: Border.all(
               color:
-                  selected ? const Color(0x886F3FF5) : const Color(0xFF332D55),
+                  selected ? const Color(0x886F3FF5) : c.borderColor,
             ),
             borderRadius: BorderRadius.circular(10.r),
           ),
@@ -1310,14 +1328,14 @@ class _ChoicePill extends StatelessWidget {
                     : Icons.radio_button_unchecked,
                 color: selected
                     ? const Color(0xFFB9A3FF)
-                    : const Color(0xFF8B7DC8),
+                    : c.textLight,
                 size: 18.sp,
               ),
               SizedBox(width: 8.w),
               Expanded(
                 child: Text(label,
                     style: _mainStyle(
-                        fontSize: 12.sp, fontWeight: FontWeight.w800)),
+                        context, fontSize: 12.sp, fontWeight: FontWeight.w800)),
               ),
             ],
           ),
@@ -1391,7 +1409,7 @@ class _UploadBox extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: _mainStyle(
-                                fontSize: 13.sp, fontWeight: FontWeight.w900),
+                                context, fontSize: 13.sp, fontWeight: FontWeight.w900),
                           ),
                           SizedBox(height: 3.h),
                           Text(
@@ -1399,7 +1417,7 @@ class _UploadBox extends StatelessWidget {
                                 ? 'PNG, JPG, WEBP, SVG أو PDF'
                                 : 'PNG, JPG, WEBP, SVG or PDF',
                             style: _mutedStyle(
-                                fontSize: 11.sp, fontWeight: FontWeight.w600),
+                                context, fontSize: 11.sp, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -1451,7 +1469,7 @@ class _CheckRow extends StatelessWidget {
           Expanded(
             child: Text(label,
                 style:
-                    _mainStyle(fontSize: 12.sp, fontWeight: FontWeight.w900)),
+                    _mainStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w900)),
           ),
         ],
       ),
@@ -1492,7 +1510,7 @@ class _AlertBox extends StatelessWidget {
             child: Text(
               message,
               style: _mainStyle(
-                  color: color, fontSize: 12.sp, fontWeight: FontWeight.w800),
+                  context, color: color, fontSize: 12.sp, fontWeight: FontWeight.w800),
             ),
           ),
           if (actionLabel != null && onAction != null)
@@ -1549,7 +1567,7 @@ class _SubmitButton extends StatelessWidget {
                   Text(
                     isArabic ? 'إرسال الطلب' : 'Send request',
                     style: _mainStyle(
-                        fontSize: 14.sp, fontWeight: FontWeight.w900),
+                        context, fontSize: 14.sp, fontWeight: FontWeight.w900),
                   ),
                   SizedBox(width: 10.w),
                   Icon(isArabic ? Icons.arrow_forward : Icons.arrow_forward,
@@ -1579,6 +1597,7 @@ class _InlineError extends StatelessWidget {
             child: Text(
               message,
               style: _mainStyle(
+                context,
                 color: const Color(0xFFEF4444),
                 fontSize: 11.sp,
                 fontWeight: FontWeight.w800,
@@ -1591,16 +1610,18 @@ class _InlineError extends StatelessWidget {
   }
 }
 
-InputDecoration _inputDecoration(String hint, {required bool hasError}) {
+InputDecoration _inputDecoration(BuildContext context, String hint,
+    {required bool hasError}) {
+  final c = context.etbalyColors;
   return InputDecoration(
     hintText: hint,
-    hintStyle: _mutedStyle(fontSize: 12.sp, fontWeight: FontWeight.w500),
+    hintStyle: _mutedStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w500),
     filled: true,
-    fillColor: hasError ? const Color(0x0CEF4444) : const Color(0xFF252040),
+    fillColor: hasError ? const Color(0x0CEF4444) : c.bgSubtle,
     contentPadding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 12.h),
-    border: _fieldBorder(const Color(0xFF332D55)),
+    border: _fieldBorder(c.borderColor),
     enabledBorder: _fieldBorder(
-        hasError ? const Color(0xB3EF4444) : const Color(0xFF332D55)),
+        hasError ? const Color(0xB3EF4444) : c.borderColor),
     focusedBorder: _fieldBorder(
         hasError ? const Color(0xFFEF4444) : const Color(0x996F3FF5)),
   );
@@ -1613,22 +1634,24 @@ OutlineInputBorder _fieldBorder(Color color) {
   );
 }
 
-BoxDecoration _panelDecoration({required double radius}) {
+BoxDecoration _panelDecoration(BuildContext context, {required double radius}) {
+  final c = context.etbalyColors;
   return BoxDecoration(
-    color: const Color(0xFF1E1B30),
-    border: Border.all(color: const Color(0xFF332D55)),
+    color: c.bgCard,
+    border: Border.all(color: c.borderColor),
     borderRadius: BorderRadius.circular(radius),
   );
 }
 
-TextStyle _mainStyle({
-  Color color = const Color(0xFFEDE8FF),
+TextStyle _mainStyle(
+  BuildContext context, {
+  Color? color,
   double? fontSize,
   FontWeight? fontWeight,
   double? height,
 }) {
   return TextStyle(
-    color: color,
+    color: color ?? context.etbalyColors.textMain,
     fontSize: fontSize,
     fontWeight: fontWeight,
     height: height,
@@ -1636,13 +1659,15 @@ TextStyle _mainStyle({
   );
 }
 
-TextStyle _mutedStyle({
+TextStyle _mutedStyle(
+  BuildContext context, {
   double? fontSize,
   FontWeight? fontWeight,
   double? height,
 }) {
   return _mainStyle(
-    color: const Color(0xFFB9A3FF),
+    context,
+    color: context.etbalyColors.textMuted,
     fontSize: fontSize,
     fontWeight: fontWeight,
     height: height,

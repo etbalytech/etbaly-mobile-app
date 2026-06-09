@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'app_routes.dart';
 import 'global_navigator.dart';
 import '../extensions/context_extension.dart';
+import '../services/theme_service.dart';
 import '../shared/app_assets.dart';
 import '../shared/etbaly_web_tokens.dart';
 
@@ -543,13 +544,13 @@ class _EtbalyBrandAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: EtbalyWebColors.appBarBg,
-        border: const Border(
-          bottom: BorderSide(color: Color(0x663D236C)),
+        color: context.etbalyColors.bgMain,
+        border: Border(
+          bottom: BorderSide(color: context.etbalyColors.borderSubtle),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0x5528155E),
+            color: context.etbalyColors.cardShadow,
             blurRadius: 18.r,
             offset: Offset(0.w, 8.h),
           ),
@@ -566,7 +567,7 @@ class _EtbalyBrandAppBar extends StatelessWidget
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const _AppBarIconButton(icon: Icons.lightbulb_outline),
+                  const _ThemeToggleButton(),
                   SizedBox(width: 10.w),
                   _AppBarLanguageButton(
                     onTap: () {
@@ -614,7 +615,7 @@ class _AppBarBrand extends StatelessWidget {
         Text(
           'auto.t_135dd3f6f1'.tr(),
           style: context.textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
+            color: context.etbalyColors.textMain,
             fontSize: 24.sp,
             fontWeight: FontWeight.w900,
             height: 0.95,
@@ -643,9 +644,9 @@ class _AppBarLanguageButton extends StatelessWidget {
           height: 44.h,
           padding: EdgeInsets.symmetric(horizontal: 14.w),
           decoration: BoxDecoration(
-            color: EtbalyWebColors.darkPill,
+            color: context.etbalyColors.badgeBg,
             borderRadius: BorderRadius.circular(999.r),
-            border: Border.all(color: const Color(0x443D365C)),
+            border: Border.all(color: context.etbalyColors.borderColor),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -653,14 +654,14 @@ class _AppBarLanguageButton extends StatelessWidget {
               Text(
                 label,
                 style: context.textTheme.labelLarge?.copyWith(
-                  color: EtbalyWebColors.body,
+                  color: context.etbalyColors.textMuted,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               SizedBox(width: 10.w),
               Icon(
                 Icons.language,
-                color: EtbalyWebColors.body,
+                color: context.etbalyColors.textMuted,
                 size: 22.sp,
               ),
             ],
@@ -671,22 +672,37 @@ class _AppBarLanguageButton extends StatelessWidget {
   }
 }
 
-class _AppBarIconButton extends StatelessWidget {
-  const _AppBarIconButton({required this.icon});
-
-  final IconData icon;
+class _ThemeToggleButton extends StatelessWidget {
+  const _ThemeToggleButton();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 44.w,
-      height: 44.h,
-      decoration: BoxDecoration(
-        color: EtbalyWebColors.darkPill,
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0x443D365C)),
-      ),
-      child: Icon(icon, color: EtbalyWebColors.body, size: 22.sp),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.instance.themeMode,
+      builder: (context, themeMode, _) {
+        final isDark = themeMode == ThemeMode.dark;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: ThemeService.instance.toggle,
+            borderRadius: BorderRadius.circular(999.r),
+            child: Container(
+              width: 44.w,
+              height: 44.h,
+              decoration: BoxDecoration(
+                color: context.etbalyColors.badgeBg,
+                shape: BoxShape.circle,
+                border: Border.all(color: context.etbalyColors.borderColor),
+              ),
+              child: Icon(
+                isDark ? Icons.lightbulb_outline : Icons.lightbulb,
+                color: isDark ? EtbalyWebColors.body : EtbalyWebColors.gold,
+                size: 22.sp,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

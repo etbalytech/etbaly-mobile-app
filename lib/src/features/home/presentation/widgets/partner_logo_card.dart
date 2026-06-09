@@ -24,6 +24,7 @@ class _PartnerLogoCard extends StatelessWidget {
     final blur = 3.0 * sideAmount;
     final scale = 1 - (0.14 * sideAmount);
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final colors = context.etbalyColors;
 
     return Center(
       child: Transform.scale(
@@ -42,22 +43,22 @@ class _PartnerLogoCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
                   color: Color.lerp(
-                    const Color(0xE08B5CF6),
-                    const Color(0x887C3AED),
+                    colors.primary.withValues(alpha: 0.88),
+                    colors.primary.withValues(alpha: 0.50),
                     sideAmount,
                   )!,
                   width: 2.w - (0.7 * sideAmount),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0x668B5CF6)
-                        .withValues(alpha: 0.4 * (1 - sideAmount)),
+                    color: colors.primary
+                        .withValues(alpha: 0.24 * (1 - sideAmount)),
                     blurRadius: 34.r,
                     spreadRadius: 2.r,
                   ),
                   BoxShadow(
-                    color: const Color(0x448B5CF6)
-                        .withValues(alpha: 0.27 * (1 - sideAmount)),
+                    color: colors.primary
+                        .withValues(alpha: 0.14 * (1 - sideAmount)),
                     blurRadius: 0.r,
                     spreadRadius: 3.r,
                   ),

@@ -5,12 +5,14 @@ class _AirplaneBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: const Color(0x226F3FF5),
+        color: colors.badgeBg,
         borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: const Color(0x665F37C7)),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.24)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -20,9 +22,9 @@ class _AirplaneBadge extends StatelessWidget {
             height: 8.h,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF9B5CF6),
+              color: colors.primary,
               boxShadow: [
-                BoxShadow(color: const Color(0x889B5CF6), blurRadius: 10.r),
+                BoxShadow(color: colors.primaryGlowStrong, blurRadius: 10.r),
               ],
             ),
           ),
@@ -30,7 +32,7 @@ class _AirplaneBadge extends StatelessWidget {
           Text(
             'auto.t_2d41d70d13'.tr(),
             style: context.textTheme.labelMedium?.copyWith(
-              color: const Color(0xFFC084FC),
+              color: colors.primary,
               fontWeight: FontWeight.w800,
             ),
           ),

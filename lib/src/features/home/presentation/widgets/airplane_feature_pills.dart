@@ -5,6 +5,7 @@ class _AirplaneFeaturePills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
     final features = [
       ('auto.t_5dbc6132d0'.tr(), Icons.auto_awesome),
       ('auto.t_c8dd386e3c'.tr(), Icons.diamond_outlined),
@@ -21,19 +22,19 @@ class _AirplaneFeaturePills extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             decoration: BoxDecoration(
-              color: const Color(0x4A160B31),
+              color: colors.badgeBg,
               borderRadius: BorderRadius.circular(999.r),
-              border: Border.all(color: const Color(0x663D236C)),
+              border: Border.all(color: colors.borderColor),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(feature.$2, color: const Color(0xFFC084FC), size: 15.sp),
+                Icon(feature.$2, color: colors.primary, size: 15.sp),
                 SizedBox(width: 8.w),
                 Text(
                   feature.$1,
                   style: context.textTheme.labelLarge?.copyWith(
-                    color: Colors.white,
+                    color: colors.textMain,
                     fontWeight: FontWeight.w800,
                   ),
                 ),

@@ -1,14 +1,20 @@
 part of '../screens/home_page.dart';
 
 class _IdeasSuccessBackgroundPainter extends CustomPainter {
-  _IdeasSuccessBackgroundPainter(this.progress);
+  _IdeasSuccessBackgroundPainter({
+    required this.progress,
+    required this.colors,
+    required this.isDark,
+  });
 
   final double progress;
+  final EtbalyColorsExtension colors;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = const Color(0x1A6F3FF5)
+      ..color = colors.primary.withValues(alpha: isDark ? 0.10 : 0.05)
       ..strokeWidth = 1;
     const step = 64.0;
     for (double x = 0; x <= size.width; x += step) {
@@ -19,7 +25,7 @@ class _IdeasSuccessBackgroundPainter extends CustomPainter {
     }
 
     final sparklePaint = Paint()
-      ..color = const Color(0x88D4AF37)
+      ..color = colors.gold.withValues(alpha: isDark ? 0.52 : 0.26)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     for (var i = 0; i < 18; i++) {
       final seed = i * 0.173;
@@ -30,8 +36,11 @@ class _IdeasSuccessBackgroundPainter extends CustomPainter {
     }
 
     final glowPaint = Paint()
-      ..shader = const RadialGradient(
-        colors: [Color(0x336F3FF5), Colors.transparent],
+      ..shader = RadialGradient(
+        colors: [
+          colors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+          Colors.transparent,
+        ],
       ).createShader(
         Rect.fromCircle(
           center: Offset(size.width * 0.5, size.height * 0.48),
@@ -47,26 +56,34 @@ class _IdeasSuccessBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _IdeasSuccessBackgroundPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress ||
+        oldDelegate.colors != colors ||
+        oldDelegate.isDark != isDark;
   }
 }
 
 class _IdeasSuccessWaveBackdropPainter extends CustomPainter {
-  _IdeasSuccessWaveBackdropPainter(this.progress);
+  _IdeasSuccessWaveBackdropPainter({
+    required this.progress,
+    required this.colors,
+    required this.isDark,
+  });
 
   final double progress;
+  final EtbalyColorsExtension colors;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final fillPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: [
-          Color(0x007C3AED),
-          Color(0x665B21B6),
-          Color(0x887C3AED),
-          Color(0x005B21B6),
+          colors.primary.withValues(alpha: 0),
+          colors.primaryDark.withValues(alpha: isDark ? 0.40 : 0.12),
+          colors.primary.withValues(alpha: isDark ? 0.54 : 0.16),
+          colors.primaryDark.withValues(alpha: 0),
         ],
       ).createShader(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, fillPaint);
@@ -76,8 +93,8 @@ class _IdeasSuccessWaveBackdropPainter extends CustomPainter {
       final t = i / 23;
       final wavePaint = Paint()
         ..color = Color.lerp(
-          const Color(0xAA5B21B6),
-          const Color(0x997C3AED),
+          colors.primaryDark.withValues(alpha: isDark ? 0.66 : 0.18),
+          colors.primary.withValues(alpha: isDark ? 0.60 : 0.22),
           t,
         )!
         ..strokeWidth = 1.3;
@@ -94,6 +111,8 @@ class _IdeasSuccessWaveBackdropPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _IdeasSuccessWaveBackdropPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress ||
+        oldDelegate.colors != colors ||
+        oldDelegate.isDark != isDark;
   }
 }

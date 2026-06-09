@@ -23,6 +23,8 @@ class _HomeWebHeroState extends State<_HomeWebHero>
   Widget build(BuildContext context) {
     final width = context.width;
     final horizontalPadding = width < 390 ? 16.0 : 22.0;
+    final colors = context.etbalyColors;
+    final isDark = context.isDarkMode;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -32,15 +34,21 @@ class _HomeWebHeroState extends State<_HomeWebHero>
         ),
         child: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              colors: [
-                Color(0xFF100728),
-                Color(0xFF160B2E),
-                Color(0xFF0B061B),
-              ],
+              colors: isDark
+                  ? const [
+                      Color(0xFF100728),
+                      Color(0xFF160B2E),
+                      Color(0xFF0B061B),
+                    ]
+                  : const [
+                      Color(0xFFFFFFFF),
+                      Color(0xFFFAFAFE),
+                      Color(0xFFF5F3FF),
+                    ],
             ),
           ),
           child: Stack(
@@ -50,7 +58,11 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                   animation: _controller,
                   builder: (context, _) {
                     return CustomPaint(
-                      painter: _HeroBackgroundPainter(_controller.value),
+                      painter: _HeroBackgroundPainter(
+                        progress: _controller.value,
+                        colors: colors,
+                        isDark: isDark,
+                      ),
                     );
                   },
                 ),
@@ -58,14 +70,15 @@ class _HomeWebHeroState extends State<_HomeWebHero>
               Positioned.fill(
                 child: _HeroGlow(
                   alignment: Alignment.topRight,
-                  color: const Color(0x886F3FF5),
+                  color: colors.primary.withValues(alpha: isDark ? 0.46 : 0.12),
                   size: 230.sp,
                 ),
               ),
               Positioned.fill(
                 child: _HeroGlow(
                   alignment: Alignment.bottomLeft,
-                  color: const Color(0x55B85CFF),
+                  color: colors.primaryLight
+                      .withValues(alpha: isDark ? 0.32 : 0.10),
                   size: 260.sp,
                 ),
               ),
@@ -98,13 +111,13 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                         .fadeIn(delay: const Duration(milliseconds: 80))
                         .slideY(begin: 0.18),
                     ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
+                      shaderCallback: (bounds) => LinearGradient(
                         begin: Alignment.centerRight,
                         end: Alignment.centerLeft,
                         colors: [
-                          Color(0xFFE2A0FF),
-                          Color(0xFFC779FF),
-                          Color(0xFF9D5BFF),
+                          colors.goldLight,
+                          colors.gold,
+                          colors.goldDark,
                         ],
                       ).createShader(bounds),
                       child: Text(
@@ -125,7 +138,7 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                       'auto.t_e9c5fb7e87'.tr(),
                       textAlign: TextAlign.right,
                       style: context.textTheme.titleSmall?.copyWith(
-                        color: const Color(0xFFC4BED4),
+                        color: colors.textMuted,
                         fontSize: width < 390 ? 13 : 14,
                         fontWeight: FontWeight.w600,
                         height: 1.6,
@@ -169,7 +182,7 @@ class _HomeWebHeroState extends State<_HomeWebHero>
 
   TextStyle _heroTitleStyle(BuildContext context, double width) {
     return (context.textTheme.displaySmall ?? const TextStyle()).copyWith(
-      color: Colors.white,
+      color: context.etbalyColors.textMain,
       fontSize: width < 360
           ? 26.sp
           : width < 390

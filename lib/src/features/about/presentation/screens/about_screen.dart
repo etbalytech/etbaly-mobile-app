@@ -42,7 +42,7 @@ class _AboutScreenState extends State<AboutScreen>
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: Color(0xFF070511),
+        backgroundColor: context.etbalyColors.bgMain,
         body: SafeArea(
           top: false,
           child: AnimatedBuilder(
@@ -55,6 +55,9 @@ class _AboutScreenState extends State<AboutScreen>
                     child: CustomPaint(
                       painter: _AboutBackgroundPainter(
                         progress: _floatController.value,
+                        bgTop: context.etbalyColors.bgMain,
+                        bgMid: context.etbalyColors.bgSecondary,
+                        bgBottom: context.etbalyColors.bgMain,
                       ),
                       child: child!,
                     ),
@@ -125,15 +128,15 @@ class _HeroSection extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF1C1930),
-            Color(0xFF17152A),
-            Color(0xFF281354),
+            colors.bgCard,
+            colors.bgSecondary,
+            colors.bgSubtle,
           ],
         ),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x66000000),
+            color: colors.cardShadow,
             blurRadius: 34.r,
             offset: Offset(0.w, 18.h),
           ),
@@ -237,7 +240,7 @@ class _DesktopAboutHero extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF11101C), Color(0xFF151225), Color(0xFF0C0A14)],
+          colors: [colors.bgCard, colors.bgSecondary, colors.bgCard],
         ),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.12)),
       ),
@@ -332,7 +335,7 @@ class _DesktopHeroMetric extends StatelessWidget {
       height: 138.h,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: Color(0x40110E1B),
+        color: context.etbalyColors.bgSubtle,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.24)),
       ),
@@ -381,7 +384,7 @@ class _MobileHeroMetric extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 10.r),
       decoration: BoxDecoration(
-        color: Color(0x40110E1B),
+        color: context.etbalyColors.bgSubtle,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: colors.primaryLight.withValues(alpha: 0.24)),
       ),
@@ -524,7 +527,7 @@ class _PortfolioShowcaseCard extends StatelessWidget {
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26.r),
-        color: Color(0xAA0B0914),
+        color: context.etbalyColors.bgCard,
         border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
         boxShadow: [
           BoxShadow(
@@ -564,7 +567,7 @@ class _PortfolioShowcaseCard extends StatelessWidget {
                       padding:
                           EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: Color(0xFF2A2537),
+                        color: context.etbalyColors.bgSubtle,
                         borderRadius: BorderRadius.circular(999.r),
                       ),
                       child: Row(
@@ -623,7 +626,7 @@ class _PortfolioShowcaseCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(14.r),
             decoration: BoxDecoration(
-              color: Color(0x66110E1B),
+              color: context.etbalyColors.bgSubtle,
               borderRadius: BorderRadius.circular(18.r),
               border:
                   Border.all(color: colors.borderColor.withValues(alpha: 0.35)),
@@ -697,13 +700,21 @@ class _PortfolioShowcaseCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _TinyTrust(
-                  label: 'auto.t_5f5f468124'.tr(),
-                  icon: Icons.flash_on_rounded),
-              _TinyTrust(
-                  label: 'auto.t_4ea25eef7a'.tr(), icon: Icons.lock_rounded),
-              _TinyTrust(
-                  label: 'auto.t_e0cc864c0f'.tr(), icon: Icons.refresh_rounded),
+              Flexible(
+                child: _TinyTrust(
+                    label: 'auto.t_5f5f468124'.tr(),
+                    icon: Icons.flash_on_rounded),
+              ),
+              Flexible(
+                child: _TinyTrust(
+                    label: 'auto.t_4ea25eef7a'.tr(),
+                    icon: Icons.lock_rounded),
+              ),
+              Flexible(
+                child: _TinyTrust(
+                    label: 'auto.t_e0cc864c0f'.tr(),
+                    icon: Icons.refresh_rounded),
+              ),
             ],
           ),
         ],
@@ -1243,7 +1254,7 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: Color(0xFF111018),
+              color: context.etbalyColors.bgCard,
               borderRadius: BorderRadius.circular(999.r),
               border: Border.all(color: colors.gold.withValues(alpha: 0.45)),
             ),
@@ -1281,7 +1292,7 @@ class _SlideArrow extends StatelessWidget {
           height: 42.h,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Color(0xFF101018),
+            color: context.etbalyColors.bgCard,
             border: Border.all(color: colors.gold.withValues(alpha: 0.48)),
             boxShadow: [
               BoxShadow(
@@ -1373,7 +1384,11 @@ class _GrowthPartnerBanner extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
-          colors: [Color(0xFF221D18), Color(0xFF111018), Color(0xFF181323)],
+          colors: [
+            colors.bgCard.withValues(alpha: 0.96),
+            colors.bgSecondary,
+            colors.bgCard.withValues(alpha: 0.96),
+          ],
         ),
         border: Border.all(color: colors.gold.withValues(alpha: 0.22)),
         boxShadow: [
@@ -1690,12 +1705,16 @@ class _TinyTrust extends StatelessWidget {
       children: [
         Icon(icon, color: colors.gold.withValues(alpha: 0.72), size: 13.sp),
         SizedBox(width: 4.w),
-        Text(
-          label,
-          style: context.textTheme.labelSmall?.copyWith(
-            color: colors.textMuted,
-            fontWeight: FontWeight.w800,
-            fontSize: 10.sp,
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.labelSmall?.copyWith(
+              color: colors.textMuted,
+              fontWeight: FontWeight.w800,
+              fontSize: 10.sp,
+            ),
           ),
         ),
       ],
@@ -1730,7 +1749,7 @@ class _GlassSection extends StatelessWidget {
         border: Border.all(color: colors.borderColor.withValues(alpha: 0.55)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x66000000),
+            color: context.etbalyColors.cardShadow,
             blurRadius: 32.r,
             offset: Offset(0.w, 16.h),
           ),
@@ -1880,7 +1899,7 @@ class _FloatingBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: Color(0xDD0B0912),
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
         boxShadow: [
@@ -2111,7 +2130,7 @@ class _TimelineRow extends StatelessWidget {
             width: 16.w,
             height: 16.h,
             decoration: BoxDecoration(
-              color: isActive ? dotColor : Color(0xFF0B0914),
+              color: isActive ? dotColor : context.etbalyColors.bgMain,
               shape: BoxShape.circle,
               border: Border.all(color: dotColor, width: 2.5.w),
               boxShadow: [
@@ -2403,7 +2422,7 @@ class _WhyCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(15.r),
       decoration: BoxDecoration(
-        color: Color(0x66110E1B),
+        color: colors.bgSubtle,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
@@ -3168,9 +3187,17 @@ class _CeoVideoPainter extends CustomPainter {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AboutBackgroundPainter extends CustomPainter {
-  _AboutBackgroundPainter({required this.progress});
+  _AboutBackgroundPainter({
+    required this.progress,
+    required this.bgTop,
+    required this.bgMid,
+    required this.bgBottom,
+  });
 
   final double progress;
+  final Color bgTop;
+  final Color bgMid;
+  final Color bgBottom;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -3178,7 +3205,7 @@ class _AboutBackgroundPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF070511), Color(0xFF0F0E18), Color(0xFF080613)],
+        colors: [bgTop, bgMid, bgBottom],
       ).createShader(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, bgPaint);
 
@@ -3229,7 +3256,7 @@ class _AboutBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _AboutBackgroundPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _AboutBackgroundPainter old) {
+    return old.progress != progress || old.bgTop != bgTop;
   }
 }

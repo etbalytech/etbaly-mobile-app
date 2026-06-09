@@ -15,6 +15,7 @@ class _HeroActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
     final borderRadius = BorderRadius.circular(999.r);
 
     return Material(
@@ -30,24 +31,25 @@ class _HeroActionButton extends StatelessWidget {
             borderRadius: borderRadius,
             gradient: outlined
                 ? null
-                : const LinearGradient(
+                : LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      Color(0xFFB449FF),
-                      Color(0xFF7C20E6),
-                      Color(0xFF5B00B7),
+                      colors.primaryLight,
+                      colors.primary,
+                      colors.primaryDark,
                     ],
                   ),
-            color: outlined ? const Color(0x2418102F) : null,
+            color: outlined ? colors.badgeBg : null,
             border: outlined
-                ? Border.all(color: const Color(0x887E5CB8), width: 1.2.w)
+                ? Border.all(
+                    color: colors.primary.withValues(alpha: 0.36), width: 1.2.w)
                 : null,
             boxShadow: outlined
                 ? null
                 : [
                     BoxShadow(
-                      color: const Color(0x805B00B7),
+                      color: colors.primaryGlowStrong,
                       blurRadius: 26.r,
                       offset: Offset(0.w, 14.h),
                     ),
@@ -60,14 +62,18 @@ class _HeroActionButton extends StatelessWidget {
               Text(
                 label,
                 style: context.textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
+                  color: outlined ? colors.primary : Colors.white,
                   fontWeight: FontWeight.w900,
                   height: 1,
                 ),
               ),
               if (icon != null) ...[
                 SizedBox(width: 8.w),
-                Icon(icon, color: Colors.white, size: 18.sp),
+                Icon(
+                  icon,
+                  color: outlined ? colors.primary : Colors.white,
+                  size: 18.sp,
+                ),
               ],
             ],
           ),

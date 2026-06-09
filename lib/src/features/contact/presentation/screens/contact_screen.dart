@@ -68,7 +68,7 @@ class _ContactScreenState extends State<ContactScreen> {
     return Directionality(
       textDirection: _isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: EtbalyWebColors.sectionBlack,
+        backgroundColor: context.etbalyColors.bgMain,
         body: SafeArea(
           top: false,
           child: CustomScrollView(
@@ -319,7 +319,7 @@ class _ContactHeroState extends State<_ContactHero>
       width: double.infinity,
       constraints: BoxConstraints(minHeight: 330.h),
       decoration: BoxDecoration(
-        color: EtbalyWebColors.sectionDeep,
+        color: context.etbalyColors.bgSecondary,
         borderRadius: BorderRadius.circular(8.r),
       ),
       clipBehavior: Clip.antiAlias,
@@ -346,7 +346,7 @@ class _ContactHeroState extends State<_ContactHero>
                     'auto.t_0f6336ed48'.tr(),
                     textAlign: TextAlign.center,
                     style: context.textTheme.headlineMedium?.copyWith(
-                      color: EtbalyWebColors.heading,
+                      color: context.etbalyColors.textMain,
                       fontWeight: FontWeight.w900,
                       height: 1.05,
                       fontSize: context.width < 390 ? 32 : 38,
@@ -369,8 +369,7 @@ class _ContactHeroState extends State<_ContactHero>
                       width: math.min(context.width - 58, 520),
                       padding: EdgeInsets.all(20.r),
                       decoration: BoxDecoration(
-                        color: EtbalyWebColors.sectionBlack
-                            .withValues(alpha: 0.86),
+                        color: context.etbalyColors.bgCard,
                         borderRadius: BorderRadius.circular(17.r),
                         boxShadow: [
                           BoxShadow(
@@ -386,7 +385,7 @@ class _ContactHeroState extends State<_ContactHero>
                             'auto.t_e6899218c8'.tr(),
                             textAlign: TextAlign.center,
                             style: context.textTheme.titleMedium?.copyWith(
-                              color: EtbalyWebColors.heading,
+                              color: context.etbalyColors.textMain,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -397,7 +396,7 @@ class _ContactHeroState extends State<_ContactHero>
                             textAlign: TextAlign.center,
                             text: TextSpan(
                               style: context.textTheme.bodyMedium?.copyWith(
-                                color: EtbalyWebColors.body,
+                                color: context.etbalyColors.textMuted,
                                 height: 1.55,
                               ),
                               children: [
@@ -520,9 +519,9 @@ class _ContactFormCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
-        color: EtbalyWebColors.card,
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: EtbalyWebColors.border),
+        border: Border.all(color: context.etbalyColors.borderColor),
         boxShadow: [
           BoxShadow(
             color: const Color(0x66000000),
@@ -544,7 +543,7 @@ class _ContactFormCard extends StatelessWidget {
                     Text(
                       'auto.t_8a31c1a876'.tr(),
                       style: context.textTheme.titleLarge?.copyWith(
-                        color: EtbalyWebColors.heading,
+                        color: context.etbalyColors.textMain,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -552,7 +551,7 @@ class _ContactFormCard extends StatelessWidget {
                     Text(
                       'auto.t_604899061b'.tr(),
                       style: context.textTheme.bodySmall?.copyWith(
-                        color: EtbalyWebColors.body,
+                        color: context.etbalyColors.textMuted,
                       ),
                     ),
                   ],
@@ -561,7 +560,7 @@ class _ContactFormCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 20.h),
-          Divider(color: EtbalyWebColors.border, height: 1.h),
+          Divider(color: context.etbalyColors.borderColor, height: 1.h),
           SizedBox(height: 20.h),
           _ResponsiveFields(
             children: [
@@ -754,9 +753,9 @@ class _ContactChannelCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(14.r),
                 decoration: BoxDecoration(
-                  color: EtbalyWebColors.sectionDeep.withValues(alpha: 0.75),
+                  color: context.etbalyColors.bgSecondary,
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: EtbalyWebColors.border),
+                  border: Border.all(color: context.etbalyColors.borderColor),
                   boxShadow: [
                     BoxShadow(
                       color: color.withValues(alpha: 0.06),
@@ -786,7 +785,7 @@ class _ContactChannelCard extends StatelessWidget {
                           Text(
                             label,
                             style: context.textTheme.labelMedium?.copyWith(
-                              color: EtbalyWebColors.body,
+                              color: context.etbalyColors.textMuted,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -801,7 +800,7 @@ class _ContactChannelCard extends StatelessWidget {
                             textAlign: TextAlign.right,
                             overflow: TextOverflow.ellipsis,
                             style: context.textTheme.titleSmall?.copyWith(
-                              color: EtbalyWebColors.heading,
+                              color: context.etbalyColors.textMain,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -809,7 +808,7 @@ class _ContactChannelCard extends StatelessWidget {
                           Text(
                             subtitle,
                             style: context.textTheme.bodySmall?.copyWith(
-                              color: EtbalyWebColors.body,
+                              color: context.etbalyColors.textMuted,
                             ),
                           ),
                         ],
@@ -818,7 +817,7 @@ class _ContactChannelCard extends StatelessWidget {
                     SizedBox(width: 10.w),
                     Icon(
                       Icons.arrow_forward_rounded,
-                      color: EtbalyWebColors.body,
+                      color: context.etbalyColors.textMuted,
                       size: 18.sp,
                     ),
                   ],
@@ -964,7 +963,7 @@ class _HoursCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: EtbalyWebColors.sectionDeep.withValues(alpha: 0.75),
+        color: context.etbalyColors.bgSecondary,
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
@@ -979,7 +978,7 @@ class _HoursCard extends StatelessWidget {
               Text(
                 'auto.t_0be90459f2'.tr(),
                 style: context.textTheme.titleMedium?.copyWith(
-                  color: EtbalyWebColors.heading,
+                  color: context.etbalyColors.textMain,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -994,7 +993,7 @@ class _HoursCard extends StatelessWidget {
               label: 'auto.t_8d067a376a'.tr(),
               value: 'auto.t_e944ebd608'.tr(),
               warning: true),
-          Divider(color: EtbalyWebColors.border, height: 26.h),
+          Divider(color: context.etbalyColors.borderColor, height: 26.h),
           Row(
             children: [
               Container(
@@ -1044,7 +1043,7 @@ class _HoursRow extends StatelessWidget {
             child: Text(
               label,
               style: context.textTheme.bodySmall?.copyWith(
-                color: EtbalyWebColors.body,
+                color: context.etbalyColors.textMuted,
               ),
             ),
           ),
@@ -1068,9 +1067,9 @@ class _MapSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: EtbalyWebColors.card,
+        color: context.etbalyColors.bgCard,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: EtbalyWebColors.border),
+        border: Border.all(color: context.etbalyColors.borderColor),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -1088,7 +1087,7 @@ class _MapSection extends StatelessWidget {
                   'auto.t_acd4a23c87'.tr(),
                   textAlign: TextAlign.center,
                   style: context.textTheme.headlineSmall?.copyWith(
-                    color: EtbalyWebColors.heading,
+                    color: context.etbalyColors.textMain,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -1097,7 +1096,7 @@ class _MapSection extends StatelessWidget {
                   'auto.t_6cde5c70d7'.tr(),
                   textAlign: TextAlign.center,
                   style: context.textTheme.bodySmall?.copyWith(
-                    color: EtbalyWebColors.body,
+                    color: context.etbalyColors.textMuted,
                     height: 1.45,
                   ),
                 ),
@@ -1165,11 +1164,11 @@ class _MapInfoStrip extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-      decoration: const BoxDecoration(
-        color: EtbalyWebColors.sectionDeep,
+      decoration: BoxDecoration(
+        color: context.etbalyColors.bgSecondary,
         border: Border(
-          top: BorderSide(color: EtbalyWebColors.border),
-          bottom: BorderSide(color: EtbalyWebColors.border),
+          top: BorderSide(color: context.etbalyColors.borderColor),
+          bottom: BorderSide(color: context.etbalyColors.borderColor),
         ),
       ),
       child: Wrap(
@@ -1206,7 +1205,7 @@ class _MapInfoItem extends StatelessWidget {
           textDirection:
               text.startsWith('+') ? TextDirection.ltr : TextDirection.rtl,
           style: context.textTheme.labelSmall?.copyWith(
-            color: EtbalyWebColors.body,
+            color: context.etbalyColors.textMuted,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -1274,13 +1273,13 @@ class _ContactTextField extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 15.sp, color: iconColor ?? EtbalyWebColors.body),
+            Icon(icon, size: 15.sp, color: iconColor ?? context.etbalyColors.textMuted),
             SizedBox(width: 6.w),
             Expanded(
               child: Text(
                 label,
                 style: context.textTheme.labelMedium?.copyWith(
-                  color: EtbalyWebColors.body,
+                  color: context.etbalyColors.textMuted,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1297,15 +1296,15 @@ class _ContactTextField extends StatelessWidget {
               maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
           onChanged: (_) => onChanged(),
           style: context.textTheme.bodyMedium?.copyWith(
-            color: EtbalyWebColors.heading,
+            color: context.etbalyColors.textMain,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: context.textTheme.bodySmall?.copyWith(
-              color: EtbalyWebColors.muted,
+              color: context.etbalyColors.textLight,
             ),
             filled: true,
-            fillColor: const Color(0xFF282240),
+            fillColor: context.etbalyColors.bgSubtle,
             contentPadding:
                 EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
             enabledBorder: OutlineInputBorder(
@@ -1348,7 +1347,7 @@ class _PackageEmptyBox extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: EtbalyWebColors.sectionBlack.withValues(alpha: 0.34),
+        color: context.etbalyColors.bgSubtle,
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(
           color: EtbalyWebColors.gold.withValues(alpha: 0.36),
@@ -1378,7 +1377,7 @@ class _PackageEmptyBox extends StatelessWidget {
                 Text(
                   'auto.t_80a0344904'.tr(),
                   style: context.textTheme.titleSmall?.copyWith(
-                    color: EtbalyWebColors.heading,
+                    color: context.etbalyColors.textMain,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -1386,7 +1385,7 @@ class _PackageEmptyBox extends StatelessWidget {
                 Text(
                   'auto.t_9b84bd8cbe'.tr(),
                   style: context.textTheme.bodySmall?.copyWith(
-                    color: EtbalyWebColors.body,
+                    color: context.etbalyColors.textMuted,
                   ),
                 ),
               ],
@@ -1512,7 +1511,7 @@ class _WebBadge extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: const Color(0x33251D33),
+        color: context.etbalyColors.badgeBg,
         borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
@@ -1554,7 +1553,7 @@ class _HeroStat extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: const Color(0x33251D33),
+        color: context.etbalyColors.badgeBg,
         borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: EtbalyWebColors.goldBorder),
       ),
@@ -1566,7 +1565,7 @@ class _HeroStat extends StatelessWidget {
           Text(
             text,
             style: context.textTheme.labelMedium?.copyWith(
-              color: EtbalyWebColors.body,
+              color: context.etbalyColors.textMuted,
               fontWeight: FontWeight.w900,
             ),
           ),
