@@ -696,6 +696,14 @@ class _ContactInfoColumn extends StatelessWidget {
           onTap: () => _open('https://www.youtube.com/@etba3ly4adv'),
         ),
         _ContactChannelCard(
+          label: 'auto.t_snapchat_label'.tr(),
+          value: '@etba3ly',
+          subtitle: 'auto.t_snapchat_sub'.tr(),
+          icon: FontAwesomeIcons.snapchat,
+          color: const Color(0xFFFFFC00),
+          onTap: () => _open('https://www.snapchat.com/@etba3ly'),
+        ),
+        _ContactChannelCard(
           label: 'auto.t_5f19dfe113'.tr(),
           value: '@etba3ly2',
           subtitle: 'auto.t_c98cad67e9'.tr(),
