@@ -15,6 +15,7 @@ part '../widgets/hero_action_button.dart';
 part '../widgets/hero_brand_badge.dart';
 part '../widgets/hero_glow.dart';
 part '../widgets/hero_background_painter.dart';
+part '../widgets/hero_fireworks.dart';
 part '../widgets/airplane_brand_section.dart';
 part '../widgets/airplane_brand_section_state.dart';
 part '../widgets/airplane_badge.dart';

@@ -1,14 +1,18 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+
 const _draftKey = 'start_now_draft';
 const _endpoint = 'https://etba3ly-dm.com/api/proxy.php';
+const _projectImagesEndpoint = 'https://etba3ly-dm.com/api/upload-project-images.php';
 const _whatsAppUrl = 'https://wa.me/+201010285020';
 
 class StartNowPage extends StatefulWidget {
@@ -41,8 +45,18 @@ class _StartNowPageState extends State<StartNowPage> {
   String _successMessage = '';
   String _errorMessage = '';
   String _validationMessage = '';
-  String _logoError = '';
+
+  // Logo state
   PlatformFile? _logoFile;
+  String _logoError = '';
+  bool _logoProcessing = false;
+  String _logoSizeMb = '';
+  Uint8List? _logoBytes; // compressed bytes for raster logos
+
+  // Project images state
+  final List<_ProjectImageEntry> _projectImages = [];
+  String _projectImagesError = '';
+  bool _projectImagesProcessing = false;
 
   bool get _isArabic => context.locale.languageCode == 'ar';
 
@@ -62,8 +76,7 @@ class _StartNowPageState extends State<StartNowPage> {
     if (_contactName.text.trim().length >= 2) count++;
     if (_whatsApp.text.trim().length >= 7) count++;
     for (final question in _selectedService.questions) {
-      if (question.required &&
-          _controllerFor(question.key).text.trim().isNotEmpty) {
+      if (question.required && _controllerFor(question.key).text.trim().isNotEmpty) {
         count++;
       }
     }
@@ -72,8 +85,7 @@ class _StartNowPageState extends State<StartNowPage> {
   }
 
   int get _requiredTotal {
-    final serviceRequired =
-        _selectedService.questions.where((q) => q.required).length;
+    final serviceRequired = _selectedService.questions.where((q) => q.required).length;
     final logoRequired = _identityMode == 'from-logo' ? 1 : 0;
     return 2 + serviceRequired + logoRequired;
   }
@@ -91,11 +103,11 @@ class _StartNowPageState extends State<StartNowPage> {
     _email.dispose();
     _company.dispose();
     _brandColors.dispose();
-    for (final controller in _answers.values) {
-      controller.dispose();
+    for (final c in _answers.values) {
+      c.dispose();
     }
-    for (final controller in _socials.values) {
-      controller.dispose();
+    for (final c in _socials.values) {
+      c.dispose();
     }
     super.dispose();
   }
@@ -158,8 +170,7 @@ class _StartNowPageState extends State<StartNowPage> {
               child: Text(
                 _isArabic ? 'نوع الخدمة' : 'Service type',
                 textAlign: TextAlign.left,
-                style:
-                    _mutedStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w800),
+                style: _mutedStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w800),
               ),
             ),
             Text(
@@ -238,12 +249,9 @@ class _StartNowPageState extends State<StartNowPage> {
                 keyboardType: TextInputType.phone,
                 error: _phoneErrors['whatsapp'] ??
                     (_formTouched && _whatsApp.text.trim().length < 7
-                        ? (_isArabic
-                            ? 'رقم الواتساب مطلوب'
-                            : 'WhatsApp number is required')
+                        ? (_isArabic ? 'رقم الواتساب مطلوب' : 'WhatsApp number is required')
                         : null),
-                onChanged: (value) =>
-                    _onPhoneChanged('whatsapp', value, _whatsApp),
+                onChanged: (value) => _onPhoneChanged('whatsapp', value, _whatsApp),
               ),
               _TextFieldBox(
                 label: _isArabic ? 'البريد الإلكتروني' : 'Email',
@@ -255,9 +263,7 @@ class _StartNowPageState extends State<StartNowPage> {
               _TextFieldBox(
                 label: _isArabic ? 'اسم النشاط' : 'Business name',
                 controller: _company,
-                hint: _isArabic
-                    ? 'اسم الشركة أو البراند'
-                    : 'Company or brand name',
+                hint: _isArabic ? 'اسم الشركة أو البراند' : 'Company or brand name',
                 onChanged: (_) => _saveDraft(),
               ),
             ]),
@@ -298,6 +304,7 @@ class _StartNowPageState extends State<StartNowPage> {
         _SubmitButton(
           isArabic: _isArabic,
           isSubmitting: _isSubmitting,
+          isDisabled: _logoProcessing || _projectImagesProcessing,
           onPressed: _submitForm,
         ),
       ],
@@ -352,8 +359,12 @@ class _StartNowPageState extends State<StartNowPage> {
         _UploadBox(
           isArabic: _isArabic,
           fileName: _logoFile?.name,
-          hasError:
-              _formTouched && _identityMode == 'from-logo' && _logoFile == null,
+          sizeMb: _logoSizeMb.isNotEmpty ? _logoSizeMb : null,
+          isProcessing: _logoProcessing,
+          hasError: _formTouched &&
+              _identityMode == 'from-logo' &&
+              _logoFile == null &&
+              !_logoProcessing,
           onPick: _pickLogo,
           onClear: _logoFile == null ? null : _clearLogo,
         ),
@@ -361,12 +372,23 @@ class _StartNowPageState extends State<StartNowPage> {
         if (_logoError.isEmpty &&
             _formTouched &&
             _identityMode == 'from-logo' &&
-            _logoFile == null)
+            _logoFile == null &&
+            !_logoProcessing)
           _InlineError(
             _isArabic
                 ? 'ارفع اللوجو لاستخراج الألوان منه'
                 : 'Upload your logo to extract colors from it',
           ),
+        SizedBox(height: 14.h),
+        _ProjectImagesSection(
+          isArabic: _isArabic,
+          images: _projectImages,
+          isProcessing: _projectImagesProcessing,
+          error: _projectImagesError,
+          onPick: _pickProjectImages,
+          onRemove: _removeProjectImage,
+          onClearAll: _clearProjectImages,
+        ),
         SizedBox(height: 12.h),
         _CheckRow(
           value: _noSocialPages,
@@ -515,24 +537,122 @@ class _StartNowPageState extends State<StartNowPage> {
     final file = result?.files.single;
     if (file == null) return;
 
-    if (file.size > 5 * 1024 * 1024) {
+    final ext = (file.extension ?? '').toLowerCase();
+
+    // SVG and PDF: no compression needed
+    if (ext == 'svg' || ext == 'pdf') {
       setState(() {
-        _logoFile = null;
-        _logoError = _isArabic
-            ? 'حجم الملف كبير. ارفع ملف أقل من 5MB.'
-            : 'File is too large. Please upload a file under 5MB.';
+        _logoFile = file;
+        _logoBytes = null;
+        _logoSizeMb = '${(file.size / (1024 * 1024)).toStringAsFixed(2)} MB';
       });
       return;
     }
 
-    setState(() => _logoFile = file);
+    final path = file.path;
+    if (path == null) {
+      setState(() {
+        _logoError = _isArabic ? 'تعذر قراءة الملف.' : 'Could not read the file.';
+      });
+      return;
+    }
+
+    setState(() => _logoProcessing = true);
+    try {
+      final rawBytes = await File(path).readAsBytes();
+      final compressed = await _compressImage(rawBytes);
+      setState(() {
+        _logoFile = file;
+        _logoBytes = compressed;
+        _logoSizeMb = '${(compressed.length / (1024 * 1024)).toStringAsFixed(2)} MB';
+      });
+    } catch (_) {
+      setState(() {
+        _logoError = _isArabic
+            ? 'تعذر تجهيز الصورة. جرب ملفاً آخر أو استخدم SVG أو PDF.'
+            : 'Could not process the image. Try another file or use SVG/PDF.';
+      });
+    } finally {
+      setState(() => _logoProcessing = false);
+    }
   }
 
   void _clearLogo() {
     setState(() {
       _logoFile = null;
+      _logoBytes = null;
+      _logoSizeMb = '';
       _logoError = '';
+      _logoProcessing = false;
     });
+  }
+
+  Future<void> _pickProjectImages() async {
+    setState(() => _projectImagesError = '');
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['png', 'jpg', 'jpeg', 'webp'],
+      allowMultiple: true,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    setState(() => _projectImagesProcessing = true);
+    final rejected = <String>[];
+
+    for (final file in result.files) {
+      final bytes = file.bytes;
+      if (bytes == null) {
+        rejected.add(file.name);
+        continue;
+      }
+      try {
+        final compressed = await _compressImage(bytes);
+        _projectImages.add(_ProjectImageEntry(name: file.name, bytes: compressed));
+      } catch (_) {
+        rejected.add(file.name);
+      }
+    }
+
+    setState(() {
+      _projectImagesProcessing = false;
+      if (rejected.isNotEmpty) {
+        _projectImagesError = _isArabic
+            ? 'تعذر إضافة بعض الملفات: ${rejected.join('، ')}'
+            : 'Some files could not be added: ${rejected.join(', ')}';
+      }
+    });
+  }
+
+  void _removeProjectImage(int index) {
+    setState(() => _projectImages.removeAt(index));
+  }
+
+  void _clearProjectImages() {
+    setState(() {
+      _projectImages.clear();
+      _projectImagesError = '';
+    });
+  }
+
+  Future<Uint8List> _compressImage(Uint8List bytes) async {
+    const targetSize = 4 * 1024 * 1024; // 4 MB
+    if (bytes.length <= targetSize) return bytes;
+
+    for (final quality in [90, 80, 70, 60]) {
+      final result = await FlutterImageCompress.compressWithList(
+        bytes,
+        quality: quality,
+        format: CompressFormat.webp,
+      );
+      if (result.length <= targetSize) return result;
+    }
+
+    return FlutterImageCompress.compressWithList(
+      bytes,
+      quality: 50,
+      format: CompressFormat.webp,
+    );
   }
 
   void _onPhoneChanged(
@@ -588,15 +708,13 @@ class _StartNowPageState extends State<StartNowPage> {
 
     try {
       final answers = <String, String>{
-        for (final entry in _answers.entries)
-          entry.key: entry.value.text.trim(),
+        for (final entry in _answers.entries) entry.key: entry.value.text.trim(),
       };
       final socials = <String, String>{
-        for (final entry in _socials.entries)
-          entry.key: entry.value.text.trim(),
+        for (final entry in _socials.entries) entry.key: entry.value.text.trim(),
       };
 
-      final data = FormData.fromMap({
+      final dataMap = <String, dynamic>{
         'service_type': _selectedServiceId.name,
         'contact_name': _contactName.text.trim(),
         'whatsapp': _whatsApp.text.trim(),
@@ -604,16 +722,25 @@ class _StartNowPageState extends State<StartNowPage> {
         if (_company.text.trim().isNotEmpty) 'company': _company.text.trim(),
         'answers': jsonEncode(answers),
         'identity_mode': _identityMode,
-        if (_brandColors.text.trim().isNotEmpty)
-          'brand_colors': _brandColors.text.trim(),
+        if (_brandColors.text.trim().isNotEmpty) 'brand_colors': _brandColors.text.trim(),
         'social_links': jsonEncode(socials),
         'no_social': _noSocialPages ? '1' : '0',
-        if (_logoFile?.path != null)
-          'logo': await MultipartFile.fromFile(
-            _logoFile!.path!,
-            filename: _logoFile!.name,
-          ),
-      });
+      };
+
+      // Add logo (compressed bytes preferred, fall back to file path)
+      if (_logoBytes != null && _logoFile != null) {
+        dataMap['logo'] = MultipartFile.fromBytes(
+          _logoBytes!,
+          filename: _logoFile!.name,
+        );
+      } else if (_logoFile?.path != null) {
+        dataMap['logo'] = await MultipartFile.fromFile(
+          _logoFile!.path!,
+          filename: _logoFile!.name,
+        );
+      }
+
+      final data = FormData.fromMap(dataMap);
 
       final response = await _dio.post<dynamic>(
         _endpoint,
@@ -631,11 +758,33 @@ class _StartNowPageState extends State<StartNowPage> {
           (body is Map && body['success'] == false);
       if (failed) throw Exception('send_failed');
 
+      // Extract request ID for project images upload
+      final requestId = body is Map ? (body['id'] as num?)?.toInt() : null;
+
+      // Upload project images
+      var projectImagesUploaded = true;
+      if (_projectImages.isNotEmpty) {
+        if (requestId == null) {
+          projectImagesUploaded = false;
+        } else {
+          try {
+            await _uploadProjectImages(requestId, _whatsApp.text.trim());
+          } catch (_) {
+            projectImagesUploaded = false;
+          }
+        }
+      }
+
       await _resetForm();
+      if (!mounted) return;
       setState(() {
-        _successMessage = _isArabic
-            ? 'تم إرسال الطلب بنجاح. فريقنا هيتواصل معاك قريبا.'
-            : 'Your request was sent successfully. Our team will contact you soon.';
+        _successMessage = projectImagesUploaded
+            ? (_isArabic
+                ? 'تم إرسال الطلب بنجاح. فريقنا هيتواصل معاك قريبا.'
+                : 'Your request was sent successfully. Our team will contact you soon.')
+            : (_isArabic
+                ? 'تم حفظ الطلب، لكن تعذر رفع بعض صور المشاريع. يمكنك إرسالها لفريقنا عبر واتساب.'
+                : 'Your request was saved, but some project images could not be uploaded. You can send them to our team via WhatsApp.');
       });
     } on DioException {
       setState(() {
@@ -654,6 +803,39 @@ class _StartNowPageState extends State<StartNowPage> {
     }
   }
 
+  Future<void> _uploadProjectImages(int requestId, String whatsapp) async {
+    const batchSize = 8;
+    for (var i = 0; i < _projectImages.length; i += batchSize) {
+      final batch = _projectImages.sublist(
+        i,
+        (i + batchSize).clamp(0, _projectImages.length),
+      );
+      final formData = FormData.fromMap({
+        'request_id': requestId.toString(),
+        'whatsapp': whatsapp,
+      });
+      for (final image in batch) {
+        formData.files.add(MapEntry(
+          'project_images[]',
+          MultipartFile.fromBytes(image.bytes, filename: image.name),
+        ));
+      }
+      final response = await _dio.post<dynamic>(
+        _projectImagesEndpoint,
+        data: formData,
+        options: Options(
+          sendTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+      );
+      final body = response.data;
+      final failed = response.statusCode == null ||
+          response.statusCode! >= 400 ||
+          (body is Map && body['success'] == false);
+      if (failed) throw Exception('project_images_upload_failed');
+    }
+  }
+
   bool _isValid() {
     final hasContact = _contactName.text.trim().length >= 2 &&
         _whatsApp.text.trim().length >= 7;
@@ -668,6 +850,8 @@ class _StartNowPageState extends State<StartNowPage> {
         hasRequiredQuestions &&
         hasLogo &&
         _logoError.isEmpty &&
+        !_logoProcessing &&
+        !_projectImagesProcessing &&
         noPhoneErrors;
   }
 
@@ -720,8 +904,7 @@ class _StartNowPageState extends State<StartNowPage> {
           _socials[entry.key.toString()]?.text = entry.value.toString();
         }
         _noSocialPages = draft['noSocialPages'] == true;
-        _identityMode =
-            (draft['brandIdentityMode'] ?? _identityMode).toString();
+        _identityMode = (draft['brandIdentityMode'] ?? _identityMode).toString();
         _brandColors.text = (draft['brandColors'] ?? '').toString();
       });
     } catch (_) {}
@@ -744,7 +927,12 @@ class _StartNowPageState extends State<StartNowPage> {
       _noSocialPages = false;
       _identityMode = 'from-logo';
       _logoFile = null;
+      _logoBytes = null;
+      _logoSizeMb = '';
       _logoError = '';
+      _logoProcessing = false;
+      _projectImages.clear();
+      _projectImagesError = '';
       _formTouched = false;
     });
     final prefs = await SharedPreferences.getInstance();
@@ -756,6 +944,8 @@ class _StartNowPageState extends State<StartNowPage> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
+
+// ─── Hero Header ────────────────────────────────────────────────────────────
 
 class _HeroHeader extends StatelessWidget {
   const _HeroHeader({required this.isArabic});
@@ -783,8 +973,7 @@ class _HeroHeader extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.bolt_rounded,
-                    color: const Color(0xFFB9A3FF), size: 16.sp),
+                Icon(Icons.bolt_rounded, color: const Color(0xFFB9A3FF), size: 16.sp),
                 SizedBox(width: 7.w),
                 Text(
                   isArabic ? 'ابدأ الآن' : 'Start now',
@@ -801,8 +990,8 @@ class _HeroHeader extends StatelessWidget {
           SizedBox(height: 18.h),
           Text(
             isArabic
-                ? 'خلينا نجهز مشروعك صح من أول Brief'
-                : 'Let us brief your project properly',
+                ? 'خلينا نفهم مشروعك صح ونطلع نتيجة تليق بيك'
+                : 'Let us understand your project properly and deliver results that fit your brand',
             style: _mainStyle(
                 context, fontSize: 30.sp, fontWeight: FontWeight.w900, height: 1.12),
           ),
@@ -865,6 +1054,8 @@ class _MetaChip extends StatelessWidget {
   }
 }
 
+// ─── Service Tab ─────────────────────────────────────────────────────────────
+
 class _ServiceTab extends StatelessWidget {
   const _ServiceTab({
     required this.service,
@@ -889,9 +1080,7 @@ class _ServiceTab extends StatelessWidget {
         child: Ink(
           padding: EdgeInsets.all(12.r),
           decoration: BoxDecoration(
-            color: isActive
-                ? service.accent.withValues(alpha: 0.10)
-                : c.bgCard,
+            color: isActive ? service.accent.withValues(alpha: 0.10) : c.bgCard,
             border: Border.all(
               color: isActive
                   ? service.accent.withValues(alpha: 0.60)
@@ -920,16 +1109,14 @@ class _ServiceTab extends StatelessWidget {
                       service.shortTitle.text(isArabic),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _mainStyle(
-                          context, fontSize: 13.sp, fontWeight: FontWeight.w900),
+                      style: _mainStyle(context, fontSize: 13.sp, fontWeight: FontWeight.w900),
                     ),
                     SizedBox(height: 2.h),
                     Text(
                       service.title.text(isArabic),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _mutedStyle(
-                          context, fontSize: 11.sp, fontWeight: FontWeight.w700),
+                      style: _mutedStyle(context, fontSize: 11.sp, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -961,6 +1148,8 @@ class _ServiceIcon extends StatelessWidget {
     );
   }
 }
+
+// ─── Summary Card ────────────────────────────────────────────────────────────
 
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({
@@ -1003,8 +1192,7 @@ class _SummaryCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   isArabic ? 'تقدم البيانات' : 'Brief progress',
-                  style:
-                      _mutedStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w800),
+                  style: _mutedStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w800),
                 ),
               ),
               Text(
@@ -1036,6 +1224,8 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
+// ─── WhatsApp Button ─────────────────────────────────────────────────────────
+
 class _WhatsAppButton extends StatelessWidget {
   const _WhatsAppButton({required this.isArabic});
 
@@ -1046,8 +1236,8 @@ class _WhatsAppButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => launchUrl(Uri.parse(_whatsAppUrl),
-            mode: LaunchMode.externalApplication),
+        onTap: () =>
+            launchUrl(Uri.parse(_whatsAppUrl), mode: LaunchMode.externalApplication),
         borderRadius: BorderRadius.circular(10.r),
         child: Ink(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
@@ -1058,19 +1248,15 @@ class _WhatsAppButton extends StatelessWidget {
           ),
           child: Builder(builder: (context) {
             final isDark = context.isDarkMode;
-            final textColor =
-                isDark ? const Color(0xFF25D366) : Colors.white;
+            final textColor = isDark ? const Color(0xFF25D366) : Colors.white;
             return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.chat_bubble_outline,
-                    color: textColor, size: 19.sp),
+                Icon(Icons.chat_bubble_outline, color: textColor, size: 19.sp),
                 SizedBox(width: 8.w),
                 Flexible(
                   child: Text(
-                    isArabic
-                        ? 'محتاج مساعدة؟ كلمنا واتساب'
-                        : 'Need help? WhatsApp us',
+                    isArabic ? 'محتاج مساعدة؟ كلمنا واتساب' : 'Need help? WhatsApp us',
                     textAlign: TextAlign.center,
                     style: _mainStyle(
                       context,
@@ -1088,6 +1274,8 @@ class _WhatsAppButton extends StatelessWidget {
     );
   }
 }
+
+// ─── Form Block ──────────────────────────────────────────────────────────────
 
 class _FormBlock extends StatelessWidget {
   const _FormBlock({
@@ -1162,6 +1350,8 @@ class _FormBlock extends StatelessWidget {
   }
 }
 
+// ─── Text Field ──────────────────────────────────────────────────────────────
+
 class _TextFieldBox extends StatelessWidget {
   const _TextFieldBox({
     required this.label,
@@ -1204,6 +1394,8 @@ class _TextFieldBox extends StatelessWidget {
     );
   }
 }
+
+// ─── Select Box ──────────────────────────────────────────────────────────────
 
 class _SelectBox extends StatelessWidget {
   const _SelectBox({
@@ -1255,6 +1447,8 @@ class _SelectBox extends StatelessWidget {
   }
 }
 
+// ─── Field Label ─────────────────────────────────────────────────────────────
+
 class _FieldLabel extends StatelessWidget {
   const _FieldLabel(
       {required this.label, required this.required, required this.hasError});
@@ -1294,6 +1488,8 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
+// ─── Choice Pill ─────────────────────────────────────────────────────────────
+
 class _ChoicePill extends StatelessWidget {
   const _ChoicePill(
       {required this.label, required this.selected, required this.onTap});
@@ -1315,20 +1511,15 @@ class _ChoicePill extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? const Color(0x126F3FF5) : c.bgSubtle,
             border: Border.all(
-              color:
-                  selected ? const Color(0x886F3FF5) : c.borderColor,
+              color: selected ? const Color(0x886F3FF5) : c.borderColor,
             ),
             borderRadius: BorderRadius.circular(10.r),
           ),
           child: Row(
             children: [
               Icon(
-                selected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-                color: selected
-                    ? const Color(0xFFB9A3FF)
-                    : c.textLight,
+                selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                color: selected ? const Color(0xFFB9A3FF) : c.textLight,
                 size: 18.sp,
               ),
               SizedBox(width: 8.w),
@@ -1345,6 +1536,8 @@ class _ChoicePill extends StatelessWidget {
   }
 }
 
+// ─── Upload Box (Logo) ───────────────────────────────────────────────────────
+
 class _UploadBox extends StatelessWidget {
   const _UploadBox({
     required this.isArabic,
@@ -1352,6 +1545,8 @@ class _UploadBox extends StatelessWidget {
     required this.hasError,
     required this.onPick,
     required this.onClear,
+    this.isProcessing = false,
+    this.sizeMb,
   });
 
   final bool isArabic;
@@ -1359,6 +1554,8 @@ class _UploadBox extends StatelessWidget {
   final bool hasError;
   final VoidCallback onPick;
   final VoidCallback? onClear;
+  final bool isProcessing;
+  final String? sizeMb;
 
   @override
   Widget build(BuildContext context) {
@@ -1369,7 +1566,7 @@ class _UploadBox extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: onPick,
+              onTap: isProcessing ? null : onPick,
               borderRadius: BorderRadius.circular(10.r),
               child: Ink(
                 padding: EdgeInsets.all(14.r),
@@ -1394,8 +1591,16 @@ class _UploadBox extends StatelessWidget {
                         color: const Color(0x1F6F3FF5),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: Icon(Icons.cloud_upload_outlined,
-                          color: const Color(0xFFB9A3FF), size: 23.sp),
+                      child: isProcessing
+                          ? Padding(
+                              padding: EdgeInsets.all(11.r),
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFFB9A3FF),
+                              ),
+                            )
+                          : Icon(Icons.cloud_upload_outlined,
+                              color: const Color(0xFFB9A3FF), size: 23.sp),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -1404,8 +1609,12 @@ class _UploadBox extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            fileName ??
-                                (isArabic ? 'ارفع اللوجو' : 'Upload logo'),
+                            isProcessing
+                                ? (isArabic
+                                    ? 'جاري تحسين اللوجو...'
+                                    : 'Optimizing logo...')
+                                : (fileName ??
+                                    (isArabic ? 'ارفع اللوجو' : 'Upload logo')),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: _mainStyle(
@@ -1413,9 +1622,14 @@ class _UploadBox extends StatelessWidget {
                           ),
                           SizedBox(height: 3.h),
                           Text(
-                            isArabic
-                                ? 'PNG, JPG, WEBP, SVG أو PDF'
-                                : 'PNG, JPG, WEBP, SVG or PDF',
+                            sizeMb != null
+                                ? (isArabic
+                                    ? 'الحجم بعد التجهيز: $sizeMb'
+                                    : 'Processed size: $sizeMb')
+                                : (isArabic
+                                    ? 'PNG, JPG, WEBP, SVG أو PDF - أي أبعاد، والصور الكبيرة تُحسّن تلقائياً'
+                                    : 'PNG, JPG, WEBP, SVG or PDF - any dimensions, optimized automatically'),
+                            maxLines: 2,
                             style: _mutedStyle(
                                 context, fontSize: 11.sp, fontWeight: FontWeight.w600),
                           ),
@@ -1446,6 +1660,171 @@ class _UploadBox extends StatelessWidget {
   }
 }
 
+// ─── Project Images Section ──────────────────────────────────────────────────
+
+class _ProjectImagesSection extends StatelessWidget {
+  const _ProjectImagesSection({
+    required this.isArabic,
+    required this.images,
+    required this.isProcessing,
+    required this.error,
+    required this.onPick,
+    required this.onRemove,
+    required this.onClearAll,
+  });
+
+  final bool isArabic;
+  final List<_ProjectImageEntry> images;
+  final bool isProcessing;
+  final String error;
+  final VoidCallback onPick;
+  final ValueChanged<int> onRemove;
+  final VoidCallback onClearAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isArabic ? 'صور مشاريع سابقة' : 'Previous project images',
+                    style: _mainStyle(context, fontSize: 13.sp, fontWeight: FontWeight.w900),
+                  ),
+                  SizedBox(height: 3.h),
+                  Text(
+                    isArabic
+                        ? 'اختياري - يمكنك إضافة التصاميم السابقة التي أنجزتها وأي عدد من الصور'
+                        : 'Optional - add your previous completed designs and any number of images',
+                    style: _mutedStyle(
+                        context, fontSize: 11.sp, fontWeight: FontWeight.w600, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+            if (images.isNotEmpty) ...[
+              SizedBox(width: 6.w),
+              TextButton.icon(
+                onPressed: onClearAll,
+                icon: Icon(Icons.delete_outline_rounded,
+                    size: 16.sp, color: const Color(0xFFEF4444)),
+                label: Text(
+                  isArabic ? 'حذف الكل' : 'Clear all',
+                  style: TextStyle(fontSize: 12.sp, color: const Color(0xFFEF4444)),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFFEF4444),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ],
+        ),
+        SizedBox(height: 10.h),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isProcessing ? null : onPick,
+            borderRadius: BorderRadius.circular(10.r),
+            child: Ink(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+              decoration: BoxDecoration(
+                color: const Color(0x0A6F3FF5),
+                border: Border.all(
+                  color: const Color(0x4A6F3FF5),
+                  width: 1.4.w,
+                ),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isProcessing)
+                    SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFFB9A3FF),
+                      ),
+                    )
+                  else
+                    Icon(Icons.collections_outlined,
+                        color: const Color(0xFFB9A3FF), size: 20.sp),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      isProcessing
+                          ? (isArabic ? 'جاري تجهيز الصور...' : 'Preparing images...')
+                          : (isArabic ? 'إضافة صور المشاريع' : 'Add project images'),
+                      style: _mainStyle(context, fontSize: 13.sp, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  Text(
+                    'PNG, JPG, WEBP',
+                    style: _mutedStyle(context, fontSize: 11.sp, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (images.isNotEmpty) ...[
+          SizedBox(height: 12.h),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8.w,
+              mainAxisSpacing: 8.h,
+            ),
+            itemCount: images.length,
+            itemBuilder: (context, index) {
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.r),
+                    child: Image.memory(images[index].bytes, fit: BoxFit.cover),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: () => onRemove(index),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+        if (error.isNotEmpty) _InlineError(error),
+      ],
+    );
+  }
+}
+
+// ─── Check Row ───────────────────────────────────────────────────────────────
+
 class _CheckRow extends StatelessWidget {
   const _CheckRow(
       {required this.value, required this.label, required this.onChanged});
@@ -1468,14 +1847,15 @@ class _CheckRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(label,
-                style:
-                    _mainStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w900)),
+                style: _mainStyle(context, fontSize: 12.sp, fontWeight: FontWeight.w900)),
           ),
         ],
       ),
     );
   }
 }
+
+// ─── Alert Box ───────────────────────────────────────────────────────────────
 
 class _AlertBox extends StatelessWidget {
   const _AlertBox({
@@ -1521,16 +1901,20 @@ class _AlertBox extends StatelessWidget {
   }
 }
 
+// ─── Submit Button ───────────────────────────────────────────────────────────
+
 class _SubmitButton extends StatelessWidget {
   const _SubmitButton({
     required this.isArabic,
     required this.isSubmitting,
     required this.onPressed,
+    this.isDisabled = false,
   });
 
   final bool isArabic;
   final bool isSubmitting;
   final VoidCallback onPressed;
+  final bool isDisabled;
 
   @override
   Widget build(BuildContext context) {
@@ -1538,7 +1922,7 @@ class _SubmitButton extends StatelessWidget {
       width: double.infinity,
       height: 56.h,
       child: ElevatedButton(
-        onPressed: isSubmitting ? null : onPressed,
+        onPressed: (isSubmitting || isDisabled) ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF6F3FF5),
           disabledBackgroundColor: const Color(0x996F3FF5),
@@ -1558,7 +1942,8 @@ class _SubmitButton extends StatelessWidget {
                         strokeWidth: 2, color: Colors.white),
                   ),
                   SizedBox(width: 10.w),
-                  Text(isArabic ? 'جاري الإرسال...' : 'Sending...'),
+                  Text(isArabic ? 'جاري الإرسال...' : 'Sending...',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
                 ],
               )
             : Row(
@@ -1567,17 +1952,22 @@ class _SubmitButton extends StatelessWidget {
                   Text(
                     isArabic ? 'إرسال الطلب' : 'Send request',
                     style: _mainStyle(
-                        context, fontSize: 14.sp, fontWeight: FontWeight.w900),
+                        context,
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w900),
                   ),
                   SizedBox(width: 10.w),
-                  Icon(isArabic ? Icons.arrow_forward : Icons.arrow_forward,
-                      size: 19.sp),
+                  Icon(isArabic ? Icons.arrow_forward : Icons.arrow_back,
+                      size: 19.sp, color: Colors.white),
                 ],
               ),
       ),
     );
   }
 }
+
+// ─── Inline Error ────────────────────────────────────────────────────────────
 
 class _InlineError extends StatelessWidget {
   const _InlineError(this.message);
@@ -1590,8 +1980,7 @@ class _InlineError extends StatelessWidget {
       padding: EdgeInsets.only(top: 6.h),
       child: Row(
         children: [
-          Icon(Icons.error_outline,
-              color: const Color(0xFFEF4444), size: 15.sp),
+          Icon(Icons.error_outline, color: const Color(0xFFEF4444), size: 15.sp),
           SizedBox(width: 5.w),
           Expanded(
             child: Text(
@@ -1610,6 +1999,8 @@ class _InlineError extends StatelessWidget {
   }
 }
 
+// ─── Shared Helpers ──────────────────────────────────────────────────────────
+
 InputDecoration _inputDecoration(BuildContext context, String hint,
     {required bool hasError}) {
   final c = context.etbalyColors;
@@ -1620,8 +2011,8 @@ InputDecoration _inputDecoration(BuildContext context, String hint,
     fillColor: hasError ? const Color(0x0CEF4444) : c.bgSubtle,
     contentPadding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 12.h),
     border: _fieldBorder(c.borderColor),
-    enabledBorder: _fieldBorder(
-        hasError ? const Color(0xB3EF4444) : c.borderColor),
+    enabledBorder:
+        _fieldBorder(hasError ? const Color(0xB3EF4444) : c.borderColor),
     focusedBorder: _fieldBorder(
         hasError ? const Color(0xFFEF4444) : const Color(0x996F3FF5)),
   );
@@ -1672,6 +2063,15 @@ TextStyle _mutedStyle(
     fontWeight: fontWeight,
     height: height,
   );
+}
+
+// ─── Data Models ─────────────────────────────────────────────────────────────
+
+class _ProjectImageEntry {
+  const _ProjectImageEntry({required this.name, required this.bytes});
+
+  final String name;
+  final Uint8List bytes;
 }
 
 enum _StartServiceId { mobile, web, content }
@@ -1734,6 +2134,8 @@ class _StartServiceConfig {
   final List<_StartQuestion> questions;
 }
 
+// ─── Identity Options ────────────────────────────────────────────────────────
+
 const _identityOptions = [
   _StartOption('from-logo', _LangText('الألوان من اللوجو', 'Colors from logo')),
   _StartOption('studio-style',
@@ -1743,6 +2145,8 @@ const _identityOptions = [
   _StartOption('need-help',
       _LangText('أحتاج اقتراح هوية', 'I need identity suggestions')),
 ];
+
+// ─── Services Data ───────────────────────────────────────────────────────────
 
 const _services = [
   _StartServiceConfig(
@@ -1772,6 +2176,10 @@ const _services = [
         type: _QuestionType.textarea,
         required: true,
         label: _LangText('مين المستخدم المستهدف؟', 'Who are the target users?'),
+        placeholder: _LangText(
+          'مثال: عملاء المطاعم، طلاب جامعات، أصحاب شركات صغيرة...',
+          'Example: restaurant customers, university students, small business owners...',
+        ),
       ),
       _StartQuestion(
         key: 'platform',
@@ -1798,8 +2206,11 @@ const _services = [
       _StartQuestion(
         key: 'referenceApps',
         type: _QuestionType.textarea,
-        label: _LangText(
-            'تطبيقات مرجعية أو منافسين', 'Reference apps or competitors'),
+        label: _LangText('تطبيقات مرجعية أو منافسين', 'Reference apps or competitors'),
+        placeholder: _LangText(
+          'اكتب أسماء تطبيقات قريبة من فكرتك أو روابطها لو متاحة',
+          'Add similar app names or links if available.',
+        ),
       ),
     ],
   ),
@@ -1820,8 +2231,7 @@ const _services = [
         required: true,
         label: _LangText('نوع الموقع', 'Website type'),
         options: [
-          _StartOption(
-              'company', _LangText('موقع تعريفي لشركة', 'Company website')),
+          _StartOption('company', _LangText('موقع تعريفي لشركة', 'Company website')),
           _StartOption('store', _LangText('متجر إلكتروني', 'E-commerce store')),
           _StartOption('landing', _LangText('Landing Page', 'Landing page')),
           _StartOption('custom', _LangText('نظام مخصص', 'Custom platform')),
@@ -1860,7 +2270,11 @@ const _services = [
       _StartQuestion(
         key: 'deadline',
         type: _QuestionType.text,
-        label: _LangText('موعد الإطلاق المتوقع', 'Expected launch date'),
+        label: _LangText('ملاحظات إضافية', 'Additional notes'),
+        placeholder: _LangText(
+          'اكتب أي تفاصيل مهمة عن الميعاد، الأولويات، أو طريقة التنفيذ',
+          'Add timing, priorities, or any important implementation notes.',
+        ),
       ),
     ],
   ),
@@ -1880,26 +2294,40 @@ const _services = [
         type: _QuestionType.text,
         required: true,
         label: _LangText('اسم الشركة / البراند', 'Company / brand name'),
+        placeholder: _LangText(
+          'مثال: اطبعلي ديجيتال ماركتنج',
+          'Example: Etbaly Digital Marketing',
+        ),
       ),
       _StartQuestion(
         key: 'companyOverview',
         type: _QuestionType.textarea,
         required: true,
         label: _LangText('نبذة سريعة عن الشركة', 'Short company overview'),
+        placeholder: _LangText(
+          'عرّفنا بالنشاط، خبرتكم، وأهم ما تقدموه للعملاء',
+          'Tell us what you do, your experience, and what you offer customers.',
+        ),
       ),
       _StartQuestion(
         key: 'mainProducts',
         type: _QuestionType.textarea,
         required: true,
-        label: _LangText(
-            'الخدمات أو المنتجات الأساسية', 'Core services or products'),
+        label: _LangText('الخدمات أو المنتجات الأساسية', 'Core services or products'),
+        placeholder: _LangText(
+          'اكتب أهم الخدمات أو المنتجات اللي بتقدمها لعملائك',
+          'Write the main services or products you offer to your customers',
+        ),
       ),
       _StartQuestion(
         key: 'targetCustomer',
         type: _QuestionType.textarea,
         required: true,
-        label:
-            _LangText('مين العميل المستهدف؟', 'Who is your target customer?'),
+        label: _LangText('مين العميل المستهدف؟', 'Who is your target customer?'),
+        placeholder: _LangText(
+          'حدد السن، المكان، الاهتمامات، أو نوع الشركات المستهدفة',
+          'Describe age, location, interests, or target business types.',
+        ),
       ),
       _StartQuestion(
         key: 'differentiator',
@@ -1908,6 +2336,10 @@ const _services = [
         label: _LangText(
           'إيه أكتر حاجة بتميزكم عن المنافسين؟',
           'What makes you different from competitors?',
+        ),
+        placeholder: _LangText(
+          'مثال: سرعة التنفيذ، جودة أعلى، سعر مناسب، خبرة متخصصة...',
+          'Example: faster delivery, higher quality, better pricing, specialist experience...',
         ),
       ),
       _StartQuestion(
@@ -1929,16 +2361,45 @@ const _services = [
         type: _QuestionType.tel,
         label: _LangText(
             'رقم التواصل الذي يظهر في التصميم', 'Contact number for designs'),
+        placeholder: _LangText('مثال: 01010285020', 'Example: 01010285020'),
       ),
       _StartQuestion(
-          key: 'address',
-          type: _QuestionType.text,
-          label: _LangText('العنوان', 'Address')),
+        key: 'contactNumberAlt1',
+        type: _QuestionType.tel,
+        label: _LangText(
+            'رقم تواصل إضافي 1 (اختياري)', 'Additional contact number 1 (optional)'),
+        placeholder: _LangText(
+          'رقم بديل لو حابب يظهر مع التصميم',
+          'Alternative number to show on designs if needed.',
+        ),
+      ),
+      _StartQuestion(
+        key: 'contactNumberAlt2',
+        type: _QuestionType.tel,
+        label: _LangText(
+            'رقم تواصل إضافي 2 (اختياري)', 'Additional contact number 2 (optional)'),
+        placeholder: _LangText(
+          'رقم إضافي آخر أو اتركه فارغاً',
+          'Another optional number, or leave it empty.',
+        ),
+      ),
+      _StartQuestion(
+        key: 'address',
+        type: _QuestionType.text,
+        label: _LangText('العنوان', 'Address'),
+        placeholder: _LangText(
+          'مثال: القاهرة، مدينة نصر، شارع عباس العقاد',
+          'Example: Nasr City, Cairo, Abbas El Akkad St.',
+        ),
+      ),
       _StartQuestion(
         key: 'offerLine',
         type: _QuestionType.textarea,
-        label:
-            _LangText('أي عروض أو جملة تسويقية', 'Offers or marketing slogan'),
+        label: _LangText('أي عروض أو جملة تسويقية', 'Offers or marketing slogan'),
+        placeholder: _LangText(
+          'مثال: خصم 20% لأول طلب أو جملة البراند الأساسية',
+          'Example: 20% off first order, or your main brand slogan.',
+        ),
       ),
       _StartQuestion(
         key: 'focusFeatures',
@@ -1948,11 +2409,19 @@ const _services = [
           'خدمات أو مميزات حابب نركز عليها في المحتوى',
           'Services or benefits you want us to focus on',
         ),
+        placeholder: _LangText(
+          'اكتب أهم النقاط التي تريد إبرازها في التصميمات والمنشورات',
+          'List the key points you want highlighted in designs and posts.',
+        ),
       ),
       _StartQuestion(
         key: 'notes',
         type: _QuestionType.textarea,
         label: _LangText('ملاحظات إضافية', 'Additional notes'),
+        placeholder: _LangText(
+          'اكتب أي تفضيلات، ممنوعات، أو تفاصيل تساعدنا نطلع نتيجة أدق',
+          'Add preferences, restrictions, or details that help us deliver better work.',
+        ),
       ),
     ],
   ),

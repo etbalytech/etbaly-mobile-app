@@ -1569,9 +1569,9 @@ class _CeoPortraitCard extends StatelessWidget {
       children: [
         Container(
           width: 260.w,
-          height: 330.h,
+          height: 260.w,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18.r),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: colors.gold.withValues(alpha: 0.55)),
             boxShadow: [
               BoxShadow(
@@ -1585,7 +1585,7 @@ class _CeoPortraitCard extends StatelessWidget {
           child: Image.asset(
             AppAssets.aboutCeo,
             fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
+            alignment: Alignment.center,
           ),
         ),
         Positioned(
@@ -2791,6 +2791,7 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
   late final VideoPlayerController _ctrl;
   bool _showOverlay = true;
   bool _isMuted = false;
+  bool _hasStartedPlaying = false;
 
   @override
   void initState() {
@@ -2831,7 +2832,91 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
       await _ctrl.seekTo(Duration.zero);
     }
     await _ctrl.play();
-    if (mounted) setState(() => _showOverlay = false);
+    if (mounted) {
+      setState(() {
+        _showOverlay = false;
+        _hasStartedPlaying = true;
+      });
+    }
+  }
+
+  void _openFullscreen() {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (_) => _FullscreenVideoDialog(ctrl: _ctrl),
+    );
+  }
+
+  void _showMore() {
+    if (!mounted) return;
+    final isAr = context.locale.languageCode == 'ar';
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.etbalyColors.bgCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (sheetCtx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: context.etbalyColors.borderColor,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                ListTile(
+                  leading: Icon(Icons.replay_rounded,
+                      color: context.etbalyColors.gold),
+                  title: Text(
+                    isAr ? 'إعادة التشغيل' : 'Replay',
+                    style: TextStyle(
+                      color: context.etbalyColors.textMain,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(sheetCtx).pop();
+                    _ctrl.seekTo(Duration.zero).then((_) => _ctrl.play());
+                    if (mounted) {
+                      setState(() {
+                        _showOverlay = false;
+                        _hasStartedPlaying = true;
+                      });
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.fullscreen_rounded,
+                      color: context.etbalyColors.gold),
+                  title: Text(
+                    isAr ? 'ملء الشاشة' : 'Fullscreen',
+                    style: TextStyle(
+                      color: context.etbalyColors.textMain,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(sheetCtx).pop();
+                    _openFullscreen();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _toggleMute() async {
@@ -2871,26 +2956,20 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
             ),
             clipBehavior: Clip.antiAlias,
             child: AspectRatio(
-              aspectRatio: 0.86,
+              aspectRatio: isReady ? _ctrl.value.aspectRatio : (9 / 16),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   Positioned.fill(
                       child: CustomPaint(painter: _CeoVideoPainter())),
-                  if (isReady)
-                    FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: _ctrl.value.size.width,
-                        height: _ctrl.value.size.height,
-                        child: VideoPlayer(_ctrl),
-                      ),
-                    )
+                  // Show poster until first play; then show actual video
+                  if (isReady && _hasStartedPlaying)
+                    Positioned.fill(child: VideoPlayer(_ctrl))
                   else
                     Image.asset(
                       AppAssets.aboutVideoPoster,
                       fit: BoxFit.cover,
-                      alignment: Alignment.center,
+                      alignment: Alignment.topCenter,
                     ),
                   Positioned.fill(
                     child: DecoratedBox(
@@ -2916,6 +2995,8 @@ class _CeoVideoWidgetState extends State<_CeoVideoWidget> {
                       ctrl: _ctrl,
                       onPlayPause: _onTap,
                       onToggleMute: _toggleMute,
+                      onFullscreen: _openFullscreen,
+                      onMore: _showMore,
                       fmt: _fmt,
                     ),
                   ),
@@ -3024,12 +3105,16 @@ class _VideoBar extends StatelessWidget {
     required this.ctrl,
     required this.onPlayPause,
     required this.onToggleMute,
+    required this.onFullscreen,
+    required this.onMore,
     required this.fmt,
   });
 
   final VideoPlayerController ctrl;
   final VoidCallback onPlayPause;
   final VoidCallback onToggleMute;
+  final VoidCallback onFullscreen;
+  final VoidCallback onMore;
   final String Function(Duration) fmt;
 
   @override
@@ -3038,7 +3123,7 @@ class _VideoBar extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.fromLTRB(12.w, 6.h, 12.w, 8.h),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
@@ -3054,63 +3139,130 @@ class _VideoBar extends StatelessWidget {
               ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
               : 0.0;
 
-          return Row(
+          return Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              GestureDetector(
-                onTap: onPlayPause,
-                child: Icon(
-                  value.isPlaying
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 28.sp,
+              // ── Seek slider ──────────────────────────────────
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 2.5,
+                  thumbShape:
+                      RoundSliderThumbShape(enabledThumbRadius: 5.r),
+                  overlayShape: SliderComponentShape.noOverlay,
+                  activeTrackColor: colors.gold,
+                  inactiveTrackColor: Colors.white24,
+                  thumbColor: colors.gold,
+                ),
+                child: Slider(
+                  value: frac,
+                  onChanged: dur == Duration.zero
+                      ? null
+                      : (v) => ctrl.seekTo(dur * v),
                 ),
               ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderThemeData(
-                    trackHeight: 3,
-                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5),
-                    overlayShape: SliderComponentShape.noOverlay,
-                    activeTrackColor: colors.gold,
-                    inactiveTrackColor: Colors.white24,
-                    thumbColor: colors.gold,
+              // ── Controls row ─────────────────────────────────
+              Row(
+                children: [
+                  // Play / Pause
+                  GestureDetector(
+                    onTap: onPlayPause,
+                    child: Icon(
+                      value.isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 26.sp,
+                    ),
                   ),
-                  child: Slider(
-                    value: frac,
-                    onChanged: dur == Duration.zero
-                        ? null
-                        : (v) => ctrl.seekTo(dur * v),
+                  SizedBox(width: 8.w),
+                  // Time
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      '${fmt(pos)} / ${fmt(dur)}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Text(
-                  '${fmt(pos)} / ${fmt(dur)}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w700,
+                  const Spacer(),
+                  // Volume
+                  GestureDetector(
+                    onTap: onToggleMute,
+                    child: Icon(
+                      value.volume > 0
+                          ? Icons.volume_up_rounded
+                          : Icons.volume_off_rounded,
+                      color: Colors.white,
+                      size: 20.sp,
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              GestureDetector(
-                onTap: onToggleMute,
-                child: Icon(
-                  value.volume > 0
-                      ? Icons.volume_up_rounded
-                      : Icons.volume_off_rounded,
-                  color: Colors.white,
-                  size: 22.sp,
-                ),
+                  SizedBox(width: 10.w),
+                  // Fullscreen
+                  GestureDetector(
+                    onTap: onFullscreen,
+                    child: Icon(
+                      Icons.fullscreen_rounded,
+                      color: Colors.white,
+                      size: 22.sp,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  // More options
+                  GestureDetector(
+                    onTap: onMore,
+                    child: Icon(
+                      Icons.more_vert_rounded,
+                      color: Colors.white,
+                      size: 20.sp,
+                    ),
+                  ),
+                ],
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// ── Fullscreen video dialog ───────────────────────────────────────────────────
+
+class _FullscreenVideoDialog extends StatelessWidget {
+  const _FullscreenVideoDialog({required this.ctrl});
+
+  final VideoPlayerController ctrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog.fullscreen(
+      backgroundColor: Colors.black,
+      child: Stack(
+        children: [
+          Center(
+            child: AspectRatio(
+              aspectRatio: ctrl.value.aspectRatio,
+              child: VideoPlayer(ctrl),
+            ),
+          ),
+          Positioned(
+            top: 40.h,
+            left: 12.w,
+            child: SafeArea(
+              child: IconButton(
+                icon: Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 28.sp,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -11,6 +11,7 @@
     "about": "About",
     "payments": "Payments",
     "contact": "Contact",
+    "careers": "Careers",
     "dashboard": "Admin"
   },
   "dashboard": {
@@ -378,7 +379,7 @@
     "t_6cde5c70d7": "Alexandria, Egypt - Available for visits during office hours",
     "t_d2c8cef56d": "Get Directions",
     "t_a3326e7683": "Contact Before Visit",
-    "t_0069eb3e9e": "Saturday - Thursday",
+    "t_0069eb3e9e": "Sat – Thu · 12 PM – 9 PM",
     "t_80a0344904": "No package selected yet",
     "t_9b84bd8cbe": "Browse our packages and pick one",
     "t_ac442fdb57": "Show Packages",

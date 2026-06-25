@@ -12,6 +12,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../start_now/presentation/widgets/payment_popup.dart';
+import '../../../../shared/widgets/etbaly_invoice.dart';
+
 String _serviceLocaleText(BuildContext context, String ar, String en) =>
     context.locale.languageCode == 'en' ? en : ar;
 
@@ -26,7 +29,6 @@ class ServiceDetailScreen extends StatefulWidget {
 
 class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   static const _baseUrl = 'https://etba3ly-dm.com/';
-  static const _ordersApiUrl = 'https://etba3ly-dm.com/api-services/orders.php';
   static const _waNumber = '201010285020';
 
   late final Map<String, int> _quantities;
@@ -3963,12 +3965,9 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
   final _notesCtrl = TextEditingController();
   final Set<String> _selectedPlatforms = {};
   bool _sameAsPhone = false;
-  bool _submitting = false;
-
   List<_PlatformOption> get _platformOptions =>
       _platformOptionsFor(widget.serviceSlug);
   bool get _requiresPlatforms => _platformOptions.isNotEmpty;
-  bool _apiSubmitHandled = false;
 
   @override
   void initState() {
@@ -4038,138 +4037,39 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
       return;
     }
 
-    setState(() => _submitting = true);
-    try {
-      final payload = <String, dynamic>{
-        'service_slug': widget.serviceSlug,
-        'full_name': name,
-        'mobile': mobile,
-        'whatsapp': waNum,
-        'email': email,
-        'company': _companyCtrl.text.trim(),
-        'description': description,
-        'packages': widget.cartItems.map((pkg) {
-          final qty = widget.quantities[pkg.id] ?? 1;
-          final subtotal = pkg.price * qty;
-          return {
-            'id': pkg.id,
-            'slug': pkg.id,
-            'name_ar': pkg.nameAr,
-            'name_en': pkg.nameEn ?? pkg.nameAr,
-            'qty': qty,
-            'price': pkg.price,
-            'subtotal': subtotal,
-          };
-        }).toList(),
-        'grand_total': widget.grandTotal,
-      };
+    // Generate invoice number locally — same as the website (no API call at this step)
+    final now = DateTime.now();
+    final invoiceNumber =
+        (100000 + now.millisecondsSinceEpoch % 900000).toString();
+    final invoiceDate = '${now.day}/${now.month}/${now.year}';
 
-      if (_selectedPlatforms.isNotEmpty) {
-        payload['platforms'] = _selectedPlatforms.toList();
-      }
-      final adsRegion = _adsRegionFor(widget.cartItems);
-      if (adsRegion != null) {
-        payload['ads_region'] = adsRegion;
-      }
-
-      final response = await Dio().post<dynamic>(
-        _ServiceDetailScreenState._ordersApiUrl,
-        data: payload,
-        options: Options(
-          headers: const {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
-      );
-      final data = response.data;
-      final invoice = data is Map ? data['invoice_number']?.toString() : null;
-
-      if (!mounted) return;
-      setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            invoice == null
-                ? (widget.isArabic
-                    ? 'تم إنشاء الطلب بنجاح'
-                    : 'Order created successfully')
-                : (widget.isArabic
-                    ? 'تم إنشاء الطلب بنجاح - فاتورة $invoice'
-                    : 'Order created successfully - Invoice $invoice'),
-          ),
-          backgroundColor: const Color(0xFF1B8A4B),
-        ),
-      );
-      Navigator.of(context).pop();
-      context.go(AppRoutes.payments);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.isArabic
-                ? 'حدث خطأ أثناء إنشاء الطلب. جرب مرة أخرى.'
-                : 'Could not create the order. Please try again.',
-          ),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
-    }
-    _apiSubmitHandled = true;
-    if (_apiSubmitHandled) return;
-    /*
-
-    if (_nameCtrl.text.trim().isEmpty ||
-        _phoneCtrl.text.trim().isEmpty ||
-        waNum.isEmpty) {
-      return;
-    }
-    setState(() => _submitting = true);
-
-    final lines = StringBuffer();
-    lines.writeln(widget.isArabic
-        ? 'طلب خدمة جديد من ${widget.detail.title}'
-        : 'New service request for ${widget.detail.title}');
-    lines.writeln('');
-    lines.writeln(
-        '${widget.isArabic ? 'الاسم' : 'Name'}: ${_nameCtrl.text.trim()}');
-    lines.writeln(
-        '${widget.isArabic ? 'الموبايل' : 'Mobile'}: ${_phoneCtrl.text.trim()}');
-    lines.writeln('${widget.isArabic ? 'واتساب' : 'WhatsApp'}: $waNum');
-    if (_emailCtrl.text.trim().isNotEmpty) {
-      lines.writeln(
-          '${widget.isArabic ? 'البريد الإلكتروني' : 'Email'}: ${_emailCtrl.text.trim()}');
-    }
-    if (_companyCtrl.text.trim().isNotEmpty) {
-      lines.writeln(
-          '${widget.isArabic ? 'اسم الشركة' : 'Company'}: ${_companyCtrl.text.trim()}');
-    }
-    if (_notesCtrl.text.trim().isNotEmpty) {
-      lines.writeln(
-          '${widget.isArabic ? 'تفاصيل الطلب' : 'Order details'}: ${_notesCtrl.text.trim()}');
-    }
-    lines.writeln('');
-    lines.writeln(widget.isArabic ? '--- الباقات ---' : '--- Packages ---');
-    for (final pkg in widget.cartItems) {
+    final invoiceItems = widget.cartItems.map((pkg) {
       final qty = widget.quantities[pkg.id] ?? 1;
-      lines.writeln(
-          '• ${pkg.name(context)} × $qty = ${pkg.price * qty} ${widget.isArabic ? 'جنيه' : 'EGP'}');
-    }
-    lines.writeln('');
-    lines.writeln(
-        '${widget.isArabic ? 'الإجمالي' : 'Total'}: ${widget.grandTotal} ${widget.isArabic ? 'جنيه' : 'EGP'}');
+      return InvoiceItem(
+        name: widget.isArabic ? pkg.nameAr : (pkg.nameEn ?? pkg.nameAr),
+        quantity: qty,
+        unitPrice: pkg.price.toDouble(),
+      );
+    }).toList();
 
-    final encoded = Uri.encodeComponent(lines.toString());
-    final uri = Uri.parse('https://wa.me/${widget.waNumber}?text=$encoded');
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // Close the checkout sheet, then show the payment popup
+    Navigator.of(context).pop();
+    if (!mounted) return;
 
-    if (mounted) {
-      setState(() => _submitting = false);
-      Navigator.of(context).pop();
-    }
-    */
+    await showPaymentPopup(
+      context,
+      invoiceNumber: invoiceNumber,
+      invoiceDate: invoiceDate,
+      clientName: name,
+      clientMobile: mobile,
+      clientWhatsApp: waNum,
+      clientEmail: email,
+      serviceName: widget.detail.title,
+      companyName: _companyCtrl.text.trim().isNotEmpty
+          ? _companyCtrl.text.trim()
+          : null,
+      items: invoiceItems,
+    );
   }
 
   @override
@@ -4457,15 +4357,8 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _submitting ? null : _submit,
-                  icon: _submitting
-                      ? SizedBox(
-                          width: 18.w,
-                          height: 18.h,
-                          child: CircularProgressIndicator(
-                              color: Colors.black, strokeWidth: 2),
-                        )
-                      : Icon(Icons.send_rounded, size: 17.sp),
+                  onPressed: _submit,
+                  icon: Icon(Icons.send_rounded, size: 17.sp),
                   label: Text(
                     widget.isArabic
                         ? 'إنشاء الطلب والمتابعة للدفع'
@@ -4928,14 +4821,6 @@ List<_PlatformOption> _platformOptionsFor(String serviceSlug) {
   ];
 }
 
-String? _adsRegionFor(List<_ServicePackage> packages) {
-  if (packages.isEmpty) return null;
-  final hasInternational = packages.any((pkg) => pkg.id.startsWith('intl-'));
-  final hasEgypt = packages.any((pkg) => pkg.id.startsWith('eg-'));
-  if (hasInternational && !hasEgypt) return 'arab-eu';
-  if (hasEgypt && !hasInternational) return 'egypt';
-  return null;
-}
 
 class _FormField extends StatelessWidget {
   _FormField({

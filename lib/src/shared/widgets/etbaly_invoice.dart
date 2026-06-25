@@ -1,12 +1,18 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../extensions/context_extension.dart';
 import '../../theme/etbaly_colors.dart';
 import '../../theme/theme.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// Etbaly Invoice Widget
-/// Matches web version's invoice design with purple/gold theme
-class EtbalyInvoice extends StatelessWidget {
+class EtbalyInvoice extends StatefulWidget {
   const EtbalyInvoice({
     super.key,
     required this.invoiceNumber,
@@ -30,46 +36,125 @@ class EtbalyInvoice extends StatelessWidget {
   final List<InvoiceItem> items;
   final String? companyName;
 
-  double get grandTotal {
-    return items.fold(0, (sum, item) => sum + item.total);
-  }
+  @override
+  State<EtbalyInvoice> createState() => _EtbalyInvoiceState();
+}
 
-  Future<void> _exportAsImage(BuildContext context) async {
+class _EtbalyInvoiceState extends State<EtbalyInvoice> {
+  final GlobalKey _repaintKey = GlobalKey();
+  bool _isExporting = false;
+
+  double get _grandTotal =>
+      widget.items.fold(0, (sum, item) => sum + item.total);
+
+  // ── Export as PNG ─────────────────────────────────────────────────────────
+
+  Future<void> _exportAsImage() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+
     try {
-      // TODO: Implement actual image export using RepaintBoundary
+      // Let the frame settle after setState before capturing
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+
+      final boundary = _repaintKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) throw Exception('RepaintBoundary not ready');
+
+      final image = await boundary.toImage(pixelRatio: 3);
+      final byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) throw Exception('Failed to encode PNG');
+
+      final bytes = byteData.buffer.asUint8List();
+      final dir = await getDownloadsDirectory() ??
+          await getApplicationDocumentsDirectory();
+      final fileName =
+          'invoice_${widget.invoiceNumber}_${DateTime.now().millisecondsSinceEpoch}.png';
+      final filePath = '${dir.path}/$fileName';
+      await File(filePath).writeAsBytes(bytes, flush: true);
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Invoice export coming soon!'),
+          content: Text('تم حفظ الفاتورة: $fileName'),
           backgroundColor: context.etbalyColors.gold,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'فتح',
+            textColor: Colors.black,
+            onPressed: () => OpenFilex.open(filePath),
+          ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to export invoice'),
+          content: Text('فشل تصدير الفاتورة'),
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
     }
   }
 
-  void _sendProofByEmail(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Email sending functionality coming soon!'),
-        backgroundColor: context.etbalyColors.gold,
-      ),
-    );
+  // ── WhatsApp ──────────────────────────────────────────────────────────────
+
+  Future<void> _sendProofByWhatsApp() async {
+    final text = _buildInvoiceText();
+    final url = Uri.parse(
+        'https://wa.me/${widget.clientWhatsApp}?text=${Uri.encodeComponent(text)}');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      final fallback =
+          Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
+      await launchUrl(fallback, mode: LaunchMode.externalApplication);
+    }
   }
 
-  void _sendProofByWhatsApp(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('WhatsApp sending functionality coming soon!'),
-        backgroundColor: context.etbalyColors.gold,
-      ),
-    );
+  // ── Email ─────────────────────────────────────────────────────────────────
+
+  Future<void> _sendProofByEmail() async {
+    final subject =
+        Uri.encodeComponent('فاتورة رقم #${widget.invoiceNumber}');
+    final body = Uri.encodeComponent(_buildInvoiceText());
+    final url = Uri.parse(
+        'mailto:${widget.clientEmail}?subject=$subject&body=$body');
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   }
+
+  // ── Plain-text invoice summary ────────────────────────────────────────────
+
+  String _buildInvoiceText() {
+    final buf = StringBuffer();
+    buf.writeln('🧾 فاتورة #${widget.invoiceNumber}');
+    buf.writeln('📅 التاريخ: ${widget.invoiceDate}');
+    buf.writeln('🛠 الخدمة: ${widget.serviceName}');
+    buf.writeln('');
+    buf.writeln('👤 العميل: ${widget.clientName}');
+    buf.writeln('📞 الهاتف: ${widget.clientMobile}');
+    buf.writeln('💬 واتساب: ${widget.clientWhatsApp}');
+    if (widget.clientEmail.isNotEmpty) {
+      buf.writeln('📧 البريد: ${widget.clientEmail}');
+    }
+    if (widget.companyName != null) {
+      buf.writeln('🏢 الشركة: ${widget.companyName}');
+    }
+    buf.writeln('');
+    buf.writeln('── التفاصيل ──────────────');
+    for (final item in widget.items) {
+      buf.writeln(
+          '• ${item.name}  ×${item.quantity}  @${item.unitPrice.toStringAsFixed(2)} = ${item.total.toStringAsFixed(2)} ج.م');
+    }
+    buf.writeln('──────────────────────────');
+    buf.writeln('💰 الإجمالي: ${_grandTotal.toStringAsFixed(2)} ج.م');
+    buf.writeln('');
+    buf.writeln('— اضبعلي للتسويق الرقمي');
+    return buf.toString();
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +167,8 @@ class EtbalyInvoice extends StatelessWidget {
         margin: EdgeInsets.all(20.r),
         decoration: BoxDecoration(
           color: etbalyColors.bgCard,
-          borderRadius: BorderRadius.circular(designTokens.borderRadiusLarge),
+          borderRadius:
+              BorderRadius.circular(designTokens.borderRadiusLarge),
           border: Border.all(
             color: etbalyColors.borderColor.withValues(alpha: 0.3),
             width: 1.w,
@@ -92,48 +178,48 @@ class EtbalyInvoice extends StatelessWidget {
               color: etbalyColors.cardShadow,
               blurRadius: 20.r,
               offset: Offset(0.w, 8.h),
-              spreadRadius: 0.r,
             ),
             BoxShadow(
               color: etbalyColors.primaryGlow,
               blurRadius: 32.r,
               offset: Offset(0.w, 8.h),
-              spreadRadius: 0.r,
             ),
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
-            _buildHeader(context, etbalyColors, designTokens),
-
-            // Gold Bar
-            Container(
-              height: 4.h,
-              margin: EdgeInsets.symmetric(horizontal: 24.w),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    etbalyColors.goldLight,
-                    etbalyColors.gold,
-                    etbalyColors.goldDark,
+            // ── Exportable content (captured by RepaintBoundary) ──────────
+            RepaintBoundary(
+              key: _repaintKey,
+              child: ColoredBox(
+                color: etbalyColors.bgCard,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildHeader(context, etbalyColors, designTokens),
+                    // Gold accent bar
+                    Container(
+                      height: 4.h,
+                      margin: EdgeInsets.symmetric(horizontal: 24.w),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [
+                          etbalyColors.goldLight,
+                          etbalyColors.gold,
+                          etbalyColors.goldDark,
+                        ]),
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                    _buildClientDetails(
+                        context, etbalyColors, designTokens),
+                    _buildOrderTable(context, etbalyColors, designTokens),
+                    _buildFooter(context, etbalyColors, designTokens),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(2.r),
               ),
             ),
-
-            // Client Details
-            _buildClientDetails(context, etbalyColors, designTokens),
-
-            // Order Details Table
-            _buildOrderTable(context, etbalyColors, designTokens),
-
-            // Footer
-            _buildFooter(context, etbalyColors, designTokens),
-
-            // Actions
+            // ── Action buttons (not included in exported image) ───────────
             _buildActions(context, etbalyColors, designTokens),
           ],
         ),
@@ -141,13 +227,14 @@ class EtbalyInvoice extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, EtbalyColorsExtension etbalyColors,
-      AppDesignTokens designTokens) {
+  // ── Header ────────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(BuildContext context,
+      EtbalyColorsExtension etbalyColors, AppDesignTokens designTokens) {
     return Padding(
       padding: EdgeInsets.all(24.r),
       child: Row(
         children: [
-          // Logo/Icon
           Container(
             width: 48.w,
             height: 48.h,
@@ -156,21 +243,16 @@ class EtbalyInvoice extends StatelessWidget {
               borderRadius:
                   BorderRadius.circular(designTokens.borderRadiusSmall),
             ),
-            child: Icon(
-              Icons.receipt_long,
-              color: etbalyColors.primary,
-              size: 24.sp,
-            ),
+            child: Icon(Icons.receipt_long,
+                color: etbalyColors.primary, size: 24.sp),
           ),
           SizedBox(width: 16.w),
-
-          // Service Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  serviceName,
+                  widget.serviceName,
                   style: context.textTheme.headlineSmall?.copyWith(
                     color: etbalyColors.textMain,
                     fontWeight: FontWeight.bold,
@@ -179,20 +261,17 @@ class EtbalyInvoice extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Text(
                   'Etbaly Services',
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: etbalyColors.textMuted,
-                  ),
+                  style: context.textTheme.bodyMedium
+                      ?.copyWith(color: etbalyColors.textMuted),
                 ),
               ],
             ),
           ),
-
-          // Invoice Meta
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '#$invoiceNumber',
+                '#${widget.invoiceNumber}',
                 style: context.textTheme.labelLarge?.copyWith(
                   color: etbalyColors.textMain,
                   fontWeight: FontWeight.bold,
@@ -200,14 +279,14 @@ class EtbalyInvoice extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               Text(
-                invoiceDate,
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: etbalyColors.textMuted,
-                ),
+                widget.invoiceDate,
+                style: context.textTheme.bodySmall
+                    ?.copyWith(color: etbalyColors.textMuted),
               ),
               SizedBox(height: 4.h),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                padding:
+                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: etbalyColors.gold.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12.r),
@@ -227,6 +306,8 @@ class EtbalyInvoice extends StatelessWidget {
     );
   }
 
+  // ── Client details ────────────────────────────────────────────────────────
+
   Widget _buildClientDetails(BuildContext context,
       EtbalyColorsExtension etbalyColors, AppDesignTokens designTokens) {
     return Padding(
@@ -242,8 +323,6 @@ class EtbalyInvoice extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-
-          // Client Grid
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -252,14 +331,17 @@ class EtbalyInvoice extends StatelessWidget {
             mainAxisSpacing: 12.r,
             crossAxisSpacing: 12.r,
             children: [
-              _buildClientItem('Name', clientName, etbalyColors, context),
-              _buildClientItem('Mobile', clientMobile, etbalyColors, context),
               _buildClientItem(
-                  'WhatsApp', clientWhatsApp, etbalyColors, context),
-              _buildClientItem('Email', clientEmail, etbalyColors, context),
-              if (companyName != null)
+                  'Name', widget.clientName, etbalyColors, context),
+              _buildClientItem(
+                  'Mobile', widget.clientMobile, etbalyColors, context),
+              _buildClientItem(
+                  'WhatsApp', widget.clientWhatsApp, etbalyColors, context),
+              _buildClientItem(
+                  'Email', widget.clientEmail, etbalyColors, context),
+              if (widget.companyName != null)
                 _buildClientItem(
-                    'Company', companyName!, etbalyColors, context),
+                    'Company', widget.companyName!, etbalyColors, context),
             ],
           ),
         ],
@@ -291,6 +373,8 @@ class EtbalyInvoice extends StatelessWidget {
     );
   }
 
+  // ── Order table ───────────────────────────────────────────────────────────
+
   Widget _buildOrderTable(BuildContext context,
       EtbalyColorsExtension etbalyColors, AppDesignTokens designTokens) {
     return Padding(
@@ -306,21 +390,16 @@ class EtbalyInvoice extends StatelessWidget {
             ),
           ),
           SizedBox(height: 16.h),
-
-          // Table
           DecoratedBox(
             decoration: BoxDecoration(
               color: etbalyColors.bgSubtle,
               borderRadius:
                   BorderRadius.circular(designTokens.borderRadiusMedium),
-              border: Border.all(
-                color: etbalyColors.borderSubtle,
-                width: 1.w,
-              ),
+              border: Border.all(color: etbalyColors.borderSubtle, width: 1.w),
             ),
             child: Column(
               children: [
-                // Table Header
+                // Header row
                 Container(
                   padding: EdgeInsets.all(16.r),
                   decoration: BoxDecoration(
@@ -333,57 +412,39 @@ class EtbalyInvoice extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        flex: 3,
-                        child: Text(
-                          'Service',
-                          style: context.textTheme.labelSmall?.copyWith(
-                            color: etbalyColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                          flex: 3,
+                          child: Text('Service',
+                              style: context.textTheme.labelSmall?.copyWith(
+                                  color: etbalyColors.primary,
+                                  fontWeight: FontWeight.bold))),
                       Expanded(
-                        flex: 1,
-                        child: Text(
-                          'Qty',
-                          textAlign: TextAlign.center,
-                          style: context.textTheme.labelSmall?.copyWith(
-                            color: etbalyColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                          flex: 1,
+                          child: Text('Qty',
+                              textAlign: TextAlign.center,
+                              style: context.textTheme.labelSmall?.copyWith(
+                                  color: etbalyColors.primary,
+                                  fontWeight: FontWeight.bold))),
                       Expanded(
-                        flex: 2,
-                        child: Text(
-                          'Unit Price',
-                          textAlign: TextAlign.end,
-                          style: context.textTheme.labelSmall?.copyWith(
-                            color: etbalyColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                          flex: 2,
+                          child: Text('Unit Price',
+                              textAlign: TextAlign.end,
+                              style: context.textTheme.labelSmall?.copyWith(
+                                  color: etbalyColors.primary,
+                                  fontWeight: FontWeight.bold))),
                       Expanded(
-                        flex: 2,
-                        child: Text(
-                          'Total',
-                          textAlign: TextAlign.end,
-                          style: context.textTheme.labelSmall?.copyWith(
-                            color: etbalyColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                          flex: 2,
+                          child: Text('Total',
+                              textAlign: TextAlign.end,
+                              style: context.textTheme.labelSmall?.copyWith(
+                                  color: etbalyColors.primary,
+                                  fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
-
-                // Table Rows
-                ...items
-                    .map((item) => _buildTableRow(context, item, etbalyColors)),
-
-                // Grand Total
+                // Item rows
+                ...widget.items.map(
+                    (item) => _buildTableRow(context, item, etbalyColors)),
+                // Grand total
                 Container(
                   padding: EdgeInsets.all(16.r),
                   decoration: BoxDecoration(
@@ -397,23 +458,19 @@ class EtbalyInvoice extends StatelessWidget {
                     children: [
                       Expanded(
                         flex: 6,
-                        child: Text(
-                          'Grand Total',
-                          style: context.textTheme.titleSmall?.copyWith(
-                            color: etbalyColors.gold,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: Text('Grand Total',
+                            style: context.textTheme.titleSmall?.copyWith(
+                                color: etbalyColors.gold,
+                                fontWeight: FontWeight.bold)),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${grandTotal.toStringAsFixed(2)} EGP',
+                          '${_grandTotal.toStringAsFixed(2)} EGP',
                           textAlign: TextAlign.end,
                           style: context.textTheme.titleSmall?.copyWith(
-                            color: etbalyColors.gold,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              color: etbalyColors.gold,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -433,23 +490,15 @@ class EtbalyInvoice extends StatelessWidget {
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: etbalyColors.borderSubtle,
-            width: 1.w,
-          ),
-        ),
+            bottom: BorderSide(color: etbalyColors.borderSubtle, width: 1.w)),
       ),
       child: Row(
         children: [
           Expanded(
-            flex: 3,
-            child: Text(
-              item.name,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: etbalyColors.textMain,
-              ),
-            ),
-          ),
+              flex: 3,
+              child: Text(item.name,
+                  style: context.textTheme.bodyMedium
+                      ?.copyWith(color: etbalyColors.textMain))),
           Expanded(
             flex: 1,
             child: Container(
@@ -458,67 +507,55 @@ class EtbalyInvoice extends StatelessWidget {
                 color: etbalyColors.badgeBg,
                 borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Text(
-                '${item.quantity}',
-                textAlign: TextAlign.center,
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: etbalyColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text('${item.quantity}',
+                  textAlign: TextAlign.center,
+                  style: context.textTheme.labelSmall?.copyWith(
+                      color: etbalyColors.primary,
+                      fontWeight: FontWeight.w600)),
             ),
           ),
           Expanded(
-            flex: 2,
-            child: Text(
-              '${item.unitPrice.toStringAsFixed(2)} EGP',
-              textAlign: TextAlign.end,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: etbalyColors.textMain,
-              ),
-            ),
-          ),
+              flex: 2,
+              child: Text('${item.unitPrice.toStringAsFixed(2)} EGP',
+                  textAlign: TextAlign.end,
+                  style: context.textTheme.bodyMedium
+                      ?.copyWith(color: etbalyColors.textMain))),
           Expanded(
-            flex: 2,
-            child: Text(
-              '${item.total.toStringAsFixed(2)} EGP',
-              textAlign: TextAlign.end,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: etbalyColors.textMain,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+              flex: 2,
+              child: Text('${item.total.toStringAsFixed(2)} EGP',
+                  textAlign: TextAlign.end,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                      color: etbalyColors.textMain,
+                      fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
 
-  Widget _buildFooter(BuildContext context, EtbalyColorsExtension etbalyColors,
-      AppDesignTokens designTokens) {
+  // ── Footer ────────────────────────────────────────────────────────────────
+
+  Widget _buildFooter(BuildContext context,
+      EtbalyColorsExtension etbalyColors, AppDesignTokens designTokens) {
     return Padding(
       padding: EdgeInsets.all(24.r),
       child: Row(
         children: [
-          Icon(
-            Icons.favorite,
-            color: etbalyColors.gold,
-            size: 16.sp,
-          ),
+          Icon(Icons.favorite, color: etbalyColors.gold, size: 16.sp),
           SizedBox(width: 8.w),
           Text(
             'Thank you for your trust — Etbaly Services',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: etbalyColors.textMuted,
-            ),
+            style: context.textTheme.bodySmall
+                ?.copyWith(color: etbalyColors.textMuted),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActions(BuildContext context, EtbalyColorsExtension etbalyColors,
-      AppDesignTokens designTokens) {
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  Widget _buildActions(BuildContext context,
+      EtbalyColorsExtension etbalyColors, AppDesignTokens designTokens) {
     return Padding(
       padding: EdgeInsets.all(24.r),
       child: Row(
@@ -538,9 +575,16 @@ class EtbalyInvoice extends StatelessWidget {
           SizedBox(width: 12.w),
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () => _exportAsImage(context),
-              icon: const Icon(Icons.image),
-              label: const Text('Download Image'),
+              onPressed: _isExporting ? null : _exportAsImage,
+              icon: _isExporting
+                  ? SizedBox(
+                      width: 16.w,
+                      height: 16.h,
+                      child: const CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.black),
+                    )
+                  : const Icon(Icons.download_rounded),
+              label: Text(_isExporting ? 'جاري الحفظ...' : 'تحميل صورة'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: etbalyColors.gold,
                 foregroundColor: Colors.black,
@@ -551,9 +595,9 @@ class EtbalyInvoice extends StatelessWidget {
           SizedBox(width: 12.w),
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () => _sendProofByEmail(context),
-              icon: const Icon(Icons.email),
-              label: const Text('Send Email'),
+              onPressed: _sendProofByEmail,
+              icon: const Icon(Icons.email_rounded),
+              label: const Text('إيميل'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: etbalyColors.textMuted,
                 side: BorderSide(color: etbalyColors.borderColor),
@@ -564,12 +608,12 @@ class EtbalyInvoice extends StatelessWidget {
           SizedBox(width: 12.w),
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () => _sendProofByWhatsApp(context),
-              icon: const Icon(Icons.message),
-              label: const Text('WhatsApp'),
+              onPressed: _sendProofByWhatsApp,
+              icon: const Icon(Icons.message_rounded),
+              label: const Text('واتساب'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: etbalyColors.textMuted,
-                side: BorderSide(color: etbalyColors.borderColor),
+                foregroundColor: const Color(0xFF25D366),
+                side: const BorderSide(color: Color(0xFF25D366)),
                 padding: EdgeInsets.symmetric(vertical: 12.h),
               ),
             ),
@@ -580,16 +624,18 @@ class EtbalyInvoice extends StatelessWidget {
   }
 }
 
-class InvoiceItem {
-  final String name;
-  final int quantity;
-  final double unitPrice;
+// ── InvoiceItem model ─────────────────────────────────────────────────────────
 
-  InvoiceItem({
+class InvoiceItem {
+  const InvoiceItem({
     required this.name,
     required this.quantity,
     required this.unitPrice,
   });
+
+  final String name;
+  final int quantity;
+  final double unitPrice;
 
   double get total => quantity * unitPrice;
 }

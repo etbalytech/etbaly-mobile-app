@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -1060,8 +1061,50 @@ class _HoursRow extends StatelessWidget {
   }
 }
 
-class _MapSection extends StatelessWidget {
+class _MapSection extends StatefulWidget {
   const _MapSection();
+
+  @override
+  State<_MapSection> createState() => _MapSectionState();
+}
+
+class _MapSectionState extends State<_MapSection> {
+  late final WebViewController _mapCtrl;
+  bool _mapLoaded = false;
+
+  static const _embedHtml = '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; }
+    iframe { display: block; width: 100%; height: 100%; border: none; }
+  </style>
+</head>
+<body>
+  <iframe
+    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d359.1200937378907!2d29.754102770189352!3d31.094570914184775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14f5c3c361fd4617%3A0xc29b8d30dfb8a980!2z2KfYt9pi2LnZhNmKINmE2YLYr9i52KfZitipINmI2KfZhNil2LnZhNin2YY!5e0!3m2!1sar!2seg!4v1781724241984!5m2!1sar!2seg"
+    allowfullscreen
+    loading="lazy">
+  </iframe>
+</body>
+</html>
+''';
+
+  @override
+  void initState() {
+    super.initState();
+    _mapCtrl = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (_) {
+          if (mounted) setState(() => _mapLoaded = true);
+        },
+      ))
+      ..loadHtmlString(_embedHtml);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1104,28 +1147,19 @@ class _MapSection extends StatelessWidget {
             ),
           ),
           const _MapInfoStrip(),
-          ClipRect(
-            child: SizedBox(
-              height: 260.h,
-              width: double.infinity,
-              child: CustomPaint(
-                painter: _MapPreviewPainter(),
-                child: Center(
-                  child: Container(
-                    width: 54.w,
-                    height: 54.h,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE53935).withValues(alpha: 0.14),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.location_pin,
-                      color: const Color(0xFFE53935),
-                      size: 42.sp,
+          SizedBox(
+            height: 260.h,
+            width: double.infinity,
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _mapCtrl),
+                if (!_mapLoaded)
+                  const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFD4AF37),
                     ),
                   ),
-                ),
-              ),
+              ],
             ),
           ),
           Padding(
@@ -1139,7 +1173,7 @@ class _MapSection extends StatelessWidget {
                   label: 'auto.t_d2c8cef56d'.tr(),
                   icon: Icons.directions_rounded,
                   onTap: () =>
-                      _open('https://maps.google.com/?q=31.094632,29.753261'),
+                      _open('https://maps.app.goo.gl/kHdWiv47KVqSdRgd8'),
                 ),
                 _OutlinedAction(
                   label: 'auto.t_a3326e7683'.tr(),
@@ -1759,74 +1793,6 @@ class _ContactBackgroundPainter extends CustomPainter {
   }
 }
 
-class _MapPreviewPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.clipRect(Offset.zero & size);
-
-    final bg = Paint()..color = const Color(0xFFEFF4F8);
-    canvas.drawRect(Offset.zero & size, bg);
-
-    final road = Paint()
-      ..color = const Color(0xFFC8D7E2)
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-    final roadLight = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    final green = Paint()..color = const Color(0xFFCDEFD9);
-
-    canvas.drawRect(
-      Rect.fromLTWH(size.width * 0.1, size.height * 0.18, 90, 42),
-      green,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(size.width * 0.66, size.height * 0.58, 120, 48),
-      green,
-    );
-
-    for (var i = -2; i < 7; i++) {
-      final y = size.height * 0.18 + i * 38;
-      canvas.drawLine(Offset(-20, y), Offset(size.width + 20, y + 80), road);
-      canvas.drawLine(
-          Offset(-20, y + 12), Offset(size.width + 20, y + 92), roadLight);
-    }
-
-    for (var i = -1; i < 6; i++) {
-      final x = size.width * 0.08 + i * 58;
-      canvas.drawLine(Offset(x, -20), Offset(x + 95, size.height + 20), road);
-      canvas.drawLine(
-          Offset(x + 12, -20), Offset(x + 107, size.height + 20), roadLight);
-    }
-
-    final labelStyle = TextStyle(
-      color: const Color(0xFF6B7280).withValues(alpha: 0.8),
-      fontSize: 12.sp,
-      fontWeight: FontWeight.w700,
-    );
-    _drawLabel(
-        canvas, 'El Imam Ali', Offset(size.width * 0.58, 58), labelStyle);
-    _drawLabel(
-        canvas, 'Bim Market', Offset(size.width * 0.44, 150), labelStyle);
-    _drawLabel(
-        canvas, 'Alexandria', Offset(size.width * 0.18, 205), labelStyle);
-
-    canvas.restore();
-  }
-
-  void _drawLabel(Canvas canvas, String text, Offset offset, TextStyle style) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    painter.paint(canvas, offset);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 Future<void> _open(String url) async {
   final uri = Uri.parse(url);

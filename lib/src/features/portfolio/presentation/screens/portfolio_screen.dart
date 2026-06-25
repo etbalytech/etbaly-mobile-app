@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../data/portfolio_data.dart';
+import '../../data/portfolio_repository.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 extension _PortfolioIndustryLocale on PortfolioIndustry {
@@ -53,6 +54,11 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   double _mainScrollOffset = 0;
   double _specialtyScrollOffset = 0;
 
+  // API data
+  List<PortfolioIndustry> _industries = [];
+  bool _industriesLoading = true;
+  String _industriesError = '';
+
   PortfolioIndustry? _industry;
   PortfolioSpecialty? _specialty;
   String _tab = 'photos';
@@ -74,6 +80,30 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       duration: const Duration(seconds: 10),
     )..repeat();
     _loadReviewCooldown();
+    _loadIndustries();
+  }
+
+  Future<void> _loadIndustries({bool forceRefresh = false}) async {
+    if (forceRefresh) PortfolioRepository.clearCache();
+    if (!mounted) return;
+    setState(() {
+      _industriesLoading = true;
+      _industriesError = '';
+    });
+    try {
+      final industries = await PortfolioRepository.getIndustries();
+      if (!mounted) return;
+      setState(() {
+        _industries = industries;
+        _industriesLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _industriesError = e.toString();
+        _industriesLoading = false;
+      });
+    }
   }
 
   @override
@@ -100,7 +130,13 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     return [];
   }
 
-  String _url(String path) => Uri.encodeFull('$_assetBase$path');
+  String _url(String path) {
+    if (path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return Uri.encodeFull(path);
+    }
+    return Uri.encodeFull('$_assetBase$path');
+  }
 
   Color _color(String hex) {
     final cleaned = hex.replaceAll('#', '');
@@ -394,9 +430,14 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                 child: child,
               );
             },
-            child: CustomScrollView(
+            child: RefreshIndicator(
+              onRefresh: () => _loadIndustries(forceRefresh: true),
+              color: context.etbalyColors.primary,
+              child: CustomScrollView(
               controller: _scrollController,
-              physics: const BouncingScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               slivers: [
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(18.w, 24.h, 18.w, 34.h),
@@ -413,11 +454,16 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                           ),
                         ),
                         SizedBox(height: 26.h),
-                        _IndustriesSection(
-                          industries: portfolioIndustries,
-                          onSelect: _selectIndustry,
-                          colorOf: _color,
-                        ),
+                        if (_industriesLoading)
+                          const _IndustriesLoadingShimmer()
+                        else if (_industriesError.isNotEmpty)
+                          _IndustriesErrorState(onRetry: () => _loadIndustries())
+                        else
+                          _IndustriesSection(
+                            industries: _industries,
+                            onSelect: _selectIndustry,
+                            colorOf: _color,
+                          ),
                         SizedBox(height: 26.h),
                         _CustomIndustrySection(
                           industryController: _customIndustryController,
@@ -492,6 +538,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),
@@ -773,6 +820,105 @@ class _ClassCard extends StatelessWidget {
     );
   }
 }
+
+// ─── Loading shimmer while API fetches ────────────────────────────────────────
+
+class _IndustriesLoadingShimmer extends StatelessWidget {
+  const _IndustriesLoadingShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.etbalyColors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 140.w,
+          height: 18.h,
+          margin: EdgeInsets.only(bottom: 14.h),
+          decoration: BoxDecoration(
+            color: c.bgSubtle,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        Wrap(
+          spacing: 12.w,
+          runSpacing: 12.h,
+          children: List.generate(8, (i) {
+            return Container(
+              width: (context.width - 36.w - 12.w) / 2,
+              height: 80.h,
+              decoration: BoxDecoration(
+                color: c.bgSubtle,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Error state with retry ───────────────────────────────────────────────────
+
+class _IndustriesErrorState extends StatelessWidget {
+  const _IndustriesErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.etbalyColors;
+    final isAr = context.locale.languageCode == 'ar';
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(28.r),
+      decoration: BoxDecoration(
+        color: c.bgCard,
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(color: c.borderColor),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.wifi_off_rounded, color: c.textMuted, size: 42.sp),
+          SizedBox(height: 12.h),
+          Text(
+            isAr
+                ? 'تعذّر تحميل الأعمال'
+                : 'Could not load portfolio',
+            style: TextStyle(
+              color: c.textMain,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            isAr
+                ? 'تحقق من الإنترنت وحاول مجدداً'
+                : 'Check your connection and try again',
+            style: TextStyle(color: c.textMuted, fontSize: 13.sp),
+          ),
+          SizedBox(height: 18.h),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: Icon(Icons.refresh_rounded, size: 18.sp),
+            label: Text(isAr ? 'إعادة المحاولة' : 'Retry'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: c.primary,
+              side: BorderSide(color: c.primary),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.r)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Industries grid ──────────────────────────────────────────────────────────
 
 class _IndustriesSection extends StatelessWidget {
   const _IndustriesSection({
@@ -3042,30 +3188,81 @@ class _ReelDialog extends StatefulWidget {
 }
 
 class _ReelDialogState extends State<_ReelDialog> {
-  late final VideoPlayerController _ctrl;
+  late VideoPlayerController _ctrl;
   bool _initialized = false;
+  bool _hasError = false;
+  String _errorMsg = '';
+  double? _dragValue;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
-        if (mounted) setState(() => _initialized = true);
-        _ctrl.play();
-        _ctrl.setLooping(true);
+    _initController();
+  }
+
+  void _initController() {
+    _ctrl = VideoPlayerController.networkUrl(
+      Uri.parse(widget.url),
+      httpHeaders: const {'Accept': '*/*'},
+    );
+    _ctrl.addListener(_onCtrlUpdate);
+    _ctrl.initialize().then((_) {
+      if (!mounted) return;
+      if (_ctrl.value.hasError) {
+        setState(() {
+          _hasError = true;
+          _errorMsg = _ctrl.value.errorDescription ?? 'تعذّر تشغيل الفيديو';
+        });
+        return;
+      }
+      setState(() => _initialized = true);
+      _ctrl.play();
+      _ctrl.setLooping(true);
+    }).catchError((e) {
+      if (!mounted) return;
+      setState(() {
+        _hasError = true;
+        _errorMsg = e.toString();
       });
+    });
+  }
+
+  void _onCtrlUpdate() {
+    if (_ctrl.value.hasError && !_hasError && mounted) {
+      setState(() {
+        _hasError = true;
+        _errorMsg = _ctrl.value.errorDescription ?? 'تعذّر تشغيل الفيديو';
+      });
+    }
+  }
+
+  void _retry() {
+    _ctrl.removeListener(_onCtrlUpdate);
+    _ctrl.dispose();
+    setState(() {
+      _initialized = false;
+      _hasError = false;
+      _errorMsg = '';
+      _dragValue = null;
+    });
+    _initController();
   }
 
   @override
   void dispose() {
+    _ctrl.removeListener(_onCtrlUpdate);
     _ctrl.dispose();
     super.dispose();
   }
 
   void _togglePlay() {
-    setState(() {
-      _ctrl.value.isPlaying ? _ctrl.pause() : _ctrl.play();
-    });
+    _ctrl.value.isPlaying ? _ctrl.pause() : _ctrl.play();
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
@@ -3104,63 +3301,184 @@ class _ReelDialogState extends State<_ReelDialog> {
           // Video area
           ClipRRect(
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(18.r)),
-            child: _initialized
-                ? GestureDetector(
-                    onTap: _togglePlay,
-                    child: Stack(
-                      alignment: Alignment.center,
+            child: _hasError
+                ? AspectRatio(
+                    aspectRatio: 9 / 16,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        AspectRatio(
-                          aspectRatio: _ctrl.value.aspectRatio,
-                          child: VideoPlayer(_ctrl),
+                        Icon(Icons.error_outline_rounded,
+                            color: Colors.red.shade300, size: 40.sp),
+                        SizedBox(height: 12.h),
+                        Text(
+                          _errorMsg,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white70, fontSize: 12.sp),
                         ),
-                        // Play/pause overlay
-                        AnimatedBuilder(
-                          animation: _ctrl,
-                          builder: (_, __) => _ctrl.value.isPlaying
-                              ? const SizedBox.shrink()
-                              : Container(
-                                  width: 60.w,
-                                  height: 60.h,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.55),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.play_arrow_rounded,
-                                    color: Colors.white,
-                                    size: 36.sp,
-                                  ),
-                                ),
-                        ),
-                        // Progress bar
-                        Positioned(
-                          bottom: 0.h,
-                          left: 0.w,
-                          right: 0.w,
-                          child: VideoProgressIndicator(
-                            _ctrl,
-                            allowScrubbing: true,
-                            colors: VideoProgressColors(
-                              playedColor: const Color(0xFFD4AF37),
-                              bufferedColor:
-                                  Colors.white.withValues(alpha: 0.25),
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.08),
-                            ),
-                          ),
+                        SizedBox(height: 16.h),
+                        TextButton.icon(
+                          onPressed: _retry,
+                          icon: const Icon(Icons.refresh_rounded,
+                              color: Color(0xFFD4AF37)),
+                          label: Text('إعادة المحاولة',
+                              style: TextStyle(
+                                  color: const Color(0xFFD4AF37),
+                                  fontSize: 13.sp)),
                         ),
                       ],
                     ),
                   )
-                : const AspectRatio(
-                    aspectRatio: 9 / 16,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFD4AF37),
+                : _initialized
+                    ? AnimatedBuilder(
+                        animation: _ctrl,
+                        builder: (_, __) {
+                          final total = _ctrl.value.duration;
+                          final pos = _ctrl.value.position;
+                          final sliderVal = _dragValue ??
+                              (total.inMilliseconds > 0
+                                  ? pos.inMilliseconds /
+                                      total.inMilliseconds
+                                  : 0.0);
+                          final displayPos = _dragValue != null &&
+                                  total.inMilliseconds > 0
+                              ? Duration(
+                                  milliseconds: (_dragValue! *
+                                          total.inMilliseconds)
+                                      .round())
+                              : pos;
+
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: _togglePlay,
+                                child: AspectRatio(
+                                  aspectRatio: _ctrl.value.aspectRatio,
+                                  child: VideoPlayer(_ctrl),
+                                ),
+                              ),
+                              // Play/pause overlay
+                              if (!_ctrl.value.isPlaying)
+                                IgnorePointer(
+                                  child: Container(
+                                    width: 60.w,
+                                    height: 60.h,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black
+                                          .withValues(alpha: 0.55),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.play_arrow_rounded,
+                                      color: Colors.white,
+                                      size: 36.sp,
+                                    ),
+                                  ),
+                                ),
+                              // Seek controls bar
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: EdgeInsets.fromLTRB(
+                                      12.w, 0, 12.w, 8.h),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        Colors.black
+                                            .withValues(alpha: 0.88),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SliderTheme(
+                                        data: SliderThemeData(
+                                          trackHeight: 3.r,
+                                          thumbShape:
+                                              RoundSliderThumbShape(
+                                                  enabledThumbRadius:
+                                                      7.r),
+                                          overlayShape:
+                                              RoundSliderOverlayShape(
+                                                  overlayRadius: 16.r),
+                                          activeTrackColor:
+                                              const Color(0xFFD4AF37),
+                                          inactiveTrackColor: Colors.white
+                                              .withValues(alpha: 0.3),
+                                          thumbColor:
+                                              const Color(0xFFD4AF37),
+                                          overlayColor:
+                                              const Color(0x33D4AF37),
+                                        ),
+                                        child: Slider(
+                                          value:
+                                              sliderVal.clamp(0.0, 1.0),
+                                          onChangeStart: (v) => setState(
+                                              () => _dragValue = v),
+                                          onChanged: (v) => setState(
+                                              () => _dragValue = v),
+                                          onChangeEnd: (v) {
+                                            _ctrl.seekTo(Duration(
+                                              milliseconds: (v *
+                                                      total
+                                                          .inMilliseconds)
+                                                  .round(),
+                                            ));
+                                            setState(
+                                                () => _dragValue = null);
+                                          },
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 4.w),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment
+                                                  .spaceBetween,
+                                          children: [
+                                            Text(
+                                              _fmt(displayPos),
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            Text(
+                                              _fmt(total),
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      )
+                    : const AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFD4AF37),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
           ),
         ],
       ),

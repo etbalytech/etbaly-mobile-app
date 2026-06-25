@@ -15,8 +15,55 @@ class _HeroBackgroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     _paintGrid(canvas, size);
     _paintBeams(canvas, size);
+    _paintGoldMesh(canvas, size);
     _paintParticles(canvas, size);
     _paintComets(canvas, size);
+  }
+
+  // Gold particle mesh — mirrors the website's heroParticleCanvas animation.
+  // Positions are computed deterministically from [progress] so they loop
+  // seamlessly when the AnimationController repeats (period = 18 s).
+  void _paintGoldMesh(Canvas canvas, Size sz) {
+    const count = 20;
+    final connectDist = sz.width * 0.36; // ~135 px on a 375-wide phone
+
+    // Build positions
+    final pos = List<Offset>.generate(count, (i) {
+      final seed = i * 0.137 + 0.5;
+      final baseX = (seed * 7.43) % 1.0;
+      final baseY = (seed * 5.71) % 1.0;
+      final t = progress * math.pi * 2;
+      final dx = math.sin(t + seed * 3.7) * 0.07;
+      final dy = math.cos(t * 0.73 + seed * 2.3) * 0.055;
+      return Offset(
+        sz.width * ((baseX + dx).clamp(0.01, 0.99)),
+        sz.height * ((baseY + dy).clamp(0.01, 0.99)),
+      );
+    });
+
+    // Lines between close particles
+    final linePaint = Paint()..strokeWidth = isDark ? 0.7 : 0.5;
+    for (int i = 0; i < count; i++) {
+      for (int j = i + 1; j < count; j++) {
+        final dist = (pos[i] - pos[j]).distance;
+        if (dist < connectDist) {
+          final a = (1 - dist / connectDist) * (isDark ? 0.28 : 0.16);
+          linePaint.color = colors.gold.withValues(alpha: a);
+          canvas.drawLine(pos[i], pos[j], linePaint);
+        }
+      }
+    }
+
+    // Dots with soft glow
+    final dotPaint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.2);
+    for (int i = 0; i < count; i++) {
+      final seed = i * 0.137 + 0.5;
+      final pulse = 1.0 + math.sin(progress * math.pi * 2 * 1.3 + seed * math.pi * 2) * 0.35;
+      final alpha = (0.18 + (seed * 1.61) % 0.22) * (isDark ? 1.0 : 0.65);
+      dotPaint.color = colors.gold.withValues(alpha: alpha);
+      canvas.drawCircle(pos[i], 1.5 * pulse, dotPaint);
+    }
   }
 
   void _paintGrid(Canvas canvas, Size size) {

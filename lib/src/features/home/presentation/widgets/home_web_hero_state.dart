@@ -3,6 +3,8 @@ part of '../screens/home_page.dart';
 class _HomeWebHeroState extends State<_HomeWebHero>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  final _badgeKey = GlobalKey();
+  bool _fireworksBusy = false;
 
   @override
   void initState() {
@@ -11,6 +13,15 @@ class _HomeWebHeroState extends State<_HomeWebHero>
       vsync: this,
       duration: const Duration(seconds: 18),
     )..repeat();
+  }
+
+  void _onBadgeTap() {
+    if (_fireworksBusy) return;
+    final box = _badgeKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    _fireworksBusy = true;
+    final center = box.localToGlobal(box.size.center(Offset.zero));
+    _triggerFireworks(context, center, onDone: () => _fireworksBusy = false);
   }
 
   @override
@@ -92,9 +103,12 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Align(
+                    Align(
                       alignment: Alignment.topRight,
-                      child: _HeroBrandBadge(),
+                      child: _HeroBrandBadge(
+                        key: _badgeKey,
+                        onTap: _onBadgeTap,
+                      ),
                     )
                         .animate()
                         .fadeIn(duration: const Duration(milliseconds: 450))

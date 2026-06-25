@@ -60,6 +60,7 @@ dependencies:
   # Media
   image_picker: ^1.2.1
   file_picker: ^10.3.10
+  flutter_image_compress: ^2.3.0
 
   # Utilities
   path_provider: ^2.1.4
@@ -76,6 +77,7 @@ dependencies:
 
   flutter_native_splash: ^2.4.7
   open_filex: ^4.7.0
+  webview_flutter: ^4.10.0
 
 dev_dependencies:
   flutter_test:

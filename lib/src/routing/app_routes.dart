@@ -20,6 +20,7 @@ abstract final class AppRoutes {
   static const String payments = '/pricing';
   static const String contact = '/contact';
   static const String startNow = '/start-now';
+  static const String careers = '/careers';
 
   // Sub-routes (push navigation)
   static const String serviceDetail = '/services/:slug';
