@@ -1,5 +1,7 @@
 # Miscellaneous
 .env
+.vs/
+Etbaly-Website-main/
 *.class
 *.log
 *.pyc
