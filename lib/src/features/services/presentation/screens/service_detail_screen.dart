@@ -3965,6 +3965,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
   final _notesCtrl = TextEditingController();
   final Set<String> _selectedPlatforms = {};
   bool _sameAsPhone = false;
+  String? _validationError;
   List<_PlatformOption> get _platformOptions =>
       _platformOptionsFor(widget.serviceSlug);
   bool get _requiresPlatforms => _platformOptions.isNotEmpty;
@@ -3991,6 +3992,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _validationError = null);
     final waNum = _sameAsPhone ? _phoneCtrl.text.trim() : _waCtrl.text.trim();
     final name = _nameCtrl.text.trim();
     final mobile = _phoneCtrl.text.trim();
@@ -4031,9 +4033,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
     }
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
-      );
+      setState(() => _validationError = error);
       return;
     }
 
@@ -4056,6 +4056,11 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
     Navigator.of(context).pop();
     if (!mounted) return;
 
+    final platformLabels = _platformOptions
+        .where((p) => _selectedPlatforms.contains(p.id))
+        .map((p) => widget.isArabic ? p.nameAr : p.nameEn)
+        .toList();
+
     await showPaymentPopup(
       context,
       invoiceNumber: invoiceNumber,
@@ -4069,6 +4074,8 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
           ? _companyCtrl.text.trim()
           : null,
       items: invoiceItems,
+      clientNotes: description.isNotEmpty ? description : null,
+      platforms: platformLabels,
     );
   }
 
@@ -4354,6 +4361,34 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                 maxLines: 4,
               ),
               SizedBox(height: 20.h),
+              if (_validationError != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  margin: EdgeInsets.only(bottom: 12.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0x14EF4444),
+                    border: Border.all(color: const Color(0x99EF4444)),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: const Color(0xFFEF4444), size: 18.sp),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          _validationError!,
+                          style: TextStyle(
+                            color: const Color(0xFFEF4444),
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(

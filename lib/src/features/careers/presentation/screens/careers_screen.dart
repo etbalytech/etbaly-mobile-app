@@ -1661,7 +1661,7 @@ class _GoldButton extends StatelessWidget {
                     ),
                     SizedBox(width: 8.w),
                     Icon(
-                      isArabic ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                      isArabic ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
                       color: const Color(0xFF1a0a3a),
                       size: 18.sp,
                     ),

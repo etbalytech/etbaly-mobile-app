@@ -388,6 +388,7 @@ class _StartNowPageState extends State<StartNowPage> {
           onPick: _pickProjectImages,
           onRemove: _removeProjectImage,
           onClearAll: _clearProjectImages,
+          maxImages: _maxProjectImages,
         ),
         SizedBox(height: 12.h),
         _CheckRow(
@@ -587,8 +588,21 @@ class _StartNowPageState extends State<StartNowPage> {
     });
   }
 
+  static const _maxProjectImages = 10;
+
   Future<void> _pickProjectImages() async {
     setState(() => _projectImagesError = '');
+
+    final remaining = _maxProjectImages - _projectImages.length;
+    if (remaining <= 0) {
+      setState(() {
+        _projectImagesError = _isArabic
+            ? 'وصلت للحد الأقصى ($_maxProjectImages صور)'
+            : 'Maximum of $_maxProjectImages images reached';
+      });
+      return;
+    }
+
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['png', 'jpg', 'jpeg', 'webp'],
@@ -599,8 +613,9 @@ class _StartNowPageState extends State<StartNowPage> {
 
     setState(() => _projectImagesProcessing = true);
     final rejected = <String>[];
+    final toProcess = result.files.take(remaining).toList();
 
-    for (final file in result.files) {
+    for (final file in toProcess) {
       final bytes = file.bytes;
       if (bytes == null) {
         rejected.add(file.name);
@@ -616,7 +631,11 @@ class _StartNowPageState extends State<StartNowPage> {
 
     setState(() {
       _projectImagesProcessing = false;
-      if (rejected.isNotEmpty) {
+      if (result.files.length > remaining) {
+        _projectImagesError = _isArabic
+            ? 'تم إضافة $remaining صورة فقط — الحد الأقصى $_maxProjectImages صور'
+            : 'Only $remaining image(s) added — maximum is $_maxProjectImages';
+      } else if (rejected.isNotEmpty) {
         _projectImagesError = _isArabic
             ? 'تعذر إضافة بعض الملفات: ${rejected.join('، ')}'
             : 'Some files could not be added: ${rejected.join(', ')}';
@@ -1671,6 +1690,7 @@ class _ProjectImagesSection extends StatelessWidget {
     required this.onPick,
     required this.onRemove,
     required this.onClearAll,
+    this.maxImages = 10,
   });
 
   final bool isArabic;
@@ -1680,6 +1700,7 @@ class _ProjectImagesSection extends StatelessWidget {
   final VoidCallback onPick;
   final ValueChanged<int> onRemove;
   final VoidCallback onClearAll;
+  final int maxImages;
 
   @override
   Widget build(BuildContext context) {
@@ -1700,8 +1721,8 @@ class _ProjectImagesSection extends StatelessWidget {
                   SizedBox(height: 3.h),
                   Text(
                     isArabic
-                        ? 'اختياري - يمكنك إضافة التصاميم السابقة التي أنجزتها وأي عدد من الصور'
-                        : 'Optional - add your previous completed designs and any number of images',
+                        ? 'اختياري - يمكنك رفع $maxImages صور كحد أقصى للمشاريع السابقة.'
+                        : 'Optional - you can upload up to $maxImages images of previous projects.',
                     style: _mutedStyle(
                         context, fontSize: 11.sp, fontWeight: FontWeight.w600, height: 1.5),
                   ),
@@ -1769,7 +1790,7 @@ class _ProjectImagesSection extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'PNG, JPG, WEBP',
+                    'PNG, JPG, WEBP · ${images.length}/$maxImages',
                     style: _mutedStyle(context, fontSize: 11.sp, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -2137,13 +2158,9 @@ class _StartServiceConfig {
 // ─── Identity Options ────────────────────────────────────────────────────────
 
 const _identityOptions = [
-  _StartOption('from-logo', _LangText('الألوان من اللوجو', 'Colors from logo')),
-  _StartOption('studio-style',
-      _LangText('ستايل متفق عليه من قبل الاستوديو', 'Studio-approved style')),
-  _StartOption(
-      'custom-palette', _LangText('لدي ألوان محددة', 'I have specific colors')),
-  _StartOption('need-help',
-      _LangText('أحتاج اقتراح هوية', 'I need identity suggestions')),
+  _StartOption('from-logo', _LangText('هوية بصرية من اللوجو', 'Visual identity from logo')),
+  _StartOption('need-help', _LangText('احتاج الى هوية بصرية', 'I need a visual identity')),
+  _StartOption('studio-style', _LangText('احتاج مراجعة من الاستديو', 'I need studio review')),
 ];
 
 // ─── Services Data ───────────────────────────────────────────────────────────

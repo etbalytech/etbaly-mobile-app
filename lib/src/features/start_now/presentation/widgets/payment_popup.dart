@@ -22,7 +22,11 @@ const _supportEmail = 'support@etba3ly-dm.com';
 const _whatsappNumber = '+201010285020';
 const _vodafone1 = '01010285020';
 const _vodafone2 = '01003628888';
+const _orangeCash = '01278696383';
 const _instaAddress = 'MASRAWY.2024@instapay';
+const _binanceMerchantId = '740502271';
+const _tildaNumber = '01010285020';
+const _foryNumber = '01010285020';
 const _bankAccount = '2305000886592101011';
 const _bankIban = 'EG060003023050008865921010110';
 const _bankSwift = 'NBEGEGCX230';
@@ -40,6 +44,8 @@ Future<void> showPaymentPopup(
   required String serviceName,
   required List<InvoiceItem> items,
   String? companyName,
+  String? clientNotes,
+  List<String> platforms = const [],
 }) {
   return showDialog<void>(
     context: context,
@@ -54,6 +60,8 @@ Future<void> showPaymentPopup(
       serviceName: serviceName,
       items: items,
       companyName: companyName,
+      clientNotes: clientNotes,
+      platforms: platforms,
     ),
   );
 }
@@ -73,6 +81,8 @@ class _PaymentPopup extends StatefulWidget {
     required this.serviceName,
     required this.items,
     this.companyName,
+    this.clientNotes,
+    this.platforms = const [],
   });
 
   final String invoiceNumber;
@@ -84,12 +94,16 @@ class _PaymentPopup extends StatefulWidget {
   final String serviceName;
   final List<InvoiceItem> items;
   final String? companyName;
+  final String? clientNotes;
+  final List<String> platforms;
 
   @override
   State<_PaymentPopup> createState() => _PaymentPopupState();
 }
 
+// Tab indices: 0=methods, 1=invoice, 2=proof
 class _PaymentPopupState extends State<_PaymentPopup> {
+  late final PageController _pageController;
   int _tab = 0;
 
   XFile? _transferProof;
@@ -98,16 +112,40 @@ class _PaymentPopupState extends State<_PaymentPopup> {
   bool _emailSent = false;
   bool _emailError = false;
   String? _copiedKey;
+  String? _exportStatus; // 'ok:<path>' | 'err'
+  bool _isExporting = false;
+
+  // Invoice download locked until transfer proof is uploaded
+  bool get _downloadUnlocked => _transferProof != null;
 
   bool get _ar => context.locale.languageCode == 'ar';
-
-  // ── Tab definitions ───────────────────────────────────────────────────────
 
   static const _tabDefs = [
     (Icons.receipt_long_rounded, 'الفاتورة', 'Invoice'),
     (Icons.credit_card_rounded, 'طرق الدفع', 'Pay Methods'),
     (Icons.send_rounded, 'إرسال الإثبات', 'Send Proof'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _switchTab(int index) {
+    setState(() => _tab = index);
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOut,
+    );
+  }
 
   // ── Copy ──────────────────────────────────────────────────────────────────
 
@@ -135,12 +173,47 @@ class _PaymentPopupState extends State<_PaymentPopup> {
     });
   }
 
+  // ── Export invoice as image ───────────────────────────────────────────────
+
+  final GlobalKey _repaintKey = GlobalKey();
+
+  Future<void> _exportAsImage() async {
+    if (_isExporting || !_downloadUnlocked) return;
+    setState(() {
+      _isExporting = true;
+      _exportStatus = null;
+    });
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      final boundary = _repaintKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) throw Exception('boundary not found');
+
+      final image = await boundary.toImage(pixelRatio: 3);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) throw Exception('encode failed');
+
+      final bytes = Uint8List.view(byteData.buffer);
+      final dir = await getDownloadsDirectory() ??
+          await getApplicationDocumentsDirectory();
+      final safeName =
+          widget.clientName.replaceAll(RegExp(r'[^a-zA-Z؀-ۿ0-9]'), '_');
+      final filePath =
+          '${dir.path}/etbaly_invoice_${widget.invoiceNumber}_$safeName.png';
+      await File(filePath).writeAsBytes(bytes, flush: true);
+
+      if (mounted) setState(() => _exportStatus = 'ok:$filePath');
+    } catch (_) {
+      if (mounted) setState(() => _exportStatus = 'err');
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
   // ── Send proof by email ───────────────────────────────────────────────────
 
   Future<void> _sendByEmail() async {
-    if (_transferProof == null || _invoiceProof == null || _emailSending) {
-      return;
-    }
+    if (_transferProof == null || _invoiceProof == null || _emailSending) return;
     setState(() {
       _emailSending = true;
       _emailError = false;
@@ -152,17 +225,15 @@ class _PaymentPopupState extends State<_PaymentPopup> {
       final subject = _ar
           ? 'إثبات دفع + فاتورة — ${widget.clientName}'
           : 'Payment Proof & Invoice — ${widget.clientName}';
-
       final body = _ar
           ? 'مرحباً،\nبيانات العميل:\nالاسم: ${widget.clientName}\n'
               'الموبايل: ${widget.clientMobile}\nواتساب: ${widget.clientWhatsApp}\n'
               'الإيميل: ${widget.clientEmail}\nفاتورة رقم: ${widget.invoiceNumber}\n\n'
               'أرفق صورة التحويل وصورة الفاتورة — برجاء تفعيل الخدمة.'
-          : 'Hello,\nClient Details:\nName: ${widget.clientName}\n'
+          : 'Hello,\nClient: ${widget.clientName}\n'
               'Mobile: ${widget.clientMobile}\nWhatsApp: ${widget.clientWhatsApp}\n'
-              'Email: ${widget.clientEmail}\nInvoice #: ${widget.invoiceNumber}\n\n'
-              'Please find the transfer screenshot and invoice attached. '
-              'Kindly activate the service.';
+              'Email: ${widget.clientEmail}\nInvoice #${widget.invoiceNumber}\n\n'
+              'Please find transfer screenshot and invoice attached. Kindly activate the service.';
 
       final payload = jsonEncode({
         'subject': subject,
@@ -218,7 +289,17 @@ class _PaymentPopupState extends State<_PaymentPopup> {
         children: [
           _buildHeader(colors),
           _buildTabBar(colors),
-          Expanded(child: _buildContent()),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildInvoiceTab(),
+                _buildMethodsTab(),
+                _buildProofTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -239,8 +320,7 @@ class _PaymentPopupState extends State<_PaymentPopup> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.close_rounded,
-                color: colors.textMuted, size: 22.sp),
+            icon: Icon(Icons.close_rounded, color: colors.textMuted, size: 22.sp),
             onPressed: () => Navigator.of(context).pop(),
           ),
           SizedBox(width: 8.w),
@@ -263,9 +343,7 @@ class _PaymentPopupState extends State<_PaymentPopup> {
             child: Text(
               '#${widget.invoiceNumber}',
               style: TextStyle(
-                  color: colors.gold,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp),
+                  color: colors.gold, fontWeight: FontWeight.bold, fontSize: 12.sp),
             ),
           ),
         ],
@@ -283,12 +361,11 @@ class _PaymentPopupState extends State<_PaymentPopup> {
           final def = _tabDefs[i];
           return Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _tab = i),
+              onTap: () => _switchTab(i),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 220),
                 margin: EdgeInsets.symmetric(horizontal: 4.w),
-                padding:
-                    EdgeInsets.symmetric(vertical: 10.h, horizontal: 4.w),
+                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 4.w),
                 decoration: BoxDecoration(
                   color: active
                       ? colors.gold.withValues(alpha: 0.12)
@@ -309,8 +386,7 @@ class _PaymentPopupState extends State<_PaymentPopup> {
                       _ar ? def.$2 : def.$3,
                       style: TextStyle(
                         fontSize: 10.sp,
-                        fontWeight:
-                            active ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                         color: active ? colors.gold : colors.textMuted,
                       ),
                       textAlign: TextAlign.center,
@@ -325,17 +401,216 @@ class _PaymentPopupState extends State<_PaymentPopup> {
     );
   }
 
-  Widget _buildContent() {
-    return switch (_tab) {
-      0 => _buildInvoiceTab(),
-      1 => _buildMethodsTab(),
-      2 => _buildProofTab(),
-      _ => const SizedBox.shrink(),
-    };
+  // ══════════════════════════════════════════════════════════════════════════
+  // TAB 1 — PAYMENT METHODS
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildMethodsTab() {
+    final colors = context.etbalyColors;
+    final grandTotal = widget.items.fold<double>(0, (s, i) => s + i.total);
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Amount lock chip
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+            margin: EdgeInsets.only(bottom: 14.h),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: colors.gold.withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_outline_rounded, color: colors.gold, size: 18.sp),
+                SizedBox(width: 10.w),
+                Text(
+                  _ar ? 'المبلغ' : 'Amount',
+                  style: TextStyle(color: colors.textMuted, fontSize: 13.sp),
+                ),
+                const Spacer(),
+                Text(
+                  '${grandTotal.toStringAsFixed(0)} ${_ar ? 'ج.م' : 'EGP'}',
+                  style: TextStyle(
+                      color: colors.gold,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16.sp),
+                ),
+              ],
+            ),
+          ),
+
+          // Payment method cards in 2-column grid
+          LayoutBuilder(builder: (ctx, constraints) {
+            final w = (constraints.maxWidth - 12.w) / 2;
+            return Wrap(
+              spacing: 12.w,
+              runSpacing: 12.h,
+              children: [
+                SizedBox(
+                    width: w,
+                    child: _PayCard(
+                      color: const Color(0xFFE60012),
+                      title: 'Vodafone Cash',
+                      icon: Icons.phone_android_rounded,
+                      fields: [
+                        _PayField(_ar ? 'الرقم الأول' : 'Number 1', _vodafone1, 'vf1'),
+                        _PayField(_ar ? 'الرقم الثاني' : 'Number 2', _vodafone2, 'vf2'),
+                      ],
+                      copiedKey: _copiedKey,
+                      onCopy: _copy,
+                    )),
+                SizedBox(
+                    width: w,
+                    child: _PayCard(
+                      color: const Color(0xFFFF6600),
+                      title: 'Orange Cash',
+                      icon: Icons.account_balance_wallet_rounded,
+                      fields: [
+                        _PayField(_ar ? 'رقم المحفظة' : 'Wallet Number', _orangeCash, 'oc'),
+                      ],
+                      copiedKey: _copiedKey,
+                      onCopy: _copy,
+                    )),
+                SizedBox(
+                    width: w,
+                    child: _PayCard(
+                      color: const Color(0xFF00B8D9),
+                      title: 'InstaPay',
+                      icon: Icons.flash_on_rounded,
+                      fields: [
+                        _PayField(
+                            _ar ? 'عنوان InstaPay' : 'InstaPay Address',
+                            _instaAddress,
+                            'ip'),
+                      ],
+                      copiedKey: _copiedKey,
+                      onCopy: _copy,
+                    )),
+                SizedBox(
+                    width: w,
+                    child: _PayCard(
+                      color: const Color(0xFFF0B90B),
+                      title: 'Binance',
+                      icon: Icons.currency_bitcoin_rounded,
+                      fields: [
+                        const _PayField('USDT', 'USDT', 'bn_usdt'),
+                        _PayField(_ar ? 'المعرّف' : 'Merchant ID',
+                            _binanceMerchantId, 'bn'),
+                      ],
+                      copiedKey: _copiedKey,
+                      onCopy: _copy,
+                    )),
+                SizedBox(
+                    width: w,
+                    child: _PayCard(
+                      color: const Color(0xFF1A73E8),
+                      title: 'Tilda',
+                      icon: Icons.send_to_mobile_rounded,
+                      fields: [
+                        _PayField(
+                            _ar ? 'رقم تيلدا' : 'Tilda Number', _tildaNumber, 'td'),
+                      ],
+                      copiedKey: _copiedKey,
+                      onCopy: _copy,
+                    )),
+                SizedBox(
+                    width: w,
+                    child: _PayCard(
+                      color: const Color(0xFF22C55E),
+                      title: 'Fory',
+                      icon: Icons.bolt_rounded,
+                      fields: [
+                        _PayField(_ar ? 'رقم Fory' : 'Fory Number', _foryNumber, 'fy'),
+                      ],
+                      isAvailable: true,
+                      note: _ar
+                          ? 'يتم إرسال كود لك حسب المبلغ\n– يتم الدفع من أي ماكينة فوري'
+                          : 'A code will be sent based on the amount\n– pay at any Fory machine',
+                      copiedKey: _copiedKey,
+                      onCopy: _copy,
+                    )),
+              ],
+            );
+          }),
+          SizedBox(height: 12.h),
+
+          // Bank transfer — full width
+          _PayCard(
+            color: const Color(0xFF1A3C6E),
+            title: _ar ? 'تحويل بنكي' : 'Bank Transfer',
+            subtitle: _ar ? 'البنك الأهلي المصري' : 'National Bank of Egypt',
+            icon: Icons.account_balance_rounded,
+            fields: [
+              _PayField(_ar ? 'رقم الحساب' : 'Account Number', _bankAccount, 'ba'),
+              const _PayField('IBAN', _bankIban, 'ib'),
+              const _PayField('SWIFT', _bankSwift, 'sw'),
+            ],
+            copiedKey: _copiedKey,
+            onCopy: _copy,
+          ),
+
+          SizedBox(height: 16.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.shield_outlined, color: colors.primary, size: 14.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  _ar
+                      ? 'جميع طرق الدفع آمنة ومعتمدة رسمياً'
+                      : 'All payment methods are secure and officially approved',
+                  style:
+                      TextStyle(color: colors.textMuted, fontSize: 11.sp),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 14.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _switchTab(2),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.gold,
+                foregroundColor: Colors.black,
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.send_rounded, size: 20.sp, color: Colors.black),
+                  SizedBox(width: 10.w),
+                  Text(
+                    _ar ? 'إرسال إثبات الدفع' : 'Send Payment Proof',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14.sp,
+                      color: Colors.black,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TAB 1 — INVOICE
+  // TAB 0 — INVOICE
   // ══════════════════════════════════════════════════════════════════════════
 
   Widget _buildInvoiceTab() {
@@ -344,32 +619,112 @@ class _PaymentPopupState extends State<_PaymentPopup> {
       padding: EdgeInsets.all(16.r),
       child: Column(
         children: [
-          _InvoiceCard(
-            invoiceNumber: widget.invoiceNumber,
-            invoiceDate: widget.invoiceDate,
-            clientName: widget.clientName,
-            clientMobile: widget.clientMobile,
-            clientWhatsApp: widget.clientWhatsApp,
-            clientEmail: widget.clientEmail,
-            serviceName: widget.serviceName,
-            items: widget.items,
-            companyName: widget.companyName,
-          ),
-          SizedBox(height: 16.h),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => setState(() => _tab = 1),
-              icon: Icon(Icons.credit_card_rounded, size: 18.sp),
-              label: Text(_ar ? 'طرق الدفع ←' : 'Payment Methods →'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.gold,
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
-              ),
+          RepaintBoundary(
+            key: _repaintKey,
+            child: _InvoiceCard(
+              invoiceNumber: widget.invoiceNumber,
+              invoiceDate: widget.invoiceDate,
+              clientName: widget.clientName,
+              clientMobile: widget.clientMobile,
+              clientWhatsApp: widget.clientWhatsApp,
+              clientEmail: widget.clientEmail,
+              serviceName: widget.serviceName,
+              items: widget.items,
+              companyName: widget.companyName,
+              clientNotes: widget.clientNotes,
+              platforms: widget.platforms,
+              ar: _ar,
             ),
+          ),
+          SizedBox(height: 14.h),
+
+          // Export status banner
+          if (_exportStatus != null && _exportStatus!.startsWith('ok:')) ...[
+            _StatusBanner(
+              icon: Icons.check_circle_rounded,
+              color: const Color(0xFF22C55E),
+              title: _ar ? 'تم الحفظ بنجاح' : 'Saved successfully',
+              subtitle: _ar
+                  ? 'الفاتورة في مجلد التنزيلات'
+                  : 'Invoice saved to Downloads',
+              action: _ar ? 'فتح' : 'Open',
+              onAction: () => OpenFilex.open(_exportStatus!.substring(3)),
+            ),
+            SizedBox(height: 10.h),
+          ],
+          if (_exportStatus == 'err') ...[
+            _StatusBanner(
+              icon: Icons.warning_rounded,
+              color: Colors.red,
+              title: _ar ? 'فشل التصدير' : 'Export failed',
+              subtitle: _ar
+                  ? 'حاول مرة أخرى أو التقط صورة شاشة'
+                  : 'Try again or take a screenshot',
+            ),
+            SizedBox(height: 10.h),
+          ],
+
+          // Lock notice when proof not yet uploaded
+          if (!_downloadUnlocked) ...[
+            _InfoBanner(
+              icon: Icons.lock_outline_rounded,
+              color: colors.gold,
+              message: _ar
+                  ? 'ارفع إثبات الدفع أولاً لتفعيل تحميل الفاتورة'
+                  : 'Upload payment proof first to unlock invoice download',
+            ),
+            SizedBox(height: 10.h),
+          ],
+
+          // Action row: payment methods | download | print
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _switchTab(1),
+                  icon: Icon(Icons.credit_card_rounded, size: 16.sp),
+                  label: Text(_ar ? 'طرق الدفع' : 'Pay Methods',
+                      style: TextStyle(fontSize: 12.sp)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.gold,
+                    side: BorderSide(color: colors.gold.withValues(alpha: 0.5)),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.r)),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: AnimatedOpacity(
+                  opacity: _downloadUnlocked ? 1.0 : 0.45,
+                  duration: const Duration(milliseconds: 300),
+                  child: ElevatedButton.icon(
+                    onPressed: _downloadUnlocked && !_isExporting
+                        ? _exportAsImage
+                        : null,
+                    icon: _isExporting
+                        ? SizedBox(
+                            width: 14.w,
+                            height: 14.h,
+                            child: const CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.black))
+                        : Icon(Icons.image_outlined, size: 16.sp),
+                    label: Text(_ar ? 'تحميل صورة' : 'Save Image',
+                        style: TextStyle(fontSize: 12.sp)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.gold,
+                      foregroundColor: Colors.black,
+                      disabledBackgroundColor:
+                          colors.gold.withValues(alpha: 0.5),
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -377,77 +732,7 @@ class _PaymentPopupState extends State<_PaymentPopup> {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TAB 2 — PAYMENT METHODS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildMethodsTab() {
-    final colors = context.etbalyColors;
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.r),
-      child: Column(
-        children: [
-          _PayCard(
-            color: const Color(0xFFE60012),
-            title: 'Vodafone Cash',
-            icon: Icons.phone_android_rounded,
-            fields: [
-              _PayField(_ar ? 'الرقم الأول' : 'Number 1', _vodafone1, 'vf1'),
-              _PayField(_ar ? 'الرقم الثاني' : 'Number 2', _vodafone2, 'vf2'),
-            ],
-            copiedKey: _copiedKey,
-            onCopy: _copy,
-          ),
-          SizedBox(height: 12.h),
-          _PayCard(
-            color: const Color(0xFF00B8D9),
-            title: 'InstaPay',
-            icon: Icons.flash_on_rounded,
-            fields: [
-              _PayField(
-                  _ar ? 'عنوان InstaPay' : 'InstaPay Address',
-                  _instaAddress,
-                  'ip'),
-            ],
-            copiedKey: _copiedKey,
-            onCopy: _copy,
-          ),
-          SizedBox(height: 12.h),
-          _PayCard(
-            color: const Color(0xFF1A3C6E),
-            title: _ar ? 'تحويل بنكي' : 'Bank Transfer',
-            icon: Icons.account_balance_rounded,
-            fields: [
-              _PayField(
-                  _ar ? 'رقم الحساب' : 'Account Number', _bankAccount, 'ba'),
-              const _PayField('IBAN', _bankIban, 'ib'),
-              const _PayField('SWIFT', _bankSwift, 'sw'),
-            ],
-            copiedKey: _copiedKey,
-            onCopy: _copy,
-          ),
-          SizedBox(height: 16.h),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => setState(() => _tab = 2),
-              icon: Icon(Icons.send_rounded, size: 18.sp),
-              label: Text(_ar ? 'إرسال الإثبات ←' : 'Send Proof →'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.gold,
-                foregroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // TAB 3 — SEND PROOF
+  // TAB 2 — SEND PROOF
   // ══════════════════════════════════════════════════════════════════════════
 
   Widget _buildProofTab() {
@@ -459,31 +744,94 @@ class _PaymentPopupState extends State<_PaymentPopup> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Client summary
-          _SummaryCard(
-            clientName: widget.clientName,
-            clientMobile: widget.clientMobile,
-            clientWhatsApp: widget.clientWhatsApp,
-            clientEmail: widget.clientEmail,
+          // Header card
+          Container(
+            padding: EdgeInsets.all(14.r),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: colors.borderSubtle),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Icon(Icons.send_rounded, color: colors.primary, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    _ar ? 'أرسل إثبات الدفع' : 'Send Payment Proof',
+                    style: TextStyle(
+                        color: colors.textMain,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15.sp),
+                  ),
+                ]),
+                SizedBox(height: 4.h),
+                Text(
+                  _ar
+                      ? 'ارفع الصورتين وأدخل بياناتك لتفعيل الخدمة'
+                      : 'Upload both images and enter your details to activate the service',
+                  style: TextStyle(color: colors.textMuted, fontSize: 12.sp),
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
 
-          // Section label
-          Text(
-            _ar ? 'الصور المطلوبة' : 'Required Images',
-            style: TextStyle(
-                color: colors.textMain,
-                fontWeight: FontWeight.bold,
-                fontSize: 14.sp),
+          // Client data from form
+          Container(
+            padding: EdgeInsets.all(14.r),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: colors.borderSubtle),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Icon(Icons.person_rounded, color: colors.primary, size: 16.sp),
+                  SizedBox(width: 6.w),
+                  Text(
+                    _ar ? 'بيانات العميل (من الفورم)' : 'Client details (from form)',
+                    style: TextStyle(
+                        color: colors.textMain,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.sp),
+                  ),
+                ]),
+                SizedBox(height: 10.h),
+                _clientRow(_ar ? 'الاسم' : 'Name', widget.clientName, colors),
+                _clientRow(_ar ? 'الموبايل' : 'Mobile', widget.clientMobile, colors),
+                _clientRow(
+                    _ar ? 'واتساب' : 'WhatsApp', widget.clientWhatsApp, colors),
+                if (widget.clientEmail.isNotEmpty)
+                  _clientRow(
+                      _ar ? 'الإيميل' : 'Email', widget.clientEmail, colors),
+              ],
+            ),
           ),
+          SizedBox(height: 14.h),
+
+          // Upload section label
+          Row(children: [
+            Icon(Icons.image_rounded, color: colors.primary, size: 16.sp),
+            SizedBox(width: 6.w),
+            Text(
+              _ar ? 'الصور المطلوبة' : 'Required Images',
+              style: TextStyle(
+                  color: colors.textMain,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.sp),
+            ),
+          ]),
           SizedBox(height: 10.h),
-
-          // Two upload zones
           Row(
             children: [
               Expanded(
                 child: _UploadZone(
-                  label: _ar ? 'صورة التحويل' : 'Transfer Screenshot',
+                  label: _ar ? 'صورة التحويل *' : 'Transfer Screenshot *',
+                  hint: 'PNG / JPG / WEBP',
                   icon: Icons.receipt_long_rounded,
                   file: _transferProof,
                   onTap: () => _pick(true),
@@ -496,7 +844,8 @@ class _PaymentPopupState extends State<_PaymentPopup> {
               SizedBox(width: 12.w),
               Expanded(
                 child: _UploadZone(
-                  label: _ar ? 'صورة الفاتورة' : 'Invoice Photo',
+                  label: _ar ? 'صورة الفاتورة *' : 'Invoice Photo *',
+                  hint: 'PNG / JPG / WEBP',
                   icon: Icons.file_present_rounded,
                   file: _invoiceProof,
                   onTap: () => _pick(false),
@@ -508,14 +857,29 @@ class _PaymentPopupState extends State<_PaymentPopup> {
               ),
             ],
           ),
+          SizedBox(height: 8.h),
+          // footer note
+          Row(children: [
+            Icon(Icons.lock_outline_rounded,
+                color: colors.textMuted, size: 13.sp),
+            SizedBox(width: 6.w),
+            Text(
+              _ar
+                  ? 'الصور لا تُخزّن — تُرسل مباشرة ثم تُحذف'
+                  : 'Images are not stored — sent directly then deleted',
+              style:
+                  TextStyle(color: colors.textMuted, fontSize: 11.sp),
+            ),
+          ]),
 
           if (!bothReady) ...[
             SizedBox(height: 12.h),
             _InfoBanner(
+              icon: Icons.info_outline_rounded,
+              color: colors.primary,
               message: _ar
                   ? 'يجب رفع الصورتين معاً لتفعيل الخدمة'
                   : 'Both images are required to activate your service',
-              color: colors.primary,
             ),
           ],
 
@@ -583,13 +947,36 @@ class _PaymentPopupState extends State<_PaymentPopup> {
       ),
     );
   }
+
+  Widget _clientRow(String label, String value, dynamic colors) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 76.w,
+            child: Text(label,
+                style: TextStyle(color: colors.textMuted, fontSize: 12.sp)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: TextStyle(
+                    color: colors.textMain,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.sp)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Inline invoice card (no dialog wrapper, with download button)
+// Invoice card widget
 // ═════════════════════════════════════════════════════════════════════════════
 
-class _InvoiceCard extends StatefulWidget {
+class _InvoiceCard extends StatelessWidget {
   const _InvoiceCard({
     required this.invoiceNumber,
     required this.invoiceDate,
@@ -599,7 +986,10 @@ class _InvoiceCard extends StatefulWidget {
     required this.clientEmail,
     required this.serviceName,
     required this.items,
+    required this.ar,
     this.companyName,
+    this.clientNotes,
+    this.platforms = const [],
   });
 
   final String invoiceNumber;
@@ -610,106 +1000,44 @@ class _InvoiceCard extends StatefulWidget {
   final String clientEmail;
   final String serviceName;
   final List<InvoiceItem> items;
+  final bool ar;
   final String? companyName;
+  final String? clientNotes;
+  final List<String> platforms;
 
-  @override
-  State<_InvoiceCard> createState() => _InvoiceCardState();
-}
-
-class _InvoiceCardState extends State<_InvoiceCard> {
-  final GlobalKey _repaintKey = GlobalKey();
-  bool _isExporting = false;
-
-  bool get _ar => context.locale.languageCode == 'ar';
-
-  double get _grandTotal =>
-      widget.items.fold(0, (sum, item) => sum + item.total);
-
-  // ── Export ────────────────────────────────────────────────────────────────
-
-  Future<void> _exportAsImage() async {
-    if (_isExporting) return;
-    setState(() => _isExporting = true);
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-
-      final boundary = _repaintKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) throw Exception('boundary not found');
-
-      final image = await boundary.toImage(pixelRatio: 3);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) throw Exception('encode failed');
-
-      final bytes = Uint8List.view(byteData.buffer);
-      final dir = await getDownloadsDirectory() ??
-          await getApplicationDocumentsDirectory();
-      final filePath =
-          '${dir.path}/invoice_${widget.invoiceNumber}.png';
-      await File(filePath).writeAsBytes(bytes, flush: true);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              _ar ? 'تم الحفظ بنجاح' : 'Saved successfully'),
-          backgroundColor: context.etbalyColors.gold,
-          action: SnackBarAction(
-            label: _ar ? 'فتح' : 'Open',
-            textColor: Colors.black,
-            onPressed: () => OpenFilex.open(filePath),
-          ),
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_ar ? 'فشل التصدير' : 'Export failed'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
-    }
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
+  double get _grandTotal => items.fold(0, (s, i) => s + i.total);
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
-    return RepaintBoundary(
-      key: _repaintKey,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-              color: colors.borderColor.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(colors),
-            // Gold bar
-            Container(
-              height: 3.h,
-              margin: EdgeInsets.symmetric(horizontal: 20.w),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  colors.goldLight,
-                  colors.gold,
-                  colors.goldDark,
-                ]),
-                borderRadius: BorderRadius.circular(2.r),
-              ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: colors.borderColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(colors),
+          Container(
+            height: 3.h,
+            margin: EdgeInsets.symmetric(horizontal: 20.w),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  colors: [colors.goldLight, colors.gold, colors.goldDark]),
+              borderRadius: BorderRadius.circular(2.r),
             ),
-            _buildClientSection(colors),
-            _buildItemsTable(colors),
-            _buildFooterRow(colors),
-          ],
-        ),
+          ),
+          _buildClientSection(context, colors),
+          if (platforms.isNotEmpty) _buildPlatformsSection(context, colors),
+          if (clientNotes != null && clientNotes!.isNotEmpty)
+            _buildNotesSection(context, colors),
+          _buildItemsTable(context, colors),
+          _buildPendingBanner(context, colors),
+          _buildFooter(colors),
+        ],
       ),
     );
   }
@@ -726,15 +1054,14 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               color: colors.badgeBg,
               borderRadius: BorderRadius.circular(10.r),
             ),
-            child: Icon(Icons.receipt_long,
-                color: colors.primary, size: 22.sp),
+            child: Icon(Icons.receipt_long, color: colors.primary, size: 22.sp),
           ),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.serviceName,
+                Text(serviceName,
                     style: TextStyle(
                         color: colors.textMain,
                         fontWeight: FontWeight.bold,
@@ -748,24 +1075,22 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('#${widget.invoiceNumber}',
+              Text('#$invoiceNumber',
                   style: TextStyle(
                       color: colors.textMain,
                       fontWeight: FontWeight.bold,
                       fontSize: 12.sp)),
-              Text(widget.invoiceDate,
-                  style:
-                      TextStyle(color: colors.textMuted, fontSize: 10.sp)),
+              Text(invoiceDate,
+                  style: TextStyle(color: colors.textMuted, fontSize: 10.sp)),
               SizedBox(height: 4.h),
               Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                 decoration: BoxDecoration(
                   color: colors.gold.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
-                  _ar ? 'في انتظار الدفع' : 'Pending Payment',
+                  ar ? 'في انتظار الدفع' : 'Pending Payment',
                   style: TextStyle(
                       color: colors.gold,
                       fontSize: 9.sp,
@@ -779,34 +1104,36 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     );
   }
 
-  Widget _buildClientSection(dynamic colors) {
-    final fields = [
-      (_ar ? 'الاسم' : 'Name', widget.clientName),
-      (_ar ? 'الموبايل' : 'Mobile', widget.clientMobile),
-      if (widget.clientEmail.isNotEmpty)
-        (_ar ? 'الإيميل' : 'Email', widget.clientEmail),
-      if (widget.companyName != null)
-        (_ar ? 'الشركة' : 'Company', widget.companyName!),
+  Widget _buildClientSection(BuildContext context, dynamic colors) {
+    final fields = <(String, String)>[
+      (ar ? 'الاسم' : 'Name', clientName),
+      (ar ? 'الموبايل' : 'Mobile', clientMobile),
+      (ar ? 'واتساب' : 'WhatsApp', clientWhatsApp),
+      if (clientEmail.isNotEmpty) (ar ? 'الإيميل' : 'Email', clientEmail),
+      if (companyName != null) (ar ? 'الشركة' : 'Company', companyName!),
     ];
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_ar ? 'بيانات العميل' : 'Client Details',
-              style: TextStyle(
-                  color: colors.textMain,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12.sp)),
+          Row(children: [
+            Icon(Icons.person_outline, color: colors.primary, size: 14.sp),
+            SizedBox(width: 5.w),
+            Text(ar ? 'بيانات العميل' : 'Client Details',
+                style: TextStyle(
+                    color: colors.textMain,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.sp)),
+          ]),
           SizedBox(height: 8.h),
           Wrap(
             spacing: 16.w,
             runSpacing: 6.h,
             children: fields
                 .map((f) => SizedBox(
-                      width:
-                          (MediaQuery.of(context).size.width - 80.w) / 2,
+                      width: (MediaQuery.of(context).size.width - 80.w) / 2,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -828,7 +1155,83 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     );
   }
 
-  Widget _buildItemsTable(dynamic colors) {
+  Widget _buildPlatformsSection(BuildContext context, dynamic colors) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.share_outlined, color: colors.primary, size: 14.sp),
+            SizedBox(width: 5.w),
+            Text(ar ? 'المنصات المستخدمة' : 'Platforms',
+                style: TextStyle(
+                    color: colors.textMain,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.sp)),
+          ]),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 6.h,
+            children: platforms
+                .map((p) => Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                            color: colors.primary.withValues(alpha: 0.25)),
+                      ),
+                      child: Text(p,
+                          style: TextStyle(
+                              color: colors.primary,
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600)),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesSection(BuildContext context, dynamic colors) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 10.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.chat_bubble_outline, color: colors.primary, size: 14.sp),
+            SizedBox(width: 5.w),
+            Text(ar ? 'رسالة العميل' : 'Client Notes',
+                style: TextStyle(
+                    color: colors.textMain,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.sp)),
+          ]),
+          SizedBox(height: 6.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(10.r),
+            decoration: BoxDecoration(
+              color: colors.bgSubtle,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: colors.borderSubtle),
+            ),
+            child: Text(
+              clientNotes!,
+              style: TextStyle(color: colors.textMuted, fontSize: 11.sp, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemsTable(BuildContext context, dynamic colors) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: DecoratedBox(
@@ -841,8 +1244,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           children: [
             // Header
             Container(
-              padding:
-                  EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
               decoration: BoxDecoration(
                 color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.only(
@@ -854,14 +1256,14 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                 children: [
                   Expanded(
                       flex: 3,
-                      child: Text(_ar ? 'الخدمة' : 'Service',
+                      child: Text(ar ? 'الخدمة' : 'Service',
                           style: TextStyle(
                               color: colors.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 11.sp))),
                   SizedBox(
-                    width: 36.w,
-                    child: Text(_ar ? 'كمية' : 'Qty',
+                    width: 30.w,
+                    child: Text(ar ? 'كمية' : 'Qty',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             color: colors.primary,
@@ -870,7 +1272,15 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                   ),
                   Expanded(
                       flex: 2,
-                      child: Text(_ar ? 'الإجمالي' : 'Total',
+                      child: Text(ar ? 'سعر/قطعة' : 'Unit Price',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: colors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11.sp))),
+                  Expanded(
+                      flex: 2,
+                      child: Text(ar ? 'الإجمالي' : 'Total',
                           textAlign: TextAlign.end,
                           style: TextStyle(
                               color: colors.primary,
@@ -880,9 +1290,9 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               ),
             ),
             // Rows
-            ...widget.items.map((item) => Container(
+            ...items.map((item) => Container(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                   decoration: BoxDecoration(
                     border: Border(
                         bottom: BorderSide(
@@ -896,10 +1306,10 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                               style: TextStyle(
                                   color: colors.textMain, fontSize: 11.sp))),
                       SizedBox(
-                        width: 36.w,
+                        width: 30.w,
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 6.w, vertical: 2.h),
+                              horizontal: 4.w, vertical: 2.h),
                           decoration: BoxDecoration(
                             color: colors.badgeBg,
                             borderRadius: BorderRadius.circular(6.r),
@@ -913,11 +1323,21 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                         ),
                       ),
                       Expanded(
+                          flex: 2,
+                          child: Text(
+                            item.unitPrice > 0
+                                ? '${item.unitPrice.toStringAsFixed(0)} ${ar ? 'ج.م' : 'EGP'}'
+                                : '—',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: colors.textMuted, fontSize: 11.sp),
+                          )),
+                      Expanded(
                         flex: 2,
                         child: Text(
                           item.total > 0
-                              ? '${item.total.toStringAsFixed(0)} ج.م'
-                              : (_ar ? 'يحدد لاحقاً' : 'TBD'),
+                              ? '${item.total.toStringAsFixed(0)} ${ar ? 'ج.م' : 'EGP'}'
+                              : (ar ? 'يحدد لاحقاً' : 'TBD'),
                           textAlign: TextAlign.end,
                           style: TextStyle(
                               color: colors.textMain,
@@ -930,8 +1350,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                 )),
             // Grand total
             Container(
-              padding:
-                  EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
               decoration: BoxDecoration(
                 color: colors.gold.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.only(
@@ -942,7 +1361,7 @@ class _InvoiceCardState extends State<_InvoiceCard> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(_ar ? 'الإجمالي الكلي' : 'Grand Total',
+                    child: Text(ar ? 'الإجمالي الكلي' : 'Grand Total',
                         style: TextStyle(
                             color: colors.gold,
                             fontWeight: FontWeight.bold,
@@ -950,8 +1369,8 @@ class _InvoiceCardState extends State<_InvoiceCard> {
                   ),
                   Text(
                     _grandTotal > 0
-                        ? '${_grandTotal.toStringAsFixed(0)} ج.م'
-                        : (_ar ? 'يحدد بعد المراجعة' : 'TBD after review'),
+                        ? '${_grandTotal.toStringAsFixed(0)} ${ar ? 'ج.م' : 'EGP'}'
+                        : (ar ? 'يحدد بعد المراجعة' : 'TBD after review'),
                     style: TextStyle(
                         color: colors.gold,
                         fontWeight: FontWeight.bold,
@@ -966,7 +1385,48 @@ class _InvoiceCardState extends State<_InvoiceCard> {
     );
   }
 
-  Widget _buildFooterRow(dynamic colors) {
+  Widget _buildPendingBanner(BuildContext context, dynamic colors) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 0),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: colors.gold.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8.r),
+          border: Border.all(color: colors.gold.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.shield_outlined, color: colors.primary, size: 16.sp),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ar ? 'برجاء إتمام عملية الدفع' : 'Please complete payment',
+                    style: TextStyle(
+                        color: colors.textMain,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.sp),
+                  ),
+                  Text(
+                    ar
+                        ? 'لن يبدأ تنفيذ الطلب قبل تأكيد الدفع'
+                        : 'Order will not start until payment is confirmed',
+                    style:
+                        TextStyle(color: colors.textMuted, fontSize: 11.sp),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter(dynamic colors) {
     return Padding(
       padding: EdgeInsets.all(16.r),
       child: Row(
@@ -975,48 +1435,10 @@ class _InvoiceCardState extends State<_InvoiceCard> {
           SizedBox(width: 6.w),
           Expanded(
             child: Text(
-              _ar
+              ar
                   ? 'شكراً لثقتك — اضبعلي للتسويق الرقمي'
                   : 'Thank you for your trust — Etbaly Digital Marketing',
               style: TextStyle(color: colors.textMuted, fontSize: 10.sp),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          GestureDetector(
-            onTap: _exportAsImage,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding:
-                  EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: _isExporting
-                    ? colors.gold.withValues(alpha: 0.3)
-                    : colors.gold,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_isExporting)
-                    SizedBox(
-                      width: 12.w,
-                      height: 12.h,
-                      child: const CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.black),
-                    )
-                  else
-                    Icon(Icons.download_rounded,
-                        color: Colors.black, size: 14.sp),
-                  SizedBox(width: 4.w),
-                  Text(
-                    _ar ? 'تحميل' : 'Save',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11.sp),
-                  ),
-                ],
-              ),
             ),
           ),
         ],
@@ -1046,31 +1468,36 @@ class _PayCard extends StatelessWidget {
     required this.fields,
     required this.copiedKey,
     required this.onCopy,
+    this.subtitle,
+    this.isAvailable = false,
+    this.note,
   });
 
   final Color color;
   final String title;
+  final String? subtitle;
   final IconData icon;
   final List<_PayField> fields;
   final String? copiedKey;
   final Future<void> Function(String, String) onCopy;
+  final bool isAvailable;
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
-    final ar = context.locale.languageCode == 'ar';
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.only(
@@ -1080,86 +1507,162 @@ class _PayCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: color, size: 20.sp),
-                SizedBox(width: 8.w),
-                Text(title,
-                    style: TextStyle(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.sp)),
+                Icon(icon, color: color, size: 18.sp),
+                SizedBox(width: 7.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.sp)),
+                      if (subtitle != null)
+                        Text(subtitle!,
+                            style: TextStyle(
+                                color: color.withValues(alpha: 0.7),
+                                fontSize: 10.sp)),
+                    ],
+                  ),
+                ),
+                if (isAvailable)
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 5.w,
+                          height: 5.w,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF22C55E),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text('متاح الآن',
+                            style: TextStyle(
+                                color: const Color(0xFF22C55E),
+                                fontSize: 9.sp,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(14.r),
+            padding: EdgeInsets.all(12.r),
             child: Column(
-              children: fields.map((f) {
-                final copied = copiedKey == f.key;
-                return Padding(
-                  padding: EdgeInsets.only(bottom: 8.h),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(f.label,
-                                style: TextStyle(
-                                    color: colors.textMuted,
-                                    fontSize: 11.sp)),
-                            SizedBox(height: 2.h),
-                            Text(f.value,
-                                style: TextStyle(
-                                    color: colors.textMain,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13.sp)),
-                          ],
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (note != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(7.r),
+                    ),
+                    child: Text(note!,
+                        style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 10.sp,
+                            height: 1.5)),
+                  ),
+                  SizedBox(height: 8.h),
+                ],
+                ...fields.map((f) {
+                  final copied = copiedKey == f.key;
+                  // Skip display-only labels (like "USDT")
+                  if (f.key == 'bn_usdt') {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 4.h),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 3.h),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
+                        child: Text(f.value,
+                            style: TextStyle(
+                                color: color,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11.sp)),
                       ),
-                      GestureDetector(
-                        onTap: () => onCopy(f.value, f.key),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 10.w, vertical: 6.h),
-                          decoration: BoxDecoration(
-                            color: copied
-                                ? const Color(0xFF22C55E)
-                                    .withValues(alpha: 0.12)
-                                : colors.bgSubtle,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                    );
+                  }
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 8.h),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                copied
-                                    ? Icons.check_rounded
-                                    : Icons.copy_rounded,
-                                size: 14.sp,
-                                color: copied
-                                    ? const Color(0xFF22C55E)
-                                    : colors.textMuted,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                copied
-                                    ? (ar ? 'تم' : 'Copied')
-                                    : (ar ? 'نسخ' : 'Copy'),
-                                style: TextStyle(
-                                    fontSize: 11.sp,
-                                    color: copied
-                                        ? const Color(0xFF22C55E)
-                                        : colors.textMuted),
-                              ),
+                              Text(f.label,
+                                  style: TextStyle(
+                                      color: colors.textMuted, fontSize: 10.sp)),
+                              SizedBox(height: 2.h),
+                              Text(f.value,
+                                  style: TextStyle(
+                                      color: colors.textMain,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12.sp)),
                             ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                        GestureDetector(
+                          onTap: () => onCopy(f.value, f.key),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8.w, vertical: 5.h),
+                            decoration: BoxDecoration(
+                              color: copied
+                                  ? const Color(0xFF22C55E)
+                                      .withValues(alpha: 0.12)
+                                  : colors.bgSubtle,
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  copied
+                                      ? Icons.check_rounded
+                                      : Icons.copy_rounded,
+                                  size: 13.sp,
+                                  color: copied
+                                      ? const Color(0xFF22C55E)
+                                      : colors.textMuted,
+                                ),
+                                SizedBox(width: 3.w),
+                                Text(
+                                  copied ? 'تم' : 'نسخ',
+                                  style: TextStyle(
+                                      fontSize: 10.sp,
+                                      color: copied
+                                          ? const Color(0xFF22C55E)
+                                          : colors.textMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
         ],
@@ -1173,6 +1676,7 @@ class _PayCard extends StatelessWidget {
 class _UploadZone extends StatelessWidget {
   const _UploadZone({
     required this.label,
+    required this.hint,
     required this.icon,
     required this.file,
     required this.onTap,
@@ -1180,6 +1684,7 @@ class _UploadZone extends StatelessWidget {
   });
 
   final String label;
+  final String hint;
   final IconData icon;
   final XFile? file;
   final VoidCallback onTap;
@@ -1188,7 +1693,6 @@ class _UploadZone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
-    final ar = context.locale.languageCode == 'ar';
     final hasFile = file != null;
 
     return GestureDetector(
@@ -1197,8 +1701,7 @@ class _UploadZone extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         height: 130.h,
         decoration: BoxDecoration(
-          color:
-              hasFile ? colors.primary.withValues(alpha: 0.06) : colors.bgCard,
+          color: hasFile ? colors.primary.withValues(alpha: 0.06) : colors.bgCard,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: hasFile
@@ -1240,20 +1743,29 @@ class _UploadZone extends StatelessWidget {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: colors.textMuted, size: 28.sp),
-                  SizedBox(height: 8.h),
-                  Text(label,
-                      textAlign: TextAlign.center,
+                  Icon(Icons.cloud_upload_outlined,
+                      color: colors.textMuted, size: 28.sp),
+                  SizedBox(height: 6.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w),
+                    child: Text(label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: colors.textMuted,
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                  SizedBox(height: 3.h),
+                  Text(hint,
                       style: TextStyle(
-                          color: colors.textMuted,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w500)),
-                  SizedBox(height: 4.h),
+                          color: colors.textMuted.withValues(alpha: 0.6),
+                          fontSize: 9.sp)),
+                  SizedBox(height: 3.h),
                   Text(
-                    ar ? 'اضغط للاختيار' : 'Tap to select',
+                    'اسحب أو اضغط للاختيار',
                     style: TextStyle(
-                        color: colors.textMuted.withValues(alpha: 0.6),
-                        fontSize: 10.sp),
+                        color: colors.textMuted.withValues(alpha: 0.55),
+                        fontSize: 9.sp),
                   ),
                 ],
               ),
@@ -1326,8 +1838,8 @@ class _SendButton extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           fontSize: 13.sp)),
                   Text(subLabel,
-                      style: TextStyle(
-                          color: colors.textMuted, fontSize: 11.sp)),
+                      style:
+                          TextStyle(color: colors.textMuted, fontSize: 11.sp)),
                 ],
               ),
             ),
@@ -1340,88 +1852,18 @@ class _SendButton extends StatelessWidget {
   }
 }
 
-// ── Client summary card ───────────────────────────────────────────────────────
-
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.clientName,
-    required this.clientMobile,
-    required this.clientWhatsApp,
-    required this.clientEmail,
-  });
-
-  final String clientName;
-  final String clientMobile;
-  final String clientWhatsApp;
-  final String clientEmail;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.etbalyColors;
-    final ar = context.locale.languageCode == 'ar';
-
-    final fields = [
-      (ar ? 'الاسم' : 'Name', clientName),
-      (ar ? 'الموبايل' : 'Mobile', clientMobile),
-      (ar ? 'واتساب' : 'WhatsApp', clientWhatsApp),
-      if (clientEmail.isNotEmpty) (ar ? 'الإيميل' : 'Email', clientEmail),
-    ];
-
-    return Container(
-      padding: EdgeInsets.all(14.r),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: colors.borderSubtle),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.person_rounded, color: colors.primary, size: 16.sp),
-              SizedBox(width: 6.w),
-              Text(ar ? 'بيانات العميل' : 'Client Information',
-                  style: TextStyle(
-                      color: colors.textMain,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.sp)),
-            ],
-          ),
-          SizedBox(height: 10.h),
-          ...fields.map((f) => Padding(
-                padding: EdgeInsets.only(bottom: 6.h),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 80.w,
-                      child: Text(f.$1,
-                          style: TextStyle(
-                              color: colors.textMuted, fontSize: 12.sp)),
-                    ),
-                    Expanded(
-                      child: Text(f.$2,
-                          style: TextStyle(
-                              color: colors.textMain,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12.sp)),
-                    ),
-                  ],
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Info banner ───────────────────────────────────────────────────────────────
 
 class _InfoBanner extends StatelessWidget {
-  const _InfoBanner({required this.message, required this.color});
+  const _InfoBanner({
+    required this.message,
+    required this.color,
+    this.icon = Icons.info_outline_rounded,
+  });
 
   final String message;
   final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -1433,19 +1875,18 @@ class _InfoBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: color, size: 16.sp),
+          Icon(icon, color: color, size: 16.sp),
           SizedBox(width: 8.w),
           Expanded(
-            child: Text(message,
-                style: TextStyle(color: color, fontSize: 12.sp)),
-          ),
+              child: Text(message,
+                  style: TextStyle(color: color, fontSize: 12.sp))),
         ],
       ),
     );
   }
 }
 
-// ── Status banner (success / error) ──────────────────────────────────────────
+// ── Status banner ─────────────────────────────────────────────────────────────
 
 class _StatusBanner extends StatelessWidget {
   const _StatusBanner({
@@ -1453,17 +1894,20 @@ class _StatusBanner extends StatelessWidget {
     required this.color,
     required this.title,
     required this.subtitle,
+    this.action,
+    this.onAction,
   });
 
   final IconData icon;
   final Color color;
   final String title;
   final String subtitle;
+  final String? action;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
     final textMuted = context.etbalyColors.textMuted;
-
     return Container(
       padding: EdgeInsets.all(14.r),
       decoration: BoxDecoration(
@@ -1485,11 +1929,17 @@ class _StatusBanner extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         fontSize: 13.sp)),
                 Text(subtitle,
-                    style:
-                        TextStyle(color: textMuted, fontSize: 11.sp)),
+                    style: TextStyle(color: textMuted, fontSize: 11.sp)),
               ],
             ),
           ),
+          if (action != null && onAction != null)
+            TextButton(
+              onPressed: onAction,
+              child: Text(action!,
+                  style: TextStyle(
+                      color: color, fontWeight: FontWeight.bold, fontSize: 12.sp)),
+            ),
         ],
       ),
     );
