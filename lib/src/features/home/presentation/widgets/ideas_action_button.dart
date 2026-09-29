@@ -19,28 +19,30 @@ class _IdeasActionButton extends StatelessWidget {
     final radius = BorderRadius.circular(999.r);
     final isAr = context.locale.languageCode == 'ar';
 
-    return Material(
-      color: Colors.transparent,
-      borderRadius: radius,
-      child: InkWell(
-        onTap: onTap,
+    // Decoration and shadow sit on a Container outside the Material: `Ink`
+    // paints inside the Material's bounds and clipped the glow into a rectangle.
+    return Container(
+      height: 44.h,
+      decoration: BoxDecoration(
+        color: filled ? colors.goldLight : Colors.transparent,
         borderRadius: radius,
-        child: Ink(
-          height: 44.h,
-          decoration: BoxDecoration(
-            color: filled ? colors.goldLight : Colors.transparent,
-            borderRadius: radius,
-            border: Border.all(color: colors.gold, width: 1.5.w),
-            boxShadow: filled
-                ? [
-                    BoxShadow(
-                      color: colors.gold.withValues(alpha: 0.30),
-                      blurRadius: 24.r,
-                      offset: Offset(0.w, 12.h),
-                    ),
-                  ]
-                : null,
-          ),
+        border: Border.all(color: colors.gold, width: 1.5.w),
+        boxShadow: filled
+            ? [
+                BoxShadow(
+                  color: colors.gold.withValues(alpha: 0.30),
+                  blurRadius: 24.r,
+                  offset: Offset(0.w, 12.h),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 18.w),
             child: Row(

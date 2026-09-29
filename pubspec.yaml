@@ -38,7 +38,7 @@ dependencies:
   flutter_svg: ^2.2.4
 
   # Icons
-  font_awesome_flutter: ^10.8.0
+  font_awesome_flutter: ^11.0.0
 
   # Shimmer / Skeleton
   skeletonizer: ^2.1.3
@@ -116,6 +116,7 @@ flutter:
     - assets/images/partners/
     - assets/images/services/
     - assets/images/strip/
+    - assets/images/careers/
     - assets/images/about/
     - assets/images/about/team/
     - assets/images/about/contract/

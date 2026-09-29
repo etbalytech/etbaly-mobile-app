@@ -1,13 +1,18 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../data/about_data.dart';
+import '../../data/about_repository.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -20,6 +25,13 @@ class _AboutScreenState extends State<AboutScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _floatController;
 
+  // The CEO profile and the team are edited from the dashboard, so they are
+  // loaded from the API (like the website) instead of being bundled in the app.
+  CeoProfile _ceo = CeoProfile.fallback;
+  List<TeamMember>? _team;
+  bool _teamLoading = true;
+  bool _teamFailed = false;
+
   bool get _isArabic => context.locale.languageCode == 'ar';
 
   @override
@@ -29,12 +41,63 @@ class _AboutScreenState extends State<AboutScreen>
       vsync: this,
       duration: Duration(seconds: 9),
     )..repeat();
+    _load();
   }
 
   @override
   void dispose() {
     _floatController.dispose();
     super.dispose();
+  }
+
+  Future<void> _load() async {
+    // Show the last known data right away, then refresh from the server.
+    final cachedCeo = await AboutRepository.cachedCeoProfile();
+    final cachedTeam = await AboutRepository.cachedTeam();
+    if (!mounted) return;
+    setState(() {
+      if (cachedCeo != null) _ceo = cachedCeo;
+      if (cachedTeam != null) {
+        _team = cachedTeam;
+        _teamLoading = false;
+      }
+    });
+    await Future.wait([_refreshCeo(), _refreshTeam()]);
+  }
+
+  Future<void> _refreshCeo() async {
+    try {
+      final profile = await AboutRepository.fetchCeoProfile();
+      if (!mounted || profile == null) return;
+      setState(() => _ceo = profile);
+    } catch (_) {
+      // Keep the cached profile (or the defaults) when the server is unreachable.
+    }
+  }
+
+  Future<void> _refreshTeam() async {
+    if (_team == null) {
+      setState(() {
+        _teamLoading = true;
+        _teamFailed = false;
+      });
+    }
+    try {
+      final team = await AboutRepository.fetchTeam();
+      if (!mounted) return;
+      setState(() {
+        _team = team;
+        _teamLoading = false;
+        _teamFailed = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _teamLoading = false;
+        // Only an error when there is nothing (not even a cached team) to show.
+        _teamFailed = _team == null;
+      });
+    }
   }
 
   @override
@@ -75,7 +138,7 @@ class _AboutScreenState extends State<AboutScreen>
                   SizedBox(height: 28.h),
                   _StorySection(),
                   SizedBox(height: 28.h),
-                  _CeoSection(progress: _floatController),
+                  _CeoSection(progress: _floatController, profile: _ceo),
                   SizedBox(height: 28.h),
                   _ContractSection(),
                   SizedBox(height: 28.h),
@@ -85,9 +148,14 @@ class _AboutScreenState extends State<AboutScreen>
                   SizedBox(height: 28.h),
                   _GrowthPartnerBanner(),
                   SizedBox(height: 28.h),
-                  _CeoProfileSection(),
+                  _CeoProfileSection(profile: _ceo),
                   SizedBox(height: 28.h),
-                  _TeamSection(),
+                  _TeamSection(
+                    team: _team,
+                    loading: _teamLoading,
+                    failed: _teamFailed,
+                    onRetry: _refreshTeam,
+                  ),
                   SizedBox(height: 28.h),
                   _CtaSection(),
                 ],
@@ -876,13 +944,15 @@ class _WhyChooseSection extends StatelessWidget {
 }
 
 class _CeoSection extends StatelessWidget {
-  const _CeoSection({required this.progress});
+  const _CeoSection({required this.progress, required this.profile});
 
   final Animation<double> progress;
+  final CeoProfile profile;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
+    final isAr = context.locale.languageCode == 'ar';
 
     return _PlainSection(
       child: Column(
@@ -916,9 +986,8 @@ class _CeoSection extends StatelessWidget {
           SizedBox(height: 18.h),
           _GlowPanel(
             child: _Checklist(items: [
-              _CheckItem('auto.t_dbe41ec88c'.tr(), Color(0xFFD4AF37)),
-              _CheckItem('auto.t_955599c7fe'.tr(), Color(0xFF68D391)),
-              _CheckItem('auto.t_279d3a38ef'.tr(), Color(0xFF63B3ED)),
+              for (final h in profile.highlights)
+                _CheckItem(h.text(isAr), h.color),
             ]),
           ),
           SizedBox(height: 14.h),
@@ -957,10 +1026,29 @@ class _CeoSection extends StatelessWidget {
 }
 
 class _TeamSection extends StatelessWidget {
-  const _TeamSection();
+  const _TeamSection({
+    required this.team,
+    required this.loading,
+    required this.failed,
+    required this.onRetry,
+  });
+
+  final List<TeamMember>? team;
+  final bool loading;
+  final bool failed;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final isAr = context.locale.languageCode == 'ar';
+    final colors = context.etbalyColors;
+    final members = team ?? const <TeamMember>[];
+
+    Widget stateBox({required Widget child}) => Padding(
+          padding: EdgeInsets.symmetric(vertical: 26.h),
+          child: Center(child: child),
+        );
+
     return _PlainSection(
       child: Column(
         children: [
@@ -977,46 +1065,71 @@ class _TeamSection extends StatelessWidget {
             centered: true,
           ),
           SizedBox(height: 18.h),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12.r,
-            crossAxisSpacing: 12.r,
-            childAspectRatio: 0.78,
-            children: [
-              _TeamCard(
-                name: 'auto.t_c7eca3246d'.tr(),
-                role: 'Account Manager',
-                image: 'yasmine',
+          if (loading && team == null)
+            stateBox(
+              child: CircularProgressIndicator(
+                color: colors.gold,
+                strokeWidth: 2.5,
               ),
-              _TeamCard(
-                name: 'auto.t_f3b9fa8833'.tr(),
-                role: 'Team Leader & Video Editor',
-                image: 'mahmoud',
+            )
+          else if (failed)
+            stateBox(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.wifi_off_rounded,
+                      color: colors.textLight, size: 30.sp),
+                  SizedBox(height: 10.h),
+                  Text(
+                    isAr
+                        ? 'فشل تحميل بيانات الفريق'
+                        : 'Failed to load the team',
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.bodyMedium
+                        ?.copyWith(color: colors.textMuted),
+                  ),
+                  SizedBox(height: 12.h),
+                  OutlinedButton.icon(
+                    onPressed: onRetry,
+                    icon: Icon(Icons.refresh_rounded, size: 18.sp),
+                    label: Text(isAr ? 'إعادة المحاولة' : 'Try again'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.gold,
+                      side: BorderSide(
+                          color: colors.gold.withValues(alpha: 0.5)),
+                    ),
+                  ),
+                ],
               ),
-              _TeamCard(
-                name: 'auto.t_6f5f22e2d3'.tr(),
-                role: 'Operations Coordinator',
-                image: 'hagar',
+            )
+          else if (members.isEmpty)
+            stateBox(
+              child: Text(
+                isAr
+                    ? 'لا يوجد أعضاء فريق حتى الآن'
+                    : 'No team members have been added yet',
+                textAlign: TextAlign.center,
+                style: context.textTheme.bodyMedium
+                    ?.copyWith(color: colors.textMuted),
               ),
-              _TeamCard(
-                name: 'auto.t_89a5dde564'.tr(),
-                role: 'Web Developer',
-                image: 'ahmed',
-              ),
-              _TeamCard(
-                name: 'auto.t_ca0fa79930'.tr(),
-                role: 'Mobile Developer',
-                image: 'salma',
-              ),
-              _TeamCard(
-                name: 'auto.t_669c3a1d44'.tr(),
-                role: 'Moderator',
-                image: 'shahd',
-              ),
-            ],
-          ),
+            )
+          else
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12.r,
+              crossAxisSpacing: 12.r,
+              childAspectRatio: 0.78,
+              children: [
+                for (final member in members)
+                  _TeamCard(
+                    name: member.name(isAr),
+                    role: member.role(isAr),
+                    avatar: member.avatar,
+                  ),
+              ],
+            ),
         ],
       ),
     );
@@ -1474,27 +1587,32 @@ class _GrowthPartnerBanner extends StatelessWidget {
 }
 
 class _CeoProfileSection extends StatelessWidget {
-  const _CeoProfileSection();
+  const _CeoProfileSection({required this.profile});
+
+  final CeoProfile profile;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
+    final isAr = context.locale.languageCode == 'ar';
+    final nameHighlight = profile.nameHighlight(isAr);
 
     return _PlainSection(
       child: Column(
         children: [
-          _RoleLabel(label: 'auto.t_aa406e4c94'.tr()),
+          _RoleLabel(label: profile.title(isAr)),
           SizedBox(height: 14.h),
-          _CeoPortraitCard(),
+          _CeoPortraitCard(profile: profile),
           SizedBox(height: 20.h),
           Text.rich(
             TextSpan(
-              text: 'auto.t_b418443b8b'.tr(),
+              text: profile.nameMain(isAr),
               children: [
-                TextSpan(
-                  text: 'auto.t_de70ae52e8'.tr(),
-                  style: TextStyle(color: colors.gold),
-                ),
+                if (nameHighlight.isNotEmpty)
+                  TextSpan(
+                    text: ' $nameHighlight',
+                    style: TextStyle(color: colors.gold),
+                  ),
               ],
             ),
             textAlign: TextAlign.center,
@@ -1506,14 +1624,12 @@ class _CeoProfileSection extends StatelessWidget {
           ),
           SizedBox(height: 14.h),
           _MutedText(
-            'auto.t_51c39a8008'.tr(),
+            profile.bio(isAr),
             centered: true,
           ),
           SizedBox(height: 18.h),
           _Checklist(items: [
-            _CheckItem('auto.t_dbe41ec88c'.tr(), Color(0xFFD4AF37)),
-            _CheckItem('auto.t_955599c7fe'.tr(), Color(0xFF68D391)),
-            _CheckItem('auto.t_279d3a38ef'.tr(), Color(0xFF63B3ED)),
+            for (final h in profile.highlights) _CheckItem(h.text(isAr), h.color),
           ]),
           SizedBox(height: 16.h),
           Container(
@@ -1525,17 +1641,15 @@ class _CeoProfileSection extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(
+                for (var i = 0; i < profile.stats.length; i++) ...[
+                  if (i > 0) _VerticalDivider(),
+                  Expanded(
                     child: _MiniMetric(
-                        value: '5K+', label: 'auto.t_317d1c1684'.tr())),
-                _VerticalDivider(),
-                Expanded(
-                    child: _MiniMetric(
-                        value: '93%', label: 'auto.t_52c33d066b'.tr())),
-                _VerticalDivider(),
-                Expanded(
-                    child: _MiniMetric(
-                        value: '4', label: 'auto.t_ebccd17f9b'.tr())),
+                      value: profile.stats[i].num,
+                      label: profile.stats[i].label(isAr),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1543,7 +1657,7 @@ class _CeoProfileSection extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              'auto.t_32afe007d4'.tr(),
+              profile.signature(isAr),
               style: context.textTheme.labelMedium?.copyWith(
                 color: colors.gold.withValues(alpha: 0.8),
                 fontWeight: FontWeight.w800,
@@ -1558,11 +1672,19 @@ class _CeoProfileSection extends StatelessWidget {
 }
 
 class _CeoPortraitCard extends StatelessWidget {
-  const _CeoPortraitCard();
+  const _CeoPortraitCard({required this.profile});
+
+  final CeoProfile profile;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
+    final isAr = context.locale.languageCode == 'ar';
+    final bundledPortrait = Image.asset(
+      AppAssets.aboutCeo,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+    );
 
     return Stack(
       clipBehavior: Clip.none,
@@ -1582,9 +1704,12 @@ class _CeoPortraitCard extends StatelessWidget {
             ],
           ),
           clipBehavior: Clip.antiAlias,
-          child: Image.asset(
-            AppAssets.aboutCeo,
-            fit: BoxFit.cover,
+          // The portrait is managed from the dashboard; the bundled photo is
+          // used for the default value and whenever the uploaded one fails to load.
+          child: _RemoteImage(
+            path: profile.avatar,
+            bundledPaths: const {CeoProfile.defaultAvatar},
+            fallback: bundledPortrait,
             alignment: Alignment.center,
           ),
         ),
@@ -1592,13 +1717,14 @@ class _CeoPortraitCard extends StatelessWidget {
           top: 34.h,
           left: -18.w,
           child: _FloatingBadge(
-              icon: Icons.work_rounded, label: 'auto.t_f85359e2a9'.tr()),
+              icon: Icons.work_rounded, label: profile.projectBadge(isAr)),
         ),
         Positioned(
           bottom: 28.h,
           right: -18.w,
           child: _FloatingBadge(
-              icon: Icons.timeline_rounded, label: 'auto.t_ebf7a4b024'.tr()),
+              icon: Icons.timeline_rounded,
+              label: '${profile.expNum} ${profile.expLabel(isAr)}'),
         ),
       ],
     );
@@ -2554,16 +2680,64 @@ class _RoleLabel extends StatelessWidget {
   }
 }
 
+/// An image stored on the website (relative path, http(s) URL or `data:` URI).
+/// Shows [fallback] while unavailable or when it cannot be loaded.
+class _RemoteImage extends StatelessWidget {
+  const _RemoteImage({
+    required this.path,
+    required this.fallback,
+    this.bundledPaths = const {},
+    this.alignment = Alignment.center,
+  });
+
+  final String path;
+  final Widget fallback;
+
+  /// Paths that are shipped inside the app and can be shown without a request.
+  final Set<String> bundledPaths;
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty || bundledPaths.contains(trimmed)) return fallback;
+
+    if (trimmed.startsWith('data:')) {
+      final comma = trimmed.indexOf(',');
+      if (comma < 0) return fallback;
+      try {
+        return Image.memory(
+          base64Decode(trimmed.substring(comma + 1)),
+          fit: BoxFit.cover,
+          alignment: alignment,
+          errorBuilder: (_, __, ___) => fallback,
+        );
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    return CachedNetworkImage(
+      imageUrl: AboutRepository.assetUrl(trimmed),
+      fit: BoxFit.cover,
+      alignment: alignment,
+      fadeInDuration: const Duration(milliseconds: 250),
+      placeholder: (_, __) => fallback,
+      errorWidget: (_, __, ___) => fallback,
+    );
+  }
+}
+
 class _TeamCard extends StatelessWidget {
   const _TeamCard({
     required this.name,
     required this.role,
-    required this.image,
+    required this.avatar,
   });
 
   final String name;
   final String role;
-  final String image;
+  final String avatar;
 
   @override
   Widget build(BuildContext context) {
@@ -2586,10 +2760,22 @@ class _TeamCard extends StatelessWidget {
               border: Border.all(color: colors.gold.withValues(alpha: 0.24)),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Image.asset(
-              AppAssets.teamMember(image),
-              fit: BoxFit.cover,
+            child: _RemoteImage(
+              path: avatar,
               alignment: Alignment.topCenter,
+              // No photo (or it failed to load): the member's initial, like the website.
+              fallback: ColoredBox(
+                color: colors.gold.withValues(alpha: 0.14),
+                child: Center(
+                  child: Text(
+                    name.isEmpty ? '' : name.characters.first,
+                    style: context.textTheme.titleLarge?.copyWith(
+                      color: colors.gold,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
           SizedBox(height: 9.h),

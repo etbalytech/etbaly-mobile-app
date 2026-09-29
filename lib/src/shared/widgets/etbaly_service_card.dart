@@ -101,7 +101,7 @@ class EtbalyServiceCard extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 8.w),
-              Icon(
+              FaIcon(
                 FontAwesomeIcons.arrowRight,
                 color: etbalyColors.gold,
                 size: 12.sp,

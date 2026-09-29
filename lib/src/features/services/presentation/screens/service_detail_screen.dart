@@ -1434,7 +1434,7 @@ class _BoostTab {
   final String id;
   final String name;
   final String nameEn;
-  final IconData icon;
+  final FaIconData icon;
   final String keyword;
 
   String localizedName(BuildContext context) =>
@@ -2535,7 +2535,7 @@ class _BrandSummaryRow extends StatelessWidget {
     this.total = false,
   });
 
-  final IconData? icon;
+  final FaIconData? icon;
   final String label, value;
   final bool muted, total;
 
@@ -4441,7 +4441,7 @@ class _PlatformOption {
   final String id;
   final String nameAr;
   final String nameEn;
-  final IconData icon;
+  final FaIconData icon;
 
   String label(bool isArabic) => isArabic ? nameAr : nameEn;
 }
@@ -4483,7 +4483,7 @@ class _PlatformChoiceChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(option.icon,
+            FaIcon(option.icon,
                 size: 14.sp, color: selected ? accent : colors.textMuted),
             SizedBox(width: 7.w),
             Text(
@@ -5778,7 +5778,7 @@ final _adsCategories = [
 
 // ─── Platform helpers ─────────────────────────────────────────────────────────
 
-IconData _platformIcon(String id) => switch (id) {
+FaIconData _platformIcon(String id) => switch (id) {
       'facebook' => FontAwesomeIcons.facebook,
       'instagram' => FontAwesomeIcons.instagram,
       'tiktok' => FontAwesomeIcons.tiktok,

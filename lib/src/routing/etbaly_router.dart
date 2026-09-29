@@ -20,6 +20,8 @@ import '../features/payments/presentation/screens/payments_screen.dart';
 import '../features/contact/presentation/screens/contact_screen.dart';
 import '../features/start_now/presentation/screens/start_now_page.dart';
 import '../features/careers/presentation/screens/careers_screen.dart';
+import '../features/services/data/services_catalog_data.dart';
+import '../features/services/presentation/screens/catalog_service_screen.dart';
 import '../features/services/presentation/screens/service_detail_screen.dart';
 import '../features/services/presentation/screens/why_choose_us_detail_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -329,10 +331,12 @@ class _WhatsAppFabState extends State<_WhatsAppFab>
                       radius: 0.85,
                     ),
                   ),
-                  child: Icon(
-                    FontAwesomeIcons.whatsapp,
-                    color: Colors.white,
-                    size: 30.sp,
+                  child: Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.whatsapp,
+                      color: Colors.white,
+                      size: 30.sp,
+                    ),
                   ),
                 ),
                 // 'auto.t_3e0489cbf4'.tr() gold badge on top
@@ -434,10 +438,12 @@ class _WhatsAppSheet extends StatelessWidget {
                         radius: 0.85,
                       ),
                     ),
-                    child: Icon(
-                      FontAwesomeIcons.whatsapp,
-                      color: Colors.white,
-                      size: 26.sp,
+                    child: Center(
+                      child: FaIcon(
+                        FontAwesomeIcons.whatsapp,
+                        color: Colors.white,
+                        size: 26.sp,
+                      ),
                     ),
                   ),
                   SizedBox(width: 14.w),
@@ -498,7 +504,7 @@ class _WhatsAppSheet extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: onWhatsApp,
-                  icon: Icon(FontAwesomeIcons.whatsapp, size: 18.sp),
+                  icon: FaIcon(FontAwesomeIcons.whatsapp, size: 18.sp),
                   label: Text(
                     'auto.t_fe483dc795'.tr(),
                     style: const TextStyle(fontWeight: FontWeight.w900),
@@ -774,6 +780,10 @@ final GoRouter etbalyRouter = GoRouter(
       name: 'serviceDetail',
       builder: (context, state) {
         final slug = state.pathParameters['slug']!;
+        // Services that have no dedicated screen use the catalogue-driven page.
+        if (catalogServiceBySlug(slug)?.catalogPage ?? false) {
+          return CatalogServiceScreen(slug: slug);
+        }
         return ServiceDetailScreen(slug: slug);
       },
     ),

@@ -16,7 +16,10 @@ class App extends StatelessWidget {
       valueListenable: ThemeService.instance.themeMode,
       builder: (context, themeMode, _) {
         return MaterialApp.router(
-          title: 'Etbaly',
+          // Shown in the recent-apps switcher / browser tab, in the app language.
+          onGenerateTitle: (context) => context.locale.languageCode == 'ar'
+              ? 'اطْبَعَلِيٌّ للدعاية والاعلان'
+              : 'Etba3ly Digital Marketing',
           debugShowCheckedModeBanner: false,
           theme: buildLightTheme(locale: context.locale),
           darkTheme: buildDarkTheme(locale: context.locale),

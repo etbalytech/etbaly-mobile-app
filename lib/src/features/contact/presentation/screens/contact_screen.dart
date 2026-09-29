@@ -743,7 +743,7 @@ class _ContactChannelCard extends StatelessWidget {
   final String label;
   final String value;
   final String subtitle;
-  final IconData icon;
+  final Object icon;
   final Color color;
   final VoidCallback onTap;
   final bool pulse;
@@ -784,7 +784,12 @@ class _ContactChannelCard extends StatelessWidget {
                         border:
                             Border.all(color: color.withValues(alpha: 0.32)),
                       ),
-                      child: Icon(icon, color: color, size: 22.sp),
+                      child: Center(
+                        child: icon is FaIconData
+                            ? FaIcon(icon as FaIconData,
+                                color: color, size: 22.sp)
+                            : Icon(icon as IconData, color: color, size: 22.sp),
+                      ),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -857,7 +862,20 @@ class _SubmitGradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    // The shadow lives on a DecoratedBox outside the Material: `Ink` paints
+    // inside the Material's bounds and would clip it into a rectangle.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999.r),
+        boxShadow: [
+          BoxShadow(
+            color: EtbalyWebColors.gold.withValues(alpha: 0.26),
+            blurRadius: 26.r,
+            offset: Offset(0.w, 10.h),
+          ),
+        ],
+      ),
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: isSubmitting ? null : onTap,
@@ -879,13 +897,6 @@ class _SubmitGradientButton extends StatelessWidget {
                       const Color(0xFFE8C878),
                     ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: EtbalyWebColors.gold.withValues(alpha: 0.26),
-                blurRadius: 26.r,
-                offset: Offset(0.w, 10.h),
-              ),
-            ],
           ),
           child: Center(
             child: Row(
@@ -922,6 +933,7 @@ class _SubmitGradientButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1297,7 +1309,7 @@ class _ContactTextField extends StatelessWidget {
 
   final String label;
   final String hint;
-  final IconData icon;
+  final Object icon;
   final TextEditingController controller;
   final VoidCallback onChanged;
   final String? errorText;
@@ -1315,7 +1327,9 @@ class _ContactTextField extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 15.sp, color: iconColor ?? context.etbalyColors.textMuted),
+            icon is FaIconData
+                ? FaIcon(icon as FaIconData, size: 15.sp, color: iconColor ?? context.etbalyColors.textMuted)
+                : Icon(icon as IconData, size: 15.sp, color: iconColor ?? context.etbalyColors.textMuted),
             SizedBox(width: 6.w),
             Expanded(
               child: Text(
@@ -1503,7 +1517,7 @@ class _OutlinedAction extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
+  final Object icon;
   final VoidCallback onTap;
   final Color color;
 
@@ -1525,7 +1539,9 @@ class _OutlinedAction extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 17.sp),
+              icon is FaIconData
+                  ? FaIcon(icon as FaIconData, color: color, size: 17.sp)
+                  : Icon(icon as IconData, color: color, size: 17.sp),
               SizedBox(width: 8.w),
               Text(
                 label,

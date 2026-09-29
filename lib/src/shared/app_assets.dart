@@ -23,6 +23,8 @@ class AppAssets {
 
   static String partnerLogo(int index) => '$_imagesPath/partners/$index.webp';
   static String stripImage(int index) => '$_imagesPath/strip/tab_$index.webp';
+  static String careersIntro({required bool isArabic, required bool isDark}) =>
+      '$_imagesPath/careers/${isArabic ? 'ar' : 'en'}_${isDark ? 'dark' : 'light'}.webp';
   static String teamMember(String fileName) =>
       '$_imagesPath/about/team/$fileName.webp';
 }

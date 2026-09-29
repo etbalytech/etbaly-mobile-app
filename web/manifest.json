@@ -1,11 +1,11 @@
 {
-    "name": "Etbaly",
-    "short_name": "Etbaly",
+    "name": "Etba3ly Digital Marketing",
+    "short_name": "Etba3ly",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0F0E18",
     "theme_color": "#6F3FF5",
-    "description": "Etbaly",
+    "description": "Etba3ly Digital Marketing - اطْبَعَلِيٌّ للدعاية والاعلان",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

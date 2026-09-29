@@ -718,7 +718,7 @@ class _ClassCard extends StatelessWidget {
 
   final String title;
   final String desc;
-  final IconData icon;
+  final FaIconData icon;
   final Color color;
   final Color pillColor;
   final bool isBlue;
@@ -777,7 +777,9 @@ class _ClassCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: color.withValues(alpha: 0.38)),
                   ),
-                  child: Icon(icon, color: color, size: 18.sp),
+                  child: Center(
+                    child: FaIcon(icon, color: color, size: 18.sp),
+                  ),
                 ),
                 SizedBox(height: 12.h),
                 Text(
@@ -1224,7 +1226,7 @@ class _CustomIndustryInput extends StatelessWidget {
 
   final TextEditingController controller;
   final String hint;
-  final IconData icon;
+  final Object icon;
   final Color iconColor;
   final bool submitting;
   final bool hasError;
@@ -1271,7 +1273,15 @@ class _CustomIndustryInput extends StatelessWidget {
               fontWeight: FontWeight.w700,
               fontSize: 12.sp,
             ),
-            prefixIcon: Icon(icon, color: iconColor, size: 18.sp),
+            // FaIcon does not center itself; the prefix slot is a 48px minimum
+            // box, so without Center the glyph sits in its top corner.
+            prefixIcon: icon is FaIconData
+                ? Center(
+                    widthFactor: 1,
+                    heightFactor: 1,
+                    child: FaIcon(icon as FaIconData, color: iconColor, size: 18.sp),
+                  )
+                : Icon(icon as IconData, color: iconColor, size: 18.sp),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 13,
@@ -1294,7 +1304,20 @@ class _CustomSubmitButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    // The shadow lives on a DecoratedBox outside the Material: `Ink` paints
+    // inside the Material's bounds and would clip it into a rectangle.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999.r),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x448B3DFF),
+            blurRadius: 22.r,
+            offset: Offset(0.w, 10.h),
+          ),
+        ],
+      ),
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: submitting ? null : onTap,
@@ -1307,13 +1330,6 @@ class _CustomSubmitButton extends StatelessWidget {
             gradient: const LinearGradient(
               colors: [Color(0xFFC9A227), Color(0xFF8B3DFF)],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0x448B3DFF),
-                blurRadius: 22.r,
-                offset: Offset(0.w, 10.h),
-              ),
-            ],
           ),
           child: Center(
             child: submitting
@@ -1346,6 +1362,7 @@ class _CustomSubmitButton extends StatelessWidget {
                   ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1654,7 +1671,18 @@ class _PortfolioCtaSection extends StatelessWidget {
             ),
           ),
           SizedBox(height: 26.h),
-          Material(
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999.r),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.gold.withValues(alpha: 0.26),
+                  blurRadius: 24.r,
+                  offset: Offset(0.w, 10.h),
+                ),
+              ],
+            ),
+            child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () => context.go(AppRoutes.startNow),
@@ -1667,13 +1695,6 @@ class _PortfolioCtaSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: colors.gold,
                   borderRadius: BorderRadius.circular(999.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.gold.withValues(alpha: 0.26),
-                      blurRadius: 24.r,
-                      offset: Offset(0.w, 10.h),
-                    ),
-                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1696,6 +1717,7 @@ class _PortfolioCtaSection extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),
@@ -1741,7 +1763,7 @@ class _SectionHeader extends StatelessWidget {
   final String eyebrow;
   final String title;
   final String desc;
-  final IconData icon;
+  final Object icon;
 
   @override
   Widget build(BuildContext context) {
@@ -1775,7 +1797,7 @@ class _SectionHeader extends StatelessWidget {
 class _SectionBadge extends StatelessWidget {
   const _SectionBadge({required this.icon, required this.label});
 
-  final IconData icon;
+  final Object icon;
   final String label;
 
   @override
@@ -1791,7 +1813,9 @@ class _SectionBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: colors.gold, size: 15.sp),
+          icon is FaIconData
+              ? FaIcon(icon as FaIconData, color: colors.gold, size: 15.sp)
+              : Icon(icon as IconData, color: colors.gold, size: 15.sp),
           SizedBox(width: 7.w),
           Text(
             label,
@@ -2000,8 +2024,10 @@ class _SpecialtyCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(11.r),
                   border: Border.all(color: color.withValues(alpha: 0.28)),
                 ),
-                child:
-                    Icon(_iconFor(specialty.icon), color: color, size: 19.sp),
+                child: Center(
+                  child: FaIcon(_iconFor(specialty.icon),
+                      color: color, size: 19.sp),
+                ),
               ),
               const Spacer(),
               // Name
@@ -3085,7 +3111,7 @@ class _PortfolioBackgroundPainter extends CustomPainter {
       old.progress != progress || old.bgTop != bgTop;
 }
 
-IconData _iconFor(String icon) {
+FaIconData _iconFor(String icon) {
   return switch (icon) {
     // Industries
     'fa-balance-scale' => FontAwesomeIcons.scaleBalanced,
@@ -3173,7 +3199,7 @@ IconData _iconFor(String icon) {
     'fa-kaaba' => FontAwesomeIcons.kaaba,
     // Education
     'fa-chalkboard-teacher' => FontAwesomeIcons.chalkboardUser,
-    _ => Icons.category_rounded,
+    _ => FontAwesomeIcons.tag,
   };
 }
 

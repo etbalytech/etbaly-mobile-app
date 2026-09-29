@@ -1,5 +1,6 @@
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -186,6 +187,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     SizedBox(height: 18.h),
                     _SecureNote(isArabic: _isArabic),
                     SizedBox(height: 18.h),
+                    _StartProjectCta(isArabic: _isArabic),
+                    SizedBox(height: 18.h),
                     _FraudAlert(methods: _methods, isArabic: _isArabic),
                     SizedBox(height: 18.h),
                     _NeedHelpCard(isArabic: _isArabic, onTap: _openContact),
@@ -236,7 +239,7 @@ class _PaymentHero extends StatelessWidget {
                 Text(
                   isArabic
                       ? 'auto.t_dc5c5cd5b3'.tr()
-                      : 'Choose the Right Payment Method',
+                      : 'Choose Your Payment Method',
                   textAlign: TextAlign.center,
                   style: context.textTheme.displaySmall?.copyWith(
                     color: context.etbalyColors.textMain,
@@ -251,7 +254,7 @@ class _PaymentHero extends StatelessWidget {
                   child: Text(
                     isArabic
                         ? 'auto.t_31e8a10add'.tr()
-                        : 'We provide the fastest and easiest e-payment methods - transfer the amount and start with us instantly.',
+                        : 'We offer the fastest and easiest e-payment methods — transfer the amount and start your journey with us instantly',
                     textAlign: TextAlign.center,
                     style: context.textTheme.bodyLarge?.copyWith(
                       color: context.etbalyColors.textMuted,
@@ -298,7 +301,7 @@ class _TrustRow extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(item.$1, color: EtbalyWebColors.gold, size: 14.sp),
+                FaIcon(item.$1, color: EtbalyWebColors.gold, size: 14.sp),
                 SizedBox(width: 8.w),
                 Text(
                   item.$2,
@@ -640,7 +643,7 @@ class _CopyField extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
             children: [
-              Icon(FontAwesomeIcons.mobileScreenButton,
+              FaIcon(FontAwesomeIcons.mobileScreenButton,
                   color: EtbalyWebColors.gold, size: 11.sp),
               SizedBox(width: 6.w),
               Text(
@@ -749,7 +752,7 @@ class _InfoField extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(FontAwesomeIcons.receipt,
+          FaIcon(FontAwesomeIcons.receipt,
               color: EtbalyWebColors.gold, size: 13.sp),
           SizedBox(width: 8.w),
           Expanded(
@@ -778,17 +781,159 @@ class _SecureNote extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(FontAwesomeIcons.shieldHalved,
+          FaIcon(FontAwesomeIcons.shieldHalved,
               color: const Color(0xFF22C55E), size: 14.sp),
           SizedBox(width: 8.w),
           Flexible(
             child: Text(
               isArabic
                   ? 'auto.t_a16b15d445'.tr()
-                  : 'All transfers are secure and encrypted - your data is safe.',
+                  : 'All transfers are secure and encrypted — your data is fully protected',
               textAlign: TextAlign.center,
               style: context.textTheme.bodySmall
                   ?.copyWith(color: context.etbalyColors.textMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Ready to start your project?" call to action, as on the website's payment page.
+class _StartProjectCta extends StatelessWidget {
+  const _StartProjectCta({required this.isArabic});
+
+  final bool isArabic;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+    final features = isArabic
+        ? const ['استشارة مجانية', 'رد سريع خلال 24 ساعة', 'بدء فوري بعد الموافقة']
+        : const ['Free Consultation', 'Reply within 24 hours', 'Instant start on approval'];
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18.r),
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            EtbalyWebColors.gold.withValues(alpha: 0.14),
+            colors.bgCard,
+            colors.primary.withValues(alpha: 0.12),
+          ],
+        ),
+        border: Border.all(color: EtbalyWebColors.goldBorder),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64.w,
+            height: 64.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: EtbalyWebColors.gold.withValues(alpha: 0.14),
+              border: Border.all(color: EtbalyWebColors.goldBorder),
+            ),
+            child: Center(
+              child: FaIcon(FontAwesomeIcons.rocket,
+                  color: EtbalyWebColors.gold, size: 26.sp),
+            ),
+          ),
+          SizedBox(height: 14.h),
+          _Badge(
+            label: isArabic ? 'ابدأ الآن' : 'Get Started',
+            icon: FontAwesomeIcons.bolt,
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            isArabic ? 'جاهز لبدء مشروعك؟' : 'Ready to Start Your Project?',
+            textAlign: TextAlign.center,
+            style: context.textTheme.titleLarge?.copyWith(
+              color: colors.textMain,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            isArabic
+                ? 'يمكنك التواصل معنا وملء استمارة البدء — سيقوم فريقنا بالتواصل معك في أقرب وقت لبدء تنفيذ مشروعك'
+                : 'Contact us and fill out the start form — our team will reach out as soon as possible to kick off your project',
+            textAlign: TextAlign.center,
+            style: context.textTheme.bodyMedium
+                ?.copyWith(color: colors.textMuted, height: 1.7),
+          ),
+          SizedBox(height: 14.h),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 14.r,
+            runSpacing: 8.r,
+            children: [
+              for (final feature in features)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle_rounded,
+                        color: const Color(0xFF22C55E), size: 16.sp),
+                    SizedBox(width: 6.w),
+                    Text(
+                      feature,
+                      style: context.textTheme.labelMedium?.copyWith(
+                        color: colors.textMain,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          SizedBox(height: 18.h),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999.r),
+              boxShadow: [
+                BoxShadow(
+                  color: EtbalyWebColors.gold.withValues(alpha: 0.28),
+                  blurRadius: 22.r,
+                  offset: Offset(0, 8.h),
+                ),
+              ],
+            ),
+            child: Material(
+              color: EtbalyWebColors.gold,
+              borderRadius: BorderRadius.circular(999.r),
+              child: InkWell(
+                onTap: () => context.go(AppRoutes.startNow),
+                borderRadius: BorderRadius.circular(999.r),
+                child: Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 26.w, vertical: 14.h),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.send_rounded,
+                          color: Colors.black, size: 18.sp),
+                      SizedBox(width: 8.w),
+                      Text(
+                        isArabic
+                            ? 'ابدأ مشروعك الآن'
+                            : 'Start Your Project Now',
+                        style: context.textTheme.titleSmall?.copyWith(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Icon(Icons.arrow_forward_rounded,
+                          color: Colors.black, size: 18.sp),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -838,8 +983,10 @@ class _FraudAlert extends StatelessWidget {
                         blurRadius: 22.r),
                   ],
                 ),
-                child: Icon(FontAwesomeIcons.shieldHalved,
-                    color: const Color(0xFFEF4444), size: 24.sp),
+                child: Center(
+                  child: FaIcon(FontAwesomeIcons.shieldHalved,
+                      color: const Color(0xFFEF4444), size: 24.sp),
+                ),
               ),
               SizedBox(width: 14.w),
               Expanded(
@@ -1065,7 +1212,7 @@ class _WarningBox extends StatelessWidget {
     required this.text,
   });
 
-  final IconData icon;
+  final FaIconData icon;
   final Color color;
   final String title;
   final String text;
@@ -1082,7 +1229,7 @@ class _WarningBox extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 17.sp),
+          FaIcon(icon, color: color, size: 17.sp),
           SizedBox(width: 10.w),
           Expanded(
             child: Column(
@@ -1129,7 +1276,7 @@ class _NeedHelpCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(FontAwesomeIcons.circleQuestion,
+          FaIcon(FontAwesomeIcons.circleQuestion,
               color: EtbalyWebColors.gold, size: 22.sp),
           SizedBox(width: 12.w),
           Expanded(
@@ -1194,7 +1341,10 @@ class _MethodMark extends StatelessWidget {
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: method.accent.withValues(alpha: 0.55)),
       ),
-      child: Icon(method.icon, color: method.accent, size: small ? 18 : 21),
+      child: Center(
+        child:
+            FaIcon(method.icon, color: method.accent, size: small ? 18 : 21),
+      ),
     );
   }
 }
@@ -1203,7 +1353,7 @@ class _Badge extends StatelessWidget {
   const _Badge({required this.label, required this.icon});
 
   final String label;
-  final IconData icon;
+  final FaIconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -1219,7 +1369,7 @@ class _Badge extends StatelessWidget {
         children: [
           Icon(Icons.circle, color: EtbalyWebColors.gold, size: 6.sp),
           SizedBox(width: 10.w),
-          Icon(icon, color: EtbalyWebColors.gold, size: 13.sp),
+          FaIcon(icon, color: EtbalyWebColors.gold, size: 13.sp),
           SizedBox(width: 8.w),
           Text(
             label,
@@ -1251,7 +1401,7 @@ class _AlertBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(FontAwesomeIcons.triangleExclamation,
+          FaIcon(FontAwesomeIcons.triangleExclamation,
               color: const Color(0xFFF87171), size: 12.sp),
           SizedBox(width: 6.w),
           Text(
@@ -1350,7 +1500,7 @@ class _PaymentMethod {
   final String tagAr;
   final String tagEn;
   final Color accent;
-  final IconData icon;
+  final FaIconData icon;
   final List<_PaymentField> fields;
   final String? noteAr;
   final String? noteEn;

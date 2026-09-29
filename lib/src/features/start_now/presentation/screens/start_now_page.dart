@@ -1091,7 +1091,22 @@ class _ServiceTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.etbalyColors;
-    return Material(
+    // The glow lives on a DecoratedBox outside the Material: `Ink` paints
+    // inside the Material's bounds and would clip it into a rectangle.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10.r),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: service.accent.withValues(alpha: 0.14),
+                  blurRadius: 22.r,
+                  offset: Offset(0, 8.h),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -1106,15 +1121,6 @@ class _ServiceTab extends StatelessWidget {
                   : c.borderColor,
             ),
             borderRadius: BorderRadius.circular(10.r),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: service.accent.withValues(alpha: 0.14),
-                      blurRadius: 22.r,
-                      offset: Offset(0, 8.h),
-                    ),
-                  ]
-                : null,
           ),
           child: Row(
             children: [
@@ -1143,6 +1149,7 @@ class _ServiceTab extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

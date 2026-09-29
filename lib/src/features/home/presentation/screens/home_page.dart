@@ -46,6 +46,7 @@ part '../widgets/strip_header.dart';
 part '../widgets/strip_image_card.dart';
 part '../widgets/strip_lightbox.dart';
 part '../widgets/stats_strip_background_painter.dart';
+part '../widgets/careers_banner_section.dart';
 part '../widgets/how_we_work_section.dart';
 part '../widgets/process_wave.dart';
 part '../widgets/work_step_card.dart';
@@ -72,6 +73,7 @@ class HomePage extends StatelessWidget {
         _SuccessPartnersSection(),
         _StatsImageStripSection(),
         _IdeasSuccessSection(),
+        _CareersBannerSection(),
         _HowWeWorkSection(),
       ],
     );
