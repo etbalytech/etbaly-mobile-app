@@ -1,4 +1,4 @@
-package com.example.etbaly_app
+package com.etba3lydm.app
 
 import io.flutter.embedding.android.FlutterActivity
 

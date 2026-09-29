@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../contact/data/contact_session.dart';
 import '../../data/services_catalog_data.dart';
 
 const _whatsappNumber = '201010285020';
@@ -410,6 +411,12 @@ Future<void> showPackageOrderSheet(
                     child: FilledButton.icon(
                       onPressed: () {
                         Navigator.of(sheetContext).pop();
+                        ContactSession.pendingPackage = SelectedPackage(
+                          name: name,
+                          category: categoryLabel,
+                          price: pkg.isCustom ? null : pkg.price.round().toString(),
+                          isCustom: pkg.isCustom,
+                        );
                         context.go(AppRoutes.contact);
                       },
                       style: FilledButton.styleFrom(

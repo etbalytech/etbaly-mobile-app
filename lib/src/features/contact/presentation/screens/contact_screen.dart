@@ -10,6 +10,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../data/contact_email_policy.dart';
+import '../../data/contact_session.dart';
+
+const _whatsappUrl = 'https://wa.me/201010285020';
+
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
 
@@ -19,8 +24,7 @@ class ContactScreen extends StatefulWidget {
 
 class _ContactScreenState extends State<ContactScreen> {
   static const _formUrl = 'https://api.web3forms.com/submit';
-  static const _subscribeUrl =
-      'https://corsproxy.io/?url=https://etba3ly-api.xo.je/subscribe.php';
+  static const _subscribeUrl = 'https://etba3ly-dm.com/api-email/subscribe.php';
   static const _accessKey = 'eef10318-b29e-4033-b122-535fe44348f1';
 
   final _nameController = TextEditingController();
@@ -30,6 +34,11 @@ class _ContactScreenState extends State<ContactScreen> {
   final _businessController = TextEditingController();
   final _specialtyController = TextEditingController();
   final _messageController = TextEditingController();
+
+  /// Lets a failed validation scroll to the first field that needs attention.
+  final _fieldKeys = <_ContactField, GlobalKey>{
+    for (final field in _ContactField.values) field: GlobalKey(),
+  };
 
   final _dio = Dio(
     BaseOptions(
@@ -45,15 +54,34 @@ class _ContactScreenState extends State<ContactScreen> {
   bool get _isArabic => context.locale.languageCode == 'ar';
 
   bool _isSubmitting = false;
-  String? _successMessage;
-  String? _errorMessage;
+  bool _showSuccess = false;
+  bool _showValidationBanner = false;
+  bool _submitFailed = false;
   String? _nameError;
   String? _emailError;
   String? _phoneError;
   String? _whatsappError;
+  bool _emailDomainBlocked = false;
+  SelectedPackage? _package;
+  int _cooldownSeconds = 0;
+  Timer? _cooldownTimer;
+  Timer? _successTimer;
+  Timer? _validationTimer;
+  Timer? _failureTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreSession();
+    _resumeCooldown();
+  }
 
   @override
   void dispose() {
+    _cooldownTimer?.cancel();
+    _successTimer?.cancel();
+    _validationTimer?.cancel();
+    _failureTimer?.cancel();
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -98,11 +126,13 @@ class _ContactScreenState extends State<ContactScreen> {
     );
   }
 
+  /// Channels first, then the form — the website's order in both layouts.
   Widget _buildMainLayout(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 820;
         final form = _ContactFormCard(
+          fieldKeys: _fieldKeys,
           nameController: _nameController,
           emailController: _emailController,
           phoneController: _phoneController,
@@ -114,20 +144,27 @@ class _ContactScreenState extends State<ContactScreen> {
           emailError: _emailError,
           phoneError: _phoneError,
           whatsappError: _whatsappError,
-          successMessage: _successMessage,
-          errorMessage: _errorMessage,
+          emailDomainBlocked: _emailDomainBlocked,
+          package: _package,
+          showSuccess: _showSuccess,
+          showValidationBanner: _showValidationBanner,
+          submitFailed: _submitFailed,
+          cooldownSeconds: _cooldownSeconds,
           isSubmitting: _isSubmitting,
           onSubmit: _submitForm,
-          onChanged: _clearMessages,
+          onChanged: _onFieldChanged,
+          onBlur: _onFieldBlur,
+          onChangePackage: _changePackage,
+          onRemovePackage: _removePackage,
         );
         const channels = _ContactInfoColumn();
 
         if (!wide) {
           return Column(
             children: [
-              form,
-              SizedBox(height: 18.h),
               channels,
+              SizedBox(height: 18.h),
+              form,
             ],
           );
         }
@@ -135,39 +172,230 @@ class _ContactScreenState extends State<ContactScreen> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 7, child: form),
-            SizedBox(width: 18.w),
             const Expanded(flex: 4, child: channels),
+            SizedBox(width: 18.w),
+            Expanded(flex: 7, child: form),
           ],
         );
       },
     );
   }
 
-  void _clearMessages() {
-    if (_successMessage == null && _errorMessage == null) return;
-    setState(() {
-      _successMessage = null;
-      _errorMessage = null;
+  // ── Session (draft, package, cooldown) ───────────────────────────────────
+
+  void _restoreSession() {
+    final draft = ContactSession.draft;
+    _nameController.text = draft.name;
+    _emailController.text = draft.email;
+    _phoneController.text = draft.phone;
+    _whatsappController.text = draft.whatsapp;
+    _businessController.text = draft.business;
+    _specialtyController.text = draft.specialty;
+    _messageController.text = draft.message;
+
+    // A package picked on the services tab wins over the one kept in the draft.
+    final pending = ContactSession.pendingPackage;
+    if (pending != null) {
+      _package = pending;
+      ContactSession.pendingPackage = null;
+      ContactSession.package = pending;
+    } else {
+      _package = ContactSession.package;
+    }
+  }
+
+  void _saveDraft() {
+    ContactSession.draft = ContactDraft(
+      name: _nameController.text,
+      email: _emailController.text,
+      phone: _phoneController.text,
+      whatsapp: _whatsappController.text,
+      business: _businessController.text,
+      specialty: _specialtyController.text,
+      message: _messageController.text,
+    );
+    ContactSession.package = _package;
+  }
+
+  Future<void> _resumeCooldown() async {
+    final left = await ContactSession.remainingCooldown();
+    if (!mounted || left == Duration.zero) return;
+    _startCooldown(left);
+  }
+
+  void _startCooldown(Duration duration) {
+    _cooldownTimer?.cancel();
+    setState(() => _cooldownSeconds = (duration.inMilliseconds / 1000).ceil());
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _cooldownSeconds--;
+        if (_cooldownSeconds <= 0) {
+          _cooldownSeconds = 0;
+          timer.cancel();
+        }
+      });
     });
   }
 
-  Future<void> _submitForm() async {
-    if (_isSubmitting) return;
+  void _changePackage() {
+    _saveDraft();
+    context.go(AppRoutes.services);
+  }
 
-    final valid = _validate();
-    if (!valid) {
+  void _removePackage() {
+    setState(() => _package = null);
+    _saveDraft();
+  }
+
+  // ── Field events ─────────────────────────────────────────────────────────
+
+  /// Typing clears that field's error, exactly like the website.
+  void _onFieldChanged(_ContactField field) {
+    final hadError = switch (field) {
+      _ContactField.name => _nameError != null,
+      _ContactField.email => _emailError != null || _emailDomainBlocked,
+      _ContactField.phone => _phoneError != null,
+      _ContactField.whatsapp => _whatsappError != null,
+      _ => false,
+    };
+    if (hadError) {
       setState(() {
-        _successMessage = null;
-        _errorMessage = 'auto.t_feeba6be8f'.tr();
+        switch (field) {
+          case _ContactField.name:
+            _nameError = null;
+          case _ContactField.email:
+            _emailError = null;
+            _emailDomainBlocked = false;
+          case _ContactField.phone:
+            _phoneError = null;
+          case _ContactField.whatsapp:
+            _whatsappError = null;
+          default:
+            break;
+        }
       });
+    }
+    _saveDraft();
+  }
+
+  void _onFieldBlur(_ContactField field) {
+    switch (field) {
+      case _ContactField.name:
+        _validateName();
+      case _ContactField.email:
+        _validateEmail();
+      case _ContactField.phone:
+        _validatePhone();
+      case _ContactField.whatsapp:
+        _validateWhatsapp();
+      default:
+        break;
+    }
+  }
+
+  void _validateName() {
+    final name = _nameController.text.trim();
+    setState(() {
+      _nameError = name.isEmpty
+          ? 'auto.t_0925fc6b3b'.tr()
+          : name.length < 2
+              ? 'auto.t_dd829b9c35'.tr()
+              : null;
+    });
+  }
+
+  /// The email is optional, but when present it must be well formed and not a
+  /// throwaway-mail address.
+  void _validateEmail() {
+    final email = _emailController.text.trim();
+    setState(() {
+      _emailDomainBlocked = false;
+      if (email.isEmpty) {
+        _emailError = null;
+      } else if (!isValidContactEmail(email)) {
+        _emailError = 'auto.t_96c47f9dfa'.tr();
+      } else if (!isAllowedEmailDomain(email)) {
+        _emailDomainBlocked = true;
+        _emailError = 'auto.t_contact_email_blocked'.tr();
+      } else {
+        _emailError = null;
+      }
+    });
+  }
+
+  void _validatePhone() {
+    final phone = _phoneController.text.trim();
+    setState(() {
+      _phoneError = phone.isEmpty
+          ? 'auto.t_e9030fa52c'.tr()
+          : !_isValidPhone(phone)
+              ? 'auto.t_dad81a3abf'.tr()
+              : null;
+    });
+  }
+
+  void _validateWhatsapp() {
+    final whatsapp = _whatsappController.text.trim();
+    setState(() {
+      _whatsappError = whatsapp.isEmpty
+          ? 'auto.t_5f52637da9'.tr()
+          : !_isValidPhone(whatsapp)
+              ? 'auto.t_8d87b0c1e6'.tr()
+              : null;
+    });
+  }
+
+  bool _isValidPhone(String value) {
+    final cleaned = value.replaceAll(RegExp(r'[\s\-().]'), '');
+    return RegExp(r'^0(10|11|12|15)\d{8}$').hasMatch(cleaned) ||
+        RegExp(r'^(\+2|002)(010|011|012|015)\d{8}$').hasMatch(cleaned) ||
+        RegExp(r'^\+\d{7,15}$').hasMatch(cleaned) ||
+        RegExp(r'^0\d{6,14}$').hasMatch(cleaned);
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────
+
+  Future<void> _submitForm() async {
+    if (_isSubmitting || _cooldownSeconds > 0) return;
+    FocusScope.of(context).unfocus();
+
+    _validateName();
+    _validateEmail();
+    _validatePhone();
+    _validateWhatsapp();
+
+    final firstInvalid = [
+      if (_nameError != null) _ContactField.name,
+      if (_emailError != null) _ContactField.email,
+      if (_phoneError != null) _ContactField.phone,
+      if (_whatsappError != null) _ContactField.whatsapp,
+    ].firstOrNull;
+    if (firstInvalid != null) {
+      _validationTimer?.cancel();
+      setState(() => _showValidationBanner = true);
+      _validationTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _showValidationBanner = false);
+      });
+      final target = _fieldKeys[firstInvalid]?.currentContext;
+      if (target != null) {
+        Scrollable.ensureVisible(
+          target,
+          alignment: 0.15,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
       return;
     }
 
     setState(() {
       _isSubmitting = true;
-      _successMessage = null;
-      _errorMessage = null;
+      _showSuccess = false;
+      _submitFailed = false;
     });
 
     final submittedEmail = _emailController.text.trim();
@@ -180,8 +408,8 @@ class _ContactScreenState extends State<ContactScreen> {
       'companyName': _businessController.text.trim(),
       'specialty': _specialtyController.text.trim(),
       'message': _messageController.text.trim(),
-      'package': '',
-      'price': '',
+      'package': _package?.name ?? '',
+      'price': _package?.price ?? '',
       'source': 'Etbaly Flutter App',
     };
 
@@ -195,15 +423,21 @@ class _ContactScreenState extends State<ContactScreen> {
 
       unawaited(_subscribeEmailSilently(submittedEmail));
       _resetForm();
+      await ContactSession.recordSubmit();
 
       if (!mounted) return;
-      setState(() {
-        _successMessage = 'auto.t_8156a21ea5'.tr();
+      setState(() => _showSuccess = true);
+      _successTimer?.cancel();
+      _successTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) setState(() => _showSuccess = false);
       });
+      _startCooldown(ContactSession.cooldown);
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _errorMessage = 'auto.t_4071062caa'.tr();
+      setState(() => _submitFailed = true);
+      _failureTimer?.cancel();
+      _failureTimer = Timer(const Duration(seconds: 10), () {
+        if (mounted) setState(() => _submitFailed = false);
       });
     } finally {
       if (mounted) {
@@ -218,7 +452,8 @@ class _ContactScreenState extends State<ContactScreen> {
     try {
       await _dio.post<dynamic>(
         _subscribeUrl,
-        data: 'email=${Uri.encodeComponent(email)}&lang=ar',
+        data: 'email=${Uri.encodeComponent(email)}'
+            '&lang=${_isArabic ? 'ar' : 'en'}',
         options: Options(
           headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         ),
@@ -226,51 +461,6 @@ class _ContactScreenState extends State<ContactScreen> {
     } catch (_) {
       // Newsletter subscription is a bonus after contact submit.
     }
-  }
-
-  bool _validate() {
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
-    final phone = _phoneController.text.trim();
-    final whatsapp = _whatsappController.text.trim();
-
-    setState(() {
-      _nameError = name.isEmpty
-          ? 'auto.t_0925fc6b3b'.tr()
-          : name.length < 2
-              ? 'auto.t_dd829b9c35'.tr()
-              : null;
-      _emailError = email.isNotEmpty && !_isValidEmail(email)
-          ? 'auto.t_96c47f9dfa'.tr()
-          : null;
-      _phoneError = phone.isEmpty
-          ? 'auto.t_e9030fa52c'.tr()
-          : !_isValidPhone(phone)
-              ? 'auto.t_dad81a3abf'.tr()
-              : null;
-      _whatsappError = whatsapp.isEmpty
-          ? 'auto.t_5f52637da9'.tr()
-          : !_isValidPhone(whatsapp)
-              ? 'auto.t_8d87b0c1e6'.tr()
-              : null;
-    });
-
-    return _nameError == null &&
-        _emailError == null &&
-        _phoneError == null &&
-        _whatsappError == null;
-  }
-
-  bool _isValidEmail(String value) {
-    return RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value);
-  }
-
-  bool _isValidPhone(String value) {
-    final cleaned = value.replaceAll(RegExp(r'[\s\-().]'), '');
-    return RegExp(r'^0(10|11|12|15)\d{8}$').hasMatch(cleaned) ||
-        RegExp(r'^(\+2|002)(010|011|012|015)\d{8}$').hasMatch(cleaned) ||
-        RegExp(r'^\+\d{7,15}$').hasMatch(cleaned) ||
-        RegExp(r'^0\d{6,14}$').hasMatch(cleaned);
   }
 
   void _resetForm() {
@@ -281,11 +471,27 @@ class _ContactScreenState extends State<ContactScreen> {
     _businessController.clear();
     _specialtyController.clear();
     _messageController.clear();
-    _nameError = null;
-    _emailError = null;
-    _phoneError = null;
-    _whatsappError = null;
+    _package = null;
+    ContactSession.clear();
+    setState(() {
+      _nameError = null;
+      _emailError = null;
+      _phoneError = null;
+      _whatsappError = null;
+      _emailDomainBlocked = false;
+    });
   }
+}
+
+/// The form's inputs; also the keys for scrolling to a field that needs fixing.
+enum _ContactField {
+  name,
+  email,
+  phone,
+  whatsapp,
+  business,
+  specialty,
+  message
 }
 
 class _ContactHero extends StatefulWidget {
@@ -421,7 +627,22 @@ class _ContactHeroState extends State<_ContactHero>
                             ),
                           ),
                           SizedBox(height: 14.h),
-                          _MiniPill(text: 'auto.t_d9f0ff2067'.tr()),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8.r,
+                            runSpacing: 8.r,
+                            children: [
+                              Text(
+                                'auto.t_contact_talk_today'.tr(),
+                                style: context.textTheme.bodySmall?.copyWith(
+                                  color: context.etbalyColors.textMuted,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              _MiniPill(text: 'auto.t_d9f0ff2067'.tr()),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -478,6 +699,7 @@ class _ContactHeroState extends State<_ContactHero>
 
 class _ContactFormCard extends StatelessWidget {
   const _ContactFormCard({
+    required this.fieldKeys,
     required this.nameController,
     required this.emailController,
     required this.phoneController,
@@ -489,13 +711,21 @@ class _ContactFormCard extends StatelessWidget {
     required this.emailError,
     required this.phoneError,
     required this.whatsappError,
-    required this.successMessage,
-    required this.errorMessage,
+    required this.emailDomainBlocked,
+    required this.package,
+    required this.showSuccess,
+    required this.showValidationBanner,
+    required this.submitFailed,
+    required this.cooldownSeconds,
     required this.isSubmitting,
     required this.onSubmit,
     required this.onChanged,
+    required this.onBlur,
+    required this.onChangePackage,
+    required this.onRemovePackage,
   });
 
+  final Map<_ContactField, GlobalKey> fieldKeys;
   final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController phoneController;
@@ -507,15 +737,51 @@ class _ContactFormCard extends StatelessWidget {
   final String? emailError;
   final String? phoneError;
   final String? whatsappError;
-  final String? successMessage;
-  final String? errorMessage;
+  final bool emailDomainBlocked;
+  final SelectedPackage? package;
+  final bool showSuccess;
+  final bool showValidationBanner;
+  final bool submitFailed;
+  final int cooldownSeconds;
   final bool isSubmitting;
   final VoidCallback onSubmit;
-  final VoidCallback onChanged;
+  final ValueChanged<_ContactField> onChanged;
+  final ValueChanged<_ContactField> onBlur;
+  final VoidCallback onChangePackage;
+  final VoidCallback onRemovePackage;
 
   @override
   Widget build(BuildContext context) {
     final cardPadding = context.width < 390 ? 16.r : 20.r;
+
+    Widget field(
+      _ContactField id, {
+      required String label,
+      required String hint,
+      required Object icon,
+      required TextEditingController controller,
+      String? error,
+      TextInputType? keyboardType,
+      Color? iconColor,
+      int minLines = 1,
+      int maxLines = 1,
+      bool validateOnBlur = true,
+    }) {
+      return _ContactTextField(
+        fieldKey: fieldKeys[id],
+        label: label,
+        hint: hint,
+        icon: icon,
+        iconColor: iconColor,
+        keyboardType: keyboardType,
+        controller: controller,
+        errorText: error,
+        minLines: minLines,
+        maxLines: maxLines,
+        onChanged: () => onChanged(id),
+        onBlur: validateOnBlur ? () => onBlur(id) : null,
+      );
+    }
 
     return Container(
       padding: EdgeInsets.all(cardPadding),
@@ -565,80 +831,122 @@ class _ContactFormCard extends StatelessWidget {
           SizedBox(height: 20.h),
           _ResponsiveFields(
             children: [
-              _ContactTextField(
+              field(
+                _ContactField.name,
                 label: 'auto.t_e19b16bdb7'.tr(),
                 hint: 'auto.t_462426235d'.tr(),
                 icon: Icons.person_rounded,
                 controller: nameController,
-                errorText: nameError,
-                onChanged: onChanged,
+                error: nameError,
               ),
-              _ContactTextField(
-                label: 'auto.t_73698845ba'.tr(),
-                hint: 'auto.t_373bbbafbb'.tr(),
-                icon: Icons.mail_rounded,
-                keyboardType: TextInputType.emailAddress,
-                controller: emailController,
-                errorText: emailError,
-                onChanged: onChanged,
+              Column(
+                children: [
+                  field(
+                    _ContactField.email,
+                    label: 'auto.t_73698845ba'.tr(),
+                    hint: 'auto.t_373bbbafbb'.tr(),
+                    icon: Icons.mail_rounded,
+                    keyboardType: TextInputType.emailAddress,
+                    controller: emailController,
+                    error: emailError,
+                  ),
+                  if (emailDomainBlocked) const _EmailSuggestCard(),
+                ],
               ),
-              _ContactTextField(
+              field(
+                _ContactField.phone,
                 label: 'auto.t_e32f70222a'.tr(),
                 hint: 'auto.t_9037988ed7'.tr(),
                 icon: Icons.phone_rounded,
                 keyboardType: TextInputType.phone,
                 controller: phoneController,
-                errorText: phoneError,
-                onChanged: onChanged,
+                error: phoneError,
               ),
-              _ContactTextField(
-                label: 'auto.t_7b5629bcb4'.tr(),
+              field(
+                _ContactField.whatsapp,
+                label: '${'auto.t_7b5629bcb4'.tr()} *',
                 hint: 'auto.t_1c84106115'.tr(),
                 icon: FontAwesomeIcons.whatsapp,
                 iconColor: const Color(0xFF25D366),
                 keyboardType: TextInputType.phone,
                 controller: whatsappController,
-                errorText: whatsappError,
-                onChanged: onChanged,
+                error: whatsappError,
               ),
-              _ContactTextField(
+              field(
+                _ContactField.business,
                 label: 'auto.t_869ea5ba41'.tr(),
                 hint: 'auto.t_7315f53e4a'.tr(),
                 icon: Icons.storefront_rounded,
                 controller: businessController,
-                onChanged: onChanged,
+                validateOnBlur: false,
               ),
-              _ContactTextField(
+              field(
+                _ContactField.specialty,
                 label: 'auto.t_7e204f3892'.tr(),
                 hint: 'auto.t_28489e99c1'.tr(),
                 icon: Icons.sell_rounded,
                 controller: specialtyController,
-                onChanged: onChanged,
+                validateOnBlur: false,
               ),
             ],
           ),
+          SizedBox(height: 20.h),
+          const _PackageDivider(),
+          SizedBox(height: 14.h),
+          if (package != null)
+            _PackageSelectedBox(
+              package: package!,
+              onChange: onChangePackage,
+              onRemove: onRemovePackage,
+            )
+          else
+            _PackageEmptyBox(onPick: onChangePackage),
           SizedBox(height: 18.h),
-          const _PackageEmptyBox(),
-          SizedBox(height: 18.h),
-          _ContactTextField(
+          field(
+            _ContactField.message,
             label: 'auto.t_1752e5546d'.tr(),
             hint: 'auto.t_e8c347a148'.tr(),
             icon: Icons.chat_bubble_rounded,
             controller: messageController,
             minLines: 4,
             maxLines: 6,
-            onChanged: onChanged,
+            validateOnBlur: false,
           ),
-          if (successMessage != null || errorMessage != null) ...[
+          if (showSuccess) ...[
             SizedBox(height: 14.h),
             _FormAlert(
-              message: successMessage ?? errorMessage!,
-              isSuccess: successMessage != null,
+              kind: _AlertKind.success,
+              message: 'auto.t_contact_success'.tr(),
+            ),
+          ],
+          if (showValidationBanner) ...[
+            SizedBox(height: 14.h),
+            _FormAlert(
+              kind: _AlertKind.error,
+              message: 'auto.t_contact_validation'.tr(),
+            ),
+          ],
+          if (submitFailed) ...[
+            SizedBox(height: 14.h),
+            _FormAlert(
+              kind: _AlertKind.error,
+              message: 'auto.t_contact_submit_error'.tr(),
+              actionLabel: 'auto.t_7b5629bcb4'.tr(),
+              onAction: () => _open(_whatsappUrl),
+            ),
+          ],
+          if (cooldownSeconds > 0) ...[
+            SizedBox(height: 14.h),
+            _FormAlert(
+              kind: _AlertKind.warn,
+              message: 'auto.t_contact_cooldown'
+                  .tr(namedArgs: {'time': '$cooldownSeconds'}),
             ),
           ],
           SizedBox(height: 20.h),
           _SubmitGradientButton(
             isSubmitting: isSubmitting,
+            isDisabled: cooldownSeconds > 0,
             onTap: onSubmit,
           ),
         ],
@@ -661,7 +969,7 @@ class _ContactInfoColumn extends StatelessWidget {
           icon: FontAwesomeIcons.whatsapp,
           color: const Color(0xFF25D366),
           pulse: true,
-          onTap: () => _open('https://wa.me/01010285020'),
+          onTap: () => _open(_whatsappUrl),
         ),
         _ContactChannelCard(
           label: 'auto.t_ac86ec8e2a'.tr(),
@@ -669,7 +977,8 @@ class _ContactInfoColumn extends StatelessWidget {
           subtitle: 'auto.t_fce036ec2a'.tr(),
           icon: FontAwesomeIcons.facebookF,
           color: const Color(0xFF1877F2),
-          onTap: () => _open('https://www.facebook.com/share/1Gw1i4iuXq'),
+          onTap: () =>
+              _open('https://www.facebook.com/etba3lydigitalmarketing'),
         ),
         _ContactChannelCard(
           label: 'auto.t_0915ef8ea5'.tr(),
@@ -696,14 +1005,6 @@ class _ContactInfoColumn extends StatelessWidget {
           onTap: () => _open('https://www.youtube.com/@etba3ly4adv'),
         ),
         _ContactChannelCard(
-          label: 'auto.t_snapchat_label'.tr(),
-          value: '@etba3ly',
-          subtitle: 'auto.t_snapchat_sub'.tr(),
-          icon: FontAwesomeIcons.snapchat,
-          color: const Color(0xFFFFFC00),
-          onTap: () => _open('https://www.snapchat.com/@etba3ly'),
-        ),
-        _ContactChannelCard(
           label: 'auto.t_5f19dfe113'.tr(),
           value: '@etba3ly2',
           subtitle: 'auto.t_c98cad67e9'.tr(),
@@ -712,12 +1013,30 @@ class _ContactInfoColumn extends StatelessWidget {
           onTap: () => _open('https://www.tiktok.com/@etba3ly2'),
         ),
         _ContactChannelCard(
+          label: 'auto.t_snapchat_label'.tr(),
+          value: '@etba3ly',
+          subtitle: 'auto.t_snapchat_sub'.tr(),
+          icon: FontAwesomeIcons.snapchat,
+          color: const Color(0xFFFFFC00),
+          onTap: () => _open('https://www.snapchat.com/@etba3ly'),
+        ),
+        _ContactChannelCard(
           label: 'auto.t_9e63c17fd2'.tr(),
           value: '@etba3ly_studio',
           subtitle: 'auto.t_2abf9dd7fb'.tr(),
           icon: FontAwesomeIcons.telegram,
           color: const Color(0xFF229ED9),
           onTap: () => _open('https://t.me/etba3ly_studio'),
+        ),
+        _ContactChannelCard(
+          label: 'auto.t_linkedin_label'.tr(),
+          value: 'etba3ly-digital-marketing',
+          subtitle: 'auto.t_linkedin_sub'.tr(),
+          icon: FontAwesomeIcons.linkedinIn,
+          color: const Color(0xFF0A66C2),
+          onTap: () => _open(
+            'https://www.linkedin.com/company/etba3ly-digital-marketing',
+          ),
         ),
         const _HoursCard(),
       ],
@@ -855,9 +1174,11 @@ class _SubmitGradientButton extends StatelessWidget {
   const _SubmitGradientButton({
     required this.isSubmitting,
     required this.onTap,
+    this.isDisabled = false,
   });
 
   final bool isSubmitting;
+  final bool isDisabled;
   final VoidCallback onTap;
 
   @override
@@ -876,64 +1197,64 @@ class _SubmitGradientButton extends StatelessWidget {
         ],
       ),
       child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: isSubmitting ? null : onTap,
-        borderRadius: BorderRadius.circular(999.r),
-        child: Ink(
-          height: 54.h,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999.r),
-            gradient: LinearGradient(
-              colors: isSubmitting
-                  ? [
-                      EtbalyWebColors.gold.withValues(alpha: 0.48),
-                      EtbalyWebColors.gold.withValues(alpha: 0.72),
-                    ]
-                  : [
-                      const Color(0xFFB8922A),
-                      EtbalyWebColors.gold,
-                      const Color(0xFFE8C878),
-                    ],
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: (isSubmitting || isDisabled) ? null : onTap,
+          borderRadius: BorderRadius.circular(999.r),
+          child: Ink(
+            height: 54.h,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999.r),
+              gradient: LinearGradient(
+                colors: (isSubmitting || isDisabled)
+                    ? [
+                        EtbalyWebColors.gold.withValues(alpha: 0.48),
+                        EtbalyWebColors.gold.withValues(alpha: 0.72),
+                      ]
+                    : [
+                        const Color(0xFFB8922A),
+                        EtbalyWebColors.gold,
+                        const Color(0xFFE8C878),
+                      ],
+              ),
             ),
-          ),
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isSubmitting)
-                  SizedBox(
-                    width: 18.w,
-                    height: 18.h,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.r,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF1A1501),
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isSubmitting)
+                    SizedBox(
+                      width: 18.w,
+                      height: 18.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.r,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF1A1501),
+                        ),
                       ),
+                    )
+                  else
+                    Icon(
+                      Icons.arrow_back_rounded,
+                      color: const Color(0xFF1A1501),
+                      size: 20.sp,
                     ),
-                  )
-                else
-                  Icon(
-                    Icons.arrow_back_rounded,
-                    color: const Color(0xFF1A1501),
-                    size: 20.sp,
+                  SizedBox(width: 10.w),
+                  Text(
+                    isSubmitting
+                        ? 'auto.t_b303cc20c1'.tr()
+                        : 'auto.t_c43aa55fa9'.tr(),
+                    style: context.textTheme.labelLarge?.copyWith(
+                      color: const Color(0xFF1A1501),
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                SizedBox(width: 10.w),
-                Text(
-                  isSubmitting
-                      ? 'auto.t_b303cc20c1'.tr()
-                      : 'auto.t_c43aa55fa9'.tr(),
-                  style: context.textTheme.labelLarge?.copyWith(
-                    color: const Color(0xFF1A1501),
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -1006,39 +1327,99 @@ class _HoursCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16.h),
+          // Office hours.
+          _HoursGroupLabel(
+            icon: Icon(Icons.apartment_rounded,
+                color: EtbalyWebColors.gold, size: 15.sp),
+            label: 'auto.t_f7e554583d'.tr(),
+            color: EtbalyWebColors.gold,
+          ),
+          SizedBox(height: 10.h),
           _HoursRow(
-              label: 'auto.t_f7e554583d'.tr(), value: 'auto.t_9c43f9b4ee'.tr()),
+            label: 'auto.t_9c43f9b4ee'.tr(),
+            value: 'auto.t_10c46d4ef8'.tr(),
+          ),
           _HoursRow(
-              label: 'auto.t_b4e73ac2bc'.tr(), value: 'auto.t_10c46d4ef8'.tr()),
-          _HoursRow(
-              label: 'auto.t_8d067a376a'.tr(),
-              value: 'auto.t_e944ebd608'.tr(),
-              warning: true),
+            label: 'auto.t_8d067a376a'.tr(),
+            value: 'auto.t_e944ebd608'.tr(),
+            warning: true,
+          ),
           Divider(color: context.etbalyColors.borderColor, height: 26.h),
+          // Online support.
+          _HoursGroupLabel(
+            icon: Container(
+              width: 7.w,
+              height: 7.h,
+              decoration: const BoxDecoration(
+                color: EtbalyWebColors.green,
+                shape: BoxShape.circle,
+              ),
+            ),
+            label: 'auto.t_hours_online'.tr(),
+            color: EtbalyWebColors.green,
+          ),
+          SizedBox(height: 10.h),
           Row(
             children: [
-              Container(
-                width: 7.w,
-                height: 7.h,
-                decoration: const BoxDecoration(
-                  color: EtbalyWebColors.green,
-                  shape: BoxShape.circle,
+              Expanded(
+                child: Text(
+                  'auto.t_hours_every_day'.tr(),
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.etbalyColors.textMuted,
+                  ),
                 ),
               ),
-              SizedBox(width: 8.w),
-              Text(
-                'auto.t_98017f5ce6'.tr(),
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: EtbalyWebColors.green,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const Spacer(),
               const _MiniPill(text: '24/7', green: true),
+            ],
+          ),
+          SizedBox(height: 10.h),
+          Row(
+            children: [
+              FaIcon(FontAwesomeIcons.whatsapp,
+                  color: const Color(0xFF25D366), size: 14.sp),
+              SizedBox(width: 7.w),
+              Expanded(
+                child: Text(
+                  'auto.t_hours_wa_note'.tr(),
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.etbalyColors.textMuted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _HoursGroupLabel extends StatelessWidget {
+  const _HoursGroupLabel({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final Widget icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(width: 16.w, child: Center(child: icon)),
+        SizedBox(width: 7.w),
+        Text(
+          label,
+          style: context.textTheme.labelLarge?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1199,7 +1580,7 @@ class _MapSectionState extends State<_MapSection> {
                   label: 'auto.t_a3326e7683'.tr(),
                   icon: FontAwesomeIcons.whatsapp,
                   color: const Color(0xFF25D366),
-                  onTap: () => _open('https://wa.me/01010285020'),
+                  onTap: () => _open(_whatsappUrl),
                 ),
               ],
             ),
@@ -1300,6 +1681,8 @@ class _ContactTextField extends StatelessWidget {
     required this.icon,
     required this.controller,
     required this.onChanged,
+    this.onBlur,
+    this.fieldKey,
     this.errorText,
     this.keyboardType,
     this.iconColor,
@@ -1312,6 +1695,10 @@ class _ContactTextField extends StatelessWidget {
   final Object icon;
   final TextEditingController controller;
   final VoidCallback onChanged;
+
+  /// Runs when the field loses focus (the website validates on blur).
+  final VoidCallback? onBlur;
+  final Key? fieldKey;
   final String? errorText;
   final TextInputType? keyboardType;
   final Color? iconColor;
@@ -1323,13 +1710,18 @@ class _ContactTextField extends StatelessWidget {
     final hasError = errorText != null;
 
     return Column(
+      key: fieldKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             icon is FaIconData
-                ? FaIcon(icon as FaIconData, size: 15.sp, color: iconColor ?? context.etbalyColors.textMuted)
-                : Icon(icon as IconData, size: 15.sp, color: iconColor ?? context.etbalyColors.textMuted),
+                ? FaIcon(icon as FaIconData,
+                    size: 15.sp,
+                    color: iconColor ?? context.etbalyColors.textMuted)
+                : Icon(icon as IconData,
+                    size: 15.sp,
+                    color: iconColor ?? context.etbalyColors.textMuted),
             SizedBox(width: 6.w),
             Expanded(
               child: Text(
@@ -1343,50 +1735,72 @@ class _ContactTextField extends StatelessWidget {
           ],
         ),
         SizedBox(height: 8.h),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          minLines: minLines,
-          maxLines: maxLines,
-          textInputAction:
-              maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
-          onChanged: (_) => onChanged(),
-          style: context.textTheme.bodyMedium?.copyWith(
-            color: context.etbalyColors.textMain,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: context.textTheme.bodySmall?.copyWith(
-              color: context.etbalyColors.textLight,
+        Focus(
+          onFocusChange: (hasFocus) {
+            if (!hasFocus) onBlur?.call();
+          },
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            minLines: minLines,
+            maxLines: maxLines,
+            textInputAction:
+                maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
+            onChanged: (_) => onChanged(),
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: context.etbalyColors.textMain,
             ),
-            filled: true,
-            fillColor: context.etbalyColors.bgSubtle,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(
-                color:
-                    hasError ? const Color(0xFFFF6B6B) : EtbalyWebColors.border,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: context.textTheme.bodySmall?.copyWith(
+                color: context.etbalyColors.textLight,
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(
-                color:
-                    hasError ? const Color(0xFFFF6B6B) : EtbalyWebColors.gold,
+              filled: true,
+              fillColor: context.etbalyColors.bgSubtle,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(
+                  color: hasError
+                      ? const Color(0xFFFF6B6B)
+                      : EtbalyWebColors.border,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                borderSide: BorderSide(
+                  color:
+                      hasError ? const Color(0xFFFF6B6B) : EtbalyWebColors.gold,
+                ),
               ),
             ),
           ),
         ),
         if (hasError) ...[
           SizedBox(height: 6.h),
-          Text(
-            errorText!,
-            style: context.textTheme.labelSmall?.copyWith(
-              color: const Color(0xFFFF8A8A),
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: 1.h),
+                child: Icon(
+                  Icons.error_outline_rounded,
+                  size: 13.sp,
+                  color: const Color(0xFFFF8A8A),
+                ),
+              ),
+              SizedBox(width: 5.w),
+              Expanded(
+                child: Text(
+                  errorText!,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: const Color(0xFFFF8A8A),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ],
@@ -1394,8 +1808,38 @@ class _ContactTextField extends StatelessWidget {
   }
 }
 
+/// "Selected Package" label with hairlines, as on the website's form.
+class _PackageDivider extends StatelessWidget {
+  const _PackageDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final line = Expanded(
+      child: Divider(color: context.etbalyColors.borderColor, height: 1),
+    );
+    return Row(
+      children: [
+        line,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          child: Text(
+            'auto.t_contact_pkg_title'.tr(),
+            style: context.textTheme.labelMedium?.copyWith(
+              color: context.etbalyColors.textMuted,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        line,
+      ],
+    );
+  }
+}
+
 class _PackageEmptyBox extends StatelessWidget {
-  const _PackageEmptyBox();
+  const _PackageEmptyBox({required this.onPick});
+
+  final VoidCallback onPick;
 
   @override
   Widget build(BuildContext context) {
@@ -1448,7 +1892,7 @@ class _PackageEmptyBox extends StatelessWidget {
             ),
           ),
           TextButton.icon(
-            onPressed: () => context.go(AppRoutes.services),
+            onPressed: onPick,
             icon: Icon(Icons.arrow_back_rounded, size: 17.sp),
             label: Text('auto.t_ac442fdb57'.tr()),
             style: TextButton.styleFrom(
@@ -1464,15 +1908,252 @@ class _PackageEmptyBox extends StatelessWidget {
   }
 }
 
-class _FormAlert extends StatelessWidget {
-  const _FormAlert({required this.message, required this.isSuccess});
+/// The package picked on the services tab, with "Change" and "Remove".
+class _PackageSelectedBox extends StatelessWidget {
+  const _PackageSelectedBox({
+    required this.package,
+    required this.onChange,
+    required this.onRemove,
+  });
 
-  final String message;
-  final bool isSuccess;
+  final SelectedPackage package;
+  final VoidCallback onChange;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
-    final color = isSuccess ? EtbalyWebColors.green : const Color(0xFFFF6B6B);
+    final colors = context.etbalyColors;
+
+    Widget action({
+      required IconData icon,
+      required String label,
+      required Color color,
+      required VoidCallback onTap,
+    }) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999.r),
+            border: Border.all(color: color.withValues(alpha: 0.5)),
+            color: color.withValues(alpha: 0.08),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14.sp, color: color),
+              SizedBox(width: 6.w),
+              Text(
+                label,
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: EtbalyWebColors.gold.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: EtbalyWebColors.gold.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42.w,
+                height: 42.h,
+                decoration: BoxDecoration(
+                  color: EtbalyWebColors.gold.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Icon(
+                  Icons.inventory_2_rounded,
+                  color: EtbalyWebColors.gold,
+                  size: 21.sp,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      package.category,
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: colors.textMuted,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      package.name,
+                      style: context.textTheme.titleSmall?.copyWith(
+                        color: colors.textMain,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    if (package.price != null) ...[
+                      SizedBox(height: 4.h),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.sell_rounded,
+                              size: 13.sp, color: EtbalyWebColors.gold),
+                          SizedBox(width: 5.w),
+                          Text(
+                            '${package.price} EGP',
+                            textDirection: TextDirection.ltr,
+                            style: context.textTheme.labelMedium?.copyWith(
+                              color: EtbalyWebColors.gold,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Wrap(
+            spacing: 8.r,
+            runSpacing: 8.r,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              const _MiniPill(text: '✓', green: true),
+              action(
+                icon: Icons.sync_rounded,
+                label: 'auto.t_contact_pkg_change'.tr(),
+                color: EtbalyWebColors.gold,
+                onTap: onChange,
+              ),
+              action(
+                icon: Icons.close_rounded,
+                label: 'auto.t_contact_pkg_remove'.tr(),
+                color: const Color(0xFFFF6B6B),
+                onTap: onRemove,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown under the email field when its domain is a throwaway-mail service.
+class _EmailSuggestCard extends StatelessWidget {
+  const _EmailSuggestCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(top: 10.h),
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: EtbalyWebColors.gold.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: EtbalyWebColors.gold.withValues(alpha: 0.32)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.lightbulb_rounded,
+                  size: 16.sp, color: EtbalyWebColors.gold),
+              SizedBox(width: 7.w),
+              Expanded(
+                child: Text(
+                  'auto.t_contact_email_try'.tr(),
+                  style: context.textTheme.labelMedium?.copyWith(
+                    color: context.etbalyColors.textMain,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10.h),
+          Wrap(
+            spacing: 8.r,
+            runSpacing: 8.r,
+            children: [
+              _OutlinedAction(
+                label: 'Gmail',
+                icon: FontAwesomeIcons.google,
+                color: const Color(0xFFEA4335),
+                onTap: () => _open('https://mail.google.com'),
+              ),
+              _OutlinedAction(
+                label: 'Outlook',
+                icon: FontAwesomeIcons.microsoft,
+                color: const Color(0xFF0078D4),
+                onTap: () => _open('https://outlook.live.com'),
+              ),
+              _OutlinedAction(
+                label: 'Yahoo',
+                icon: FontAwesomeIcons.yahoo,
+                color: const Color(0xFF7B3FF2),
+                onTap: () => _open('https://mail.yahoo.com'),
+              ),
+              _OutlinedAction(
+                label: 'Proton',
+                icon: Icons.mail_lock_rounded,
+                color: const Color(0xFF6D4AFF),
+                onTap: () => _open('https://proton.me/mail'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _AlertKind { success, error, warn }
+
+class _FormAlert extends StatelessWidget {
+  const _FormAlert({
+    required this.message,
+    required this.kind,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String message;
+  final _AlertKind kind;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (kind) {
+      _AlertKind.success => EtbalyWebColors.green,
+      _AlertKind.error => const Color(0xFFFF6B6B),
+      _AlertKind.warn => const Color(0xFFF59E0B),
+    };
+    final icon = switch (kind) {
+      _AlertKind.success => Icons.check_circle_rounded,
+      _AlertKind.error => Icons.error_outline_rounded,
+      _AlertKind.warn => Icons.hourglass_bottom_rounded,
+    };
 
     return Container(
       width: double.infinity,
@@ -1484,13 +2165,7 @@ class _FormAlert extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            isSuccess
-                ? Icons.check_circle_rounded
-                : Icons.error_outline_rounded,
-            color: color,
-            size: 18.sp,
-          ),
+          Icon(icon, color: color, size: 18.sp),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
@@ -1502,6 +2177,35 @@ class _FormAlert extends StatelessWidget {
               ),
             ),
           ),
+          if (actionLabel != null && onAction != null) ...[
+            SizedBox(width: 8.w),
+            InkWell(
+              onTap: onAction,
+              borderRadius: BorderRadius.circular(999.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999.r),
+                  border: Border.all(color: const Color(0xFF25D366)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FaIcon(FontAwesomeIcons.whatsapp,
+                        size: 13.sp, color: const Color(0xFF25D366)),
+                    SizedBox(width: 5.w),
+                    Text(
+                      actionLabel!,
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: const Color(0xFF25D366),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1816,7 +2520,6 @@ class _ContactBackgroundPainter extends CustomPainter {
     return oldDelegate.progress != progress;
   }
 }
-
 
 Future<void> _open(String url) async {
   final uri = Uri.parse(url);

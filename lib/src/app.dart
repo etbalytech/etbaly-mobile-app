@@ -32,7 +32,8 @@ class App extends StatelessWidget {
             final safeChild = child ?? const SizedBox.shrink();
             Widget current = safeChild;
             current = SkeletonWrapper(child: current);
-            return current;
+            // Branded loading screen, shown once per launch.
+            return EtbalySplashGate(child: current);
           },
         );
       },

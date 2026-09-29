@@ -10,7 +10,8 @@ Future<void> main() async {
   await StorageService.instance.init();
   await ThemeService.instance.init();
   await AppConfig.init();
-  FlutterNativeSplash.remove();
+  // The native splash is lifted by EtbalySplashGate once its logo is decoded,
+  // so the hand-over to the Flutter loading screen has no white flash.
 
   runApp(
     const LocalizationWrapper(

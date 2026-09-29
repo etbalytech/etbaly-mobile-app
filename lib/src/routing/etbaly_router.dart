@@ -764,7 +764,10 @@ final GoRouter etbalyRouter = GoRouter(
         GoRoute(
           path: AppRoutes.startNow,
           name: 'startNow',
-          builder: (context, state) => const StartNowPage(),
+          builder: (context, state) => StartNowPage(
+            initialService: state.uri.queryParameters['service'] ??
+                state.uri.queryParameters['type'],
+          ),
         ),
         GoRoute(
           path: AppRoutes.careers,

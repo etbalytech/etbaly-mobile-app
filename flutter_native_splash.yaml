@@ -1,6 +1,18 @@
+# Native launch screen: a plain dark screen with no icon, matching the dark
+# background of EtbalySplashGate (lib/src/shared/widgets/etbaly_splash.dart).
+# The Flutter loading screen then brings in the logo, so there is no jump in
+# logo size between the two. Regenerate with:
+#   dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "##6750A4"
-  # image: assets/images/splash.png
-  # android_12:
-  #   image: assets/images/splash.png
-  #   icon_background_color: "##6750A4"
+  color: "#080807"
+  color_dark: "#080807"
+
+  android_12:
+    # Android 12+ always draws an icon on its splash; a transparent one hides it.
+    image: tool/splash/blank.png
+    color: "#080807"
+    color_dark: "#080807"
+
+  android: true
+  ios: true
+  web: false
