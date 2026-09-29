@@ -1870,6 +1870,8 @@ class _CareersScreenState extends State<CareersScreen> {
                   SizedBox(height: 10.h),
                   _ErrorNote(_submitError),
                 ],
+                SizedBox(height: 6.h),
+                const EtbalyPrivacyLink(),
               ],
             ),
           ),

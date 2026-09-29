@@ -22,3 +22,4 @@ export 'etbaly_page_sections.dart';
 export 'etbaly_web_components.dart';
 export 'etbaly_image_viewer.dart';
 export 'etbaly_splash.dart';
+export 'etbaly_privacy_link.dart';

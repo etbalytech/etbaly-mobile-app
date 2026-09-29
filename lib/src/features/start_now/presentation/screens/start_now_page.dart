@@ -332,6 +332,8 @@ class _StartNowPageState extends State<StartNowPage> {
           isDisabled: _logoProcessing || _projectImagesProcessing,
           onPressed: _submitForm,
         ),
+        SizedBox(height: 8.h),
+        const EtbalyPrivacyLink(),
       ],
     );
   }

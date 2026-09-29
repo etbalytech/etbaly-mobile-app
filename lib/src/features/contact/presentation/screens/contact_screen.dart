@@ -949,6 +949,8 @@ class _ContactFormCard extends StatelessWidget {
             isDisabled: cooldownSeconds > 0,
             onTap: onSubmit,
           ),
+          SizedBox(height: 10.h),
+          const EtbalyPrivacyLink(),
         ],
       ),
     );
