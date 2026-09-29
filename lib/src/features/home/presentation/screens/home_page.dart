@@ -44,7 +44,6 @@ part '../widgets/stats_band_item.dart';
 part '../widgets/stats_band_divider.dart';
 part '../widgets/strip_header.dart';
 part '../widgets/strip_image_card.dart';
-part '../widgets/strip_lightbox.dart';
 part '../widgets/stats_strip_background_painter.dart';
 part '../widgets/careers_banner_section.dart';
 part '../widgets/how_we_work_section.dart';

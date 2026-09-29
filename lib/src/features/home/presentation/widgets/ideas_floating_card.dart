@@ -15,8 +15,13 @@ class _IdeasFloatingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
 
+    // The card grows with its text (a fixed width used to cut Arabic labels to
+    // "تقييم الع…"), up to just under half of the screen.
     return Container(
-      width: 124.w,
+      constraints: BoxConstraints(
+        minWidth: 124.w,
+        maxWidth: context.width * 0.46,
+      ),
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
         color:
@@ -28,11 +33,12 @@ class _IdeasFloatingCard extends StatelessWidget {
         ],
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         textDirection: TextDirection.ltr,
         children: [
           Icon(icon, color: colors.gold, size: 30.sp),
           SizedBox(width: 10.w),
-          Expanded(
+          Flexible(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
@@ -40,6 +46,9 @@ class _IdeasFloatingCard extends StatelessWidget {
                 Text(
                   value,
                   maxLines: 1,
+                  // Numbers and symbols ("+187%", "5★") must not be reordered
+                  // by the Arabic right-to-left context.
+                  textDirection: TextDirection.ltr,
                   style: context.textTheme.titleMedium?.copyWith(
                     color: colors.textMain,
                     fontWeight: FontWeight.w900,
@@ -47,7 +56,8 @@ class _IdeasFloatingCard extends StatelessWidget {
                 ),
                 Text(
                   label,
-                  maxLines: 1,
+                  maxLines: 2,
+                  textAlign: TextAlign.end,
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.labelSmall?.copyWith(
                     color: colors.textMuted,

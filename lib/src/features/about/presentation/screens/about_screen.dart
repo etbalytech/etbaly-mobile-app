@@ -1044,6 +1044,22 @@ class _TeamSection extends StatelessWidget {
     final colors = context.etbalyColors;
     final members = team ?? const <TeamMember>[];
 
+    // Tapping a photo opens the full-screen viewer; the user can swipe through
+    // all the team photos from there. Members without a photo are not tappable.
+    final viewerImages = <EtbalyViewerImage>[];
+    final viewerIndex = <int, int>{};
+    for (var i = 0; i < members.length; i++) {
+      final provider = _avatarProvider(members[i].avatar);
+      if (provider == null) continue;
+      viewerIndex[i] = viewerImages.length;
+      viewerImages.add(EtbalyViewerImage(
+        provider: provider,
+        title: members[i].name(isAr),
+        subtitle: members[i].role(isAr),
+        heroTag: 'team-avatar-$i',
+      ));
+    }
+
     Widget stateBox({required Widget child}) => Padding(
           padding: EdgeInsets.symmetric(vertical: 26.h),
           child: Center(child: child),
@@ -1122,11 +1138,19 @@ class _TeamSection extends StatelessWidget {
               crossAxisSpacing: 12.r,
               childAspectRatio: 0.78,
               children: [
-                for (final member in members)
+                for (var i = 0; i < members.length; i++)
                   _TeamCard(
-                    name: member.name(isAr),
-                    role: member.role(isAr),
-                    avatar: member.avatar,
+                    name: members[i].name(isAr),
+                    role: members[i].role(isAr),
+                    avatar: members[i].avatar,
+                    heroTag: viewerIndex.containsKey(i) ? 'team-avatar-$i' : null,
+                    onTap: viewerIndex.containsKey(i)
+                        ? () => showEtbalyImageViewer(
+                              context,
+                              images: viewerImages,
+                              initialIndex: viewerIndex[i]!,
+                            )
+                        : null,
                   ),
               ],
             ),
@@ -1686,31 +1710,50 @@ class _CeoPortraitCard extends StatelessWidget {
       alignment: Alignment.center,
     );
 
+    final provider = _avatarProvider(profile.avatar) ?? AssetImage(AppAssets.aboutCeo);
+    const heroTag = 'ceo-portrait';
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Container(
-          width: 260.w,
-          height: 260.w,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: colors.gold.withValues(alpha: 0.55)),
-            boxShadow: [
-              BoxShadow(
-                color: colors.gold.withValues(alpha: 0.12),
-                blurRadius: 34.r,
-                offset: Offset(0.w, 18.h),
+        GestureDetector(
+          onTap: () => showEtbalyImageViewer(
+            context,
+            images: [
+              EtbalyViewerImage(
+                provider: provider,
+                title: profile.name(isAr),
+                subtitle: profile.title(isAr),
+                heroTag: heroTag,
               ),
             ],
           ),
-          clipBehavior: Clip.antiAlias,
-          // The portrait is managed from the dashboard; the bundled photo is
-          // used for the default value and whenever the uploaded one fails to load.
-          child: _RemoteImage(
-            path: profile.avatar,
-            bundledPaths: const {CeoProfile.defaultAvatar},
-            fallback: bundledPortrait,
-            alignment: Alignment.center,
+          child: Hero(
+            tag: heroTag,
+            child: Container(
+              width: 260.w,
+              height: 260.w,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: colors.gold.withValues(alpha: 0.55)),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.gold.withValues(alpha: 0.12),
+                    blurRadius: 34.r,
+                    offset: Offset(0.w, 18.h),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              // The portrait is managed from the dashboard; the bundled photo is
+              // used for the default value and whenever the uploaded one fails to load.
+              child: _RemoteImage(
+                path: profile.avatar,
+                bundledPaths: const {CeoProfile.defaultAvatar},
+                fallback: bundledPortrait,
+                alignment: Alignment.center,
+              ),
+            ),
           ),
         ),
         Positioned(
@@ -2728,20 +2771,103 @@ class _RemoteImage extends StatelessWidget {
   }
 }
 
+/// The image to show for a photo stored in the dashboard: the bundled portrait
+/// for the default value, a decoded `data:` URI, or the photo on the website.
+/// `null` when there is no photo.
+ImageProvider? _avatarProvider(String path) {
+  final trimmed = path.trim();
+  if (trimmed.isEmpty) return null;
+  if (trimmed == CeoProfile.defaultAvatar) return AssetImage(AppAssets.aboutCeo);
+  if (trimmed.startsWith('data:')) {
+    final comma = trimmed.indexOf(',');
+    if (comma < 0) return null;
+    try {
+      return MemoryImage(base64Decode(trimmed.substring(comma + 1)));
+    } catch (_) {
+      return null;
+    }
+  }
+  return CachedNetworkImageProvider(AboutRepository.assetUrl(trimmed));
+}
+
 class _TeamCard extends StatelessWidget {
   const _TeamCard({
     required this.name,
     required this.role,
     required this.avatar,
+    this.onTap,
+    this.heroTag,
   });
 
   final String name;
   final String role;
   final String avatar;
 
+  /// Opens the photo full screen; `null` when the member has no photo.
+  final VoidCallback? onTap;
+  final Object? heroTag;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
+
+    Widget photo = Container(
+      width: 64.w,
+      height: 64.w,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: colors.gold.withValues(alpha: 0.24)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: _RemoteImage(
+        path: avatar,
+        alignment: Alignment.topCenter,
+        // No photo (or it failed to load): the member's initial, like the website.
+        fallback: ColoredBox(
+          color: colors.gold.withValues(alpha: 0.14),
+          child: Center(
+            child: Text(
+              name.isEmpty ? '' : name.characters.first,
+              style: context.textTheme.titleLarge?.copyWith(
+                color: colors.gold,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (heroTag != null) photo = Hero(tag: heroTag!, child: photo);
+    if (onTap != null) {
+      photo = GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            photo,
+            // Small hint that the photo can be enlarged.
+            PositionedDirectional(
+              end: -2.w,
+              bottom: -2.w,
+              child: Container(
+                width: 22.w,
+                height: 22.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.gold,
+                  border: Border.all(color: colors.bgCard, width: 2),
+                ),
+                child: Center(
+                  child: Icon(Icons.zoom_in_rounded,
+                      color: Colors.black, size: 14.sp),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: EdgeInsets.all(11.r),
@@ -2752,32 +2878,7 @@ class _TeamCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 64.w,
-            height: 64.h,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: colors.gold.withValues(alpha: 0.24)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: _RemoteImage(
-              path: avatar,
-              alignment: Alignment.topCenter,
-              // No photo (or it failed to load): the member's initial, like the website.
-              fallback: ColoredBox(
-                color: colors.gold.withValues(alpha: 0.14),
-                child: Center(
-                  child: Text(
-                    name.isEmpty ? '' : name.characters.first,
-                    style: context.textTheme.titleLarge?.copyWith(
-                      color: colors.gold,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          photo,
           SizedBox(height: 9.h),
           Text(
             name,

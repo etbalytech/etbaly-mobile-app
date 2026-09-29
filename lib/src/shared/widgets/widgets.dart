@@ -20,3 +20,4 @@ export 'etbaly_gold_divider.dart';
 export 'etbaly_service_card.dart';
 export 'etbaly_page_sections.dart';
 export 'etbaly_web_components.dart';
+export 'etbaly_image_viewer.dart';

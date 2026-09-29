@@ -61,16 +61,22 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
             right: isNarrow ? 8.w : 16.w,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Flexible: on narrow phones the two cards shrink instead of overflowing.
               children: [
-                _IdeasFloatingCard(
-                  value: '5★',
-                  label: 'auto.t_0d19e6d1f4'.tr(),
-                  icon: Icons.star,
+                Flexible(
+                  child: _IdeasFloatingCard(
+                    value: '5★',
+                    label: 'auto.t_0d19e6d1f4'.tr(),
+                    icon: Icons.star,
+                  ),
                 ),
-                _IdeasFloatingCard(
-                  value: '187%+',
-                  label: 'auto.t_57b5421e7e'.tr(),
-                  icon: Icons.bar_chart,
+                SizedBox(width: 8.w),
+                Flexible(
+                  child: _IdeasFloatingCard(
+                    value: '+187%',
+                    label: 'auto.t_57b5421e7e'.tr(),
+                    icon: Icons.bar_chart,
+                  ),
                 ),
               ],
             ),

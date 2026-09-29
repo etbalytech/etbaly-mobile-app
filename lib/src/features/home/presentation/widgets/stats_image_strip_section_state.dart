@@ -56,15 +56,20 @@ class _StatsImageStripSectionState extends State<_StatsImageStripSection>
     final contentX = details.localPosition.dx + currentOffset;
     final itemWidth = iw + 18.0;
     final idx = (contentX / itemWidth).floor() % _imageCount;
-    _showStripLightbox(AppAssets.stripImage(idx + 1));
+    _showStripViewer(idx);
   }
 
-  void _showStripLightbox(String image) {
+  /// Opens the full-screen viewer on the tapped picture; the user can swipe
+  /// through the rest of the gallery, zoom, and swipe down to close.
+  void _showStripViewer(int index) {
     if (!mounted) return;
-    showDialog<void>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.82),
-      builder: (ctx) => _StripLightbox(image: image),
+    showEtbalyImageViewer(
+      context,
+      initialIndex: index,
+      images: [
+        for (var i = 1; i <= _imageCount; i++)
+          EtbalyViewerImage(provider: AssetImage(AppAssets.stripImage(i))),
+      ],
     );
   }
 
