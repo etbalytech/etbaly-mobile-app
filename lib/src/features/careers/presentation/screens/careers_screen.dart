@@ -7,6 +7,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../widgets/birthday_field.dart';
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const _submitUrl = 'https://etba3ly-dm.com/api-careers/submit-application.php';
@@ -504,23 +506,7 @@ List<_InterviewDay> _buildInterviewDays() {
 // ─── Input helpers ───────────────────────────────────────────────────────────
 
 /// Keeps only digits, converting Arabic-Indic / Persian digits to Latin ones.
-String _latinDigits(String value) {
-  const arabic = '٠١٢٣٤٥٦٧٨٩';
-  const persian = '۰۱۲۳۴۵۶۷۸۹';
-  final out = StringBuffer();
-  for (final ch in value.split('')) {
-    final a = arabic.indexOf(ch);
-    final p = persian.indexOf(ch);
-    if (a >= 0) {
-      out.write(a);
-    } else if (p >= 0) {
-      out.write(p);
-    } else if (ch.codeUnitAt(0) >= 0x30 && ch.codeUnitAt(0) <= 0x39) {
-      out.write(ch);
-    }
-  }
-  return out.toString();
-}
+String _latinDigits(String value) => latinDigitsOnly(value);
 
 class _DigitsFormatter extends TextInputFormatter {
   const _DigitsFormatter(this.maxLength);
@@ -537,10 +523,8 @@ class _DigitsFormatter extends TextInputFormatter {
   }
 }
 
-bool _validAge(String digits) {
-  final age = int.tryParse(digits);
-  return age != null && age >= 18 && age <= 40;
-}
+/// The API takes the age from the date of birth; applicants must be 18-40.
+bool _validBirthDate(String iso) => validApplicantBirthDate(iso, _cairoNow());
 
 bool _validMobile(String digits) => RegExp(r'^01[0125]\d{8}$').hasMatch(digits);
 
@@ -626,7 +610,6 @@ class _CareersScreenState extends State<CareersScreen> {
   final _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 30)));
 
   final _nameCtrl = TextEditingController();
-  final _ageCtrl = TextEditingController();
   final _educationCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _whatsappCtrl = TextEditingController();
@@ -636,6 +619,9 @@ class _CareersScreenState extends State<CareersScreen> {
   final _experienceCtrl = TextEditingController();
   final _achievementsCtrl = TextEditingController();
   final _coverCtrl = TextEditingController();
+
+  /// `YYYY-MM-DD`; empty until the three boxes make a real date.
+  String _birthDate = '';
 
   _Job? _selectedJob;
   String _experienceLevel = '';
@@ -711,7 +697,6 @@ class _CareersScreenState extends State<CareersScreen> {
 
   List<TextEditingController> get _controllers => [
         _nameCtrl,
-        _ageCtrl,
         _educationCtrl,
         _emailCtrl,
         _whatsappCtrl,
@@ -859,7 +844,7 @@ class _CareersScreenState extends State<CareersScreen> {
       _expError = _experienceLevel.isEmpty;
       _photoError = _photo == null;
       _nameError = _nameCtrl.text.trim().length < 2;
-      _ageError = !_validAge(_latinDigits(_ageCtrl.text));
+      _ageError = !_validBirthDate(_birthDate);
       _educationError = _educationCtrl.text.trim().length < 2;
       _genderError = _gender.isEmpty;
       _maritalError = _maritalStatus.isEmpty;
@@ -927,7 +912,9 @@ class _CareersScreenState extends State<CareersScreen> {
       'job_id': '0',
       'job_title': job.title,
       'name': _nameCtrl.text.trim(),
-      'age': _latinDigits(_ageCtrl.text),
+      'birth_date': _birthDate,
+      // Older servers only read the age, so it travels with the date it comes from.
+      'age': '${birthdayAge(_birthDate, _cairoNow()) ?? ''}',
       'gender': _gender,
       'marital_status': _maritalStatus,
       'employment_status': _employmentStatus,
@@ -1136,6 +1123,7 @@ class _CareersScreenState extends State<CareersScreen> {
     }
     _interviewDays = _buildInterviewDays();
     setState(() {
+      _birthDate = '';
       _selectedJob = null;
       _experienceLevel = '';
       _gender = '';
@@ -1396,45 +1384,50 @@ class _CareersScreenState extends State<CareersScreen> {
                 ),
                 SizedBox(height: 12.h),
 
-                // Age + Education
-                _TwoCol(
-                  left: _keyed(
-                    'age',
-                    _Label(
-                      text: isAr ? 'السن' : 'Age',
-                      required: true,
-                      hasError: _ageError,
-                      errorText: isAr ? 'يجب أن يكون السن من 18 إلى 40 سنة' : 'Age must be between 18 and 40 years',
-                      child: _Field(
-                        controller: _ageCtrl,
-                        hint: isAr ? 'من 18 إلى 40 سنة' : 'From 18 to 40 years',
-                        icon: Icons.cake_outlined,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: const [_DigitsFormatter(2)],
-                        hasError: _ageError,
-                        onChanged: (v) => setState(() {
-                          final digits = _latinDigits(v);
-                          _ageError = digits.isNotEmpty && !_validAge(digits);
-                        }),
-                      ),
-                    ),
+                // Date of birth (the age is worked out from it)
+                _keyed(
+                  'age',
+                  BirthdayField(
+                    value: _birthDate,
+                    today: _cairoNow(),
+                    isArabic: isAr,
+                    label: isAr ? 'تاريخ الميلاد' : 'Date of birth',
+                    hint: isAr
+                        ? 'اكتب اليوم والشهر والسنة — يجب أن يكون السن من 18 إلى 40 سنة.'
+                        : 'Type the day, month and year — applicants must be 18 to 40 years old.',
+                    invalid: _ageError,
+                    errorText: _birthDate.isEmpty
+                        ? (isAr
+                            ? 'اكتب تاريخ ميلادك كاملًا (يوم وشهر وسنة).'
+                            : 'Enter your full date of birth (day, month and year).')
+                        : (isAr
+                            ? 'يجب أن يكون السن من 18 إلى 40 سنة'
+                            : 'Age must be between 18 and 40 years'),
+                    onChanged: (iso) => setState(() {
+                      _birthDate = iso;
+                      // Half-typed is just unfinished; only a complete date can be out of range.
+                      _ageError = iso.isNotEmpty && !_validBirthDate(iso);
+                    }),
                   ),
-                  right: _keyed(
-                    'education',
-                    _Label(
-                      text: isAr ? 'التعليم' : 'Education',
-                      required: true,
+                ),
+                SizedBox(height: 12.h),
+
+                // Education
+                _keyed(
+                  'education',
+                  _Label(
+                    text: isAr ? 'التعليم' : 'Education',
+                    required: true,
+                    hasError: _educationError,
+                    errorText: isAr ? 'يرجى إدخال المؤهل التعليمي (حرفين على الأقل)' : 'Enter your education (at least 2 characters)',
+                    child: _Field(
+                      controller: _educationCtrl,
+                      hint: isAr ? 'مثال: بكالوريوس تجارة' : "Example: Bachelor's degree",
+                      icon: Icons.school_outlined,
                       hasError: _educationError,
-                      errorText: isAr ? 'يرجى إدخال المؤهل التعليمي (حرفين على الأقل)' : 'Enter your education (at least 2 characters)',
-                      child: _Field(
-                        controller: _educationCtrl,
-                        hint: isAr ? 'مثال: بكالوريوس تجارة' : "Example: Bachelor's degree",
-                        icon: Icons.school_outlined,
-                        hasError: _educationError,
-                        onChanged: (_) {
-                          if (_educationError) setState(() => _educationError = false);
-                        },
-                      ),
+                      onChanged: (_) {
+                        if (_educationError) setState(() => _educationError = false);
+                      },
                     ),
                   ),
                 ),
