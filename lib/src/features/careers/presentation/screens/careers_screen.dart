@@ -5,16 +5,28 @@ import 'package:dio/dio.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../data/image_format.dart';
 import '../widgets/birthday_field.dart';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const _submitUrl = 'https://etba3ly-dm.com/api-careers/submit-application.php';
+const _ugcUrl = 'https://etba3ly-dm.com/api-careers/ugc-application.php';
+
+/// An applicant with a UGC skill can send a short voice note to the team on
+/// WhatsApp; the server saves the request and returns this chat link.
+const _ugcWhatsAppPrefix = 'https://wa.me/201278696383?';
+const _ugcLevelsWithVoice = {'pass', 'good', 'excellent'};
 const _companyMapUrl = 'https://maps.app.goo.gl/kHdWiv47KVqSdRgd8';
 const _submissionTimeout = Duration(seconds: 180);
 const _statusTimeout = Duration(seconds: 12);
+
+const _ugcRequiredAr = 'يشترط امتلاك مهارة UGC للتقديم لأي وظيفة. لا يمكن إرسال طلب التوظيف عند اختيار «لا».';
+const _ugcRequiredEn = 'UGC skills are required to apply for any role. Your application cannot be submitted when you select No.';
 
 // ─── Data models ─────────────────────────────────────────────────────────────
 
@@ -571,9 +583,6 @@ bool _validLinkedIn(String value) {
   return host == 'linkedin.com' || host.endsWith('.linkedin.com');
 }
 
-bool _isAllowedImage(String fileName) =>
-    const {'jpg', 'jpeg', 'png', 'webp'}.contains(fileName.split('.').last.toLowerCase());
-
 String _formatBytes(int bytes) {
   if (bytes < 1024) return '$bytes B';
   if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
@@ -633,6 +642,8 @@ class _CareersScreenState extends State<CareersScreen> {
   final _skillsCtrl = TextEditingController();
   final _experienceCtrl = TextEditingController();
   final _achievementsCtrl = TextEditingController();
+  final _guardianCtrl = TextEditingController();
+  final _teamValueCtrl = TextEditingController();
   final _coverCtrl = TextEditingController();
 
   /// `YYYY-MM-DD`; empty until the three boxes make a real date.
@@ -684,10 +695,25 @@ class _CareersScreenState extends State<CareersScreen> {
   bool _interviewError = false;
   bool _idFrontError = false;
   bool _idBackError = false;
+  bool _guardianError = false;
+  bool _teamValueError = false;
   bool _coverError = false;
+
+  // UGC voice introduction
+  bool _ugcBusy = false;
+  String _ugcToken = '';
+  String _ugcKey = '';
+  String _ugcError = '';
+  String _ugcWhatsAppUrl = '';
 
   bool get _isAr => context.locale.languageCode == 'ar';
   bool get _submitting => _phase != _SubmitPhase.idle;
+
+  /// The voice step is offered for any role once a UGC skill level is chosen.
+  bool get _showUgcVoice => _selectedJob != null && _ugcLevelsWithVoice.contains(_ugc);
+
+  /// The application needs a UGC skill, so "No" blocks it.
+  bool get _ugcBlocked => _ugc == 'no';
 
   GlobalKey _k(String name) => _keys.putIfAbsent(name, GlobalKey.new);
 
@@ -720,6 +746,8 @@ class _CareersScreenState extends State<CareersScreen> {
         _skillsCtrl,
         _experienceCtrl,
         _achievementsCtrl,
+        _guardianCtrl,
+        _teamValueCtrl,
         _coverCtrl,
       ];
 
@@ -783,11 +811,15 @@ class _CareersScreenState extends State<CareersScreen> {
       imageQuality: quality,
     );
     if (picked == null) return null;
-    if (!_isAllowedImage(picked.name)) {
+    // The format comes from the content: an iPhone HEIC photo is converted to
+    // JPEG by the picker but may keep a ".heic" name.
+    final bytes = await picked.readAsBytes();
+    final extension = detectImageExtension(bytes);
+    if (extension == null) {
       if (mounted) onInvalid();
       return null;
     }
-    return _PickedImage(await picked.readAsBytes(), picked.name);
+    return _PickedImage(bytes, withImageExtension(picked.name, extension));
   }
 
   Future<void> _pickPhoto() async {
@@ -873,6 +905,8 @@ class _CareersScreenState extends State<CareersScreen> {
       _interviewError = !_validInterview;
       _idFrontError = _idFront == null;
       _idBackError = _idBack == null;
+      _guardianError = _guardianCtrl.text.trim().length < 2;
+      _teamValueError = _teamValueCtrl.text.trim().length < 20;
       _coverError = _coverCtrl.text.trim().length < 20;
     });
 
@@ -896,6 +930,8 @@ class _CareersScreenState extends State<CareersScreen> {
       'interview': _interviewError,
       'idFront': _idFrontError,
       'idBack': _idBackError,
+      'guardian': _guardianError,
+      'teamValue': _teamValueError,
       'cover': _coverError,
     };
     final firstInvalid = pageOrder.entries.where((e) => e.value).map((e) => e.key).firstOrNull;
@@ -949,6 +985,8 @@ class _CareersScreenState extends State<CareersScreen> {
       'applicant_skills': _skillsCtrl.text.trim(),
       'applicant_experience': _experienceCtrl.text.trim(),
       'achievements': _achievementsCtrl.text.trim(),
+      'guardian_occupation': _guardianCtrl.text.trim(),
+      'team_value': _teamValueCtrl.text.trim(),
       'availability': _availability,
       'interview_date': _interviewDate,
       'interview_time_slot': _interviewTime,
@@ -967,8 +1005,13 @@ class _CareersScreenState extends State<CareersScreen> {
   }
 
   Future<void> _submit() async {
-    if (_submitting) return;
+    if (_submitting || _ugcBusy) return;
     FocusScope.of(context).unfocus();
+    if (_ugcBlocked) {
+      setState(() => _submitError = _isAr ? _ugcRequiredAr : _ugcRequiredEn);
+      _scrollTo('ugc');
+      return;
+    }
     if (!_validate()) return;
 
     // One token per application: the server uses it to ignore a duplicate send
@@ -979,6 +1022,89 @@ class _CareersScreenState extends State<CareersScreen> {
       _submitError = '';
     });
     await _sendApplication(attempt: 0, recovery: false);
+  }
+
+  /// Saves a voice-introduction request for the selected role and opens the
+  /// team's WhatsApp chat so the applicant can send the recording.
+  Future<void> _submitUgc() async {
+    final job = _selectedJob;
+    if (job == null || !_showUgcVoice || _ugcBusy || _submitting) return;
+    FocusScope.of(context).unfocus();
+    final name = _nameCtrl.text.trim();
+    final phone = _latinDigits(_whatsappCtrl.text);
+    final nameBad = name.length < 2 || name.length > 120;
+    final phoneBad = !_validMobile(phone);
+    setState(() {
+      _nameError = nameBad;
+      _waError = phoneBad;
+      _ugcError = '';
+    });
+    if (nameBad || phoneBad) {
+      _scrollTo(nameBad ? 'name' : 'whatsapp');
+      return;
+    }
+
+    // One token per person and role: it lets the server recognise a repeated tap.
+    final key = jsonEncode([job.title, phone]);
+    if (key != _ugcKey) _ugcToken = '';
+    _ugcKey = key;
+    if (_ugcToken.isEmpty) _ugcToken = _newSubmissionToken();
+    setState(() => _ugcBusy = true);
+
+    try {
+      final response = await _dio.post<dynamic>(
+        _ugcUrl,
+        data: {
+          'name': name,
+          'whatsapp': phone,
+          'submission_token': _ugcToken,
+          'job_id': 0,
+          'job_title': job.title,
+          'ugc': _ugc,
+        },
+        options: Options(
+          contentType: Headers.jsonContentType,
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          validateStatus: (_) => true,
+        ),
+      );
+      if (!mounted) return;
+      final body = _asMap(response.data);
+      final url = '${body?['whatsapp_url'] ?? ''}';
+      if (body?['success'] == true && url.startsWith(_ugcWhatsAppPrefix)) {
+        setState(() {
+          _ugcBusy = false;
+          _ugcWhatsAppUrl = url;
+        });
+        await _openUgcChat(url);
+        return;
+      }
+      final error = '${body?['error'] ?? ''}';
+      setState(() {
+        _ugcBusy = false;
+        _ugcError = error.isNotEmpty ? error : _genericMessage;
+      });
+    } on DioException {
+      if (!mounted) return;
+      setState(() {
+        _ugcBusy = false;
+        _ugcError = _connectionMessage;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _ugcBusy = false;
+        _ugcError = _genericMessage;
+      });
+    }
+  }
+
+  Future<void> _openUgcChat(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      await launchUrl(uri, mode: LaunchMode.platformDefault);
+    }
   }
 
   Future<void> _sendApplication({required int attempt, required bool recovery}) async {
@@ -1161,6 +1287,12 @@ class _CareersScreenState extends State<CareersScreen> {
       _phase = _SubmitPhase.idle;
       _sent = false;
       _submitError = '';
+      _ugcBusy = false;
+      _ugcToken = '';
+      _ugcKey = '';
+      _ugcError = '';
+      _ugcWhatsAppUrl = '';
+      _guardianError = _teamValueError = false;
       _jobError = _expError = _photoError = _nameError = _ageError = _educationError = false;
       _genderError = _maritalError = _addressError = _emailError = _waError = false;
       _portfolioError = _linkedinError = _skillsError = _employmentError = false;
@@ -1204,10 +1336,7 @@ class _CareersScreenState extends State<CareersScreen> {
                     jobs: _jobs,
                     selected: job,
                     isArabic: isAr,
-                    onSelect: (j) => setState(() {
-                      _selectedJob = j;
-                      _jobError = false;
-                    }),
+                    onSelect: _selectJob,
                   ),
                 ),
               ),
@@ -1262,6 +1391,14 @@ class _CareersScreenState extends State<CareersScreen> {
     );
   }
 
+  void _selectJob(_Job? job) => setState(() {
+        _selectedJob = job;
+        _jobError = false;
+        _submitError = '';
+        _ugcError = '';
+        _ugcWhatsAppUrl = '';
+      });
+
   List<DropdownMenuItem<String>> _optItems(List<_Opt> options, bool isAr) => [
         for (final o in options) DropdownMenuItem(value: o.value, child: Text(isAr ? o.ar : o.en)),
       ];
@@ -1271,22 +1408,172 @@ class _CareersScreenState extends State<CareersScreen> {
     required String label,
     required String value,
     required ValueChanged<String> onChanged,
+    String? blockedText,
   }) {
-    final error = _skillsError && value.isEmpty;
+    final blocked = blockedText != null;
+    final error = blocked || (_skillsError && value.isEmpty);
     return _Label(
       text: label,
       required: true,
       hasError: error,
-      errorText: isAr ? 'يرجى اختيار المستوى' : 'Select a level',
+      errorText: blockedText ?? (isAr ? 'يرجى اختيار المستوى' : 'Select a level'),
       child: _Dropdown<String>(
         value: value.isEmpty ? null : value,
         hint: isAr ? 'اختر المستوى' : 'Select a level',
         hasError: error,
         items: _optItems(_skillLevels, isAr),
-        onChanged: (v) {
-          if (v != null) setState(() => onChanged(v));
-        },
+        onChanged: _ugcBusy || _submitting
+            ? null
+            : (v) {
+                if (v != null) setState(() => onChanged(v));
+              },
       ),
+    );
+  }
+
+  Widget _buildUgcVoiceSection(bool isAr) {
+    final c = context.etbalyColors;
+    const green = Color(0xFF22C55E);
+    final job = _selectedJob!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: green.withValues(alpha: 0.25)),
+            gradient: LinearGradient(
+              begin: AlignmentDirectional.topStart,
+              end: AlignmentDirectional.bottomEnd,
+              colors: [green.withValues(alpha: 0.10), Colors.transparent],
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 46.w,
+                height: 46.w,
+                decoration: BoxDecoration(
+                  color: green.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                child: Center(child: Icon(Icons.mic_rounded, color: green, size: 24.sp)),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${isAr ? 'تقديم بالفويس' : 'Voice introduction'} · ${job.title}',
+                      style: TextStyle(color: c.textMuted, fontSize: 10.5.sp, fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      isAr ? 'خلّينا نتعرّف عليك' : 'Let’s get to know you',
+                      style: TextStyle(color: c.textMain, fontSize: 16.sp, fontWeight: FontWeight.w900),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      isAr
+                          ? 'اكتب اسمك ورقم واتساب، وبعدها هنفتح شات الإدارة على 01278696383 علشان تبعت فويس تعريفي بالعربي أو الإنجليزي.'
+                          : 'Enter your name and WhatsApp number. We’ll then open our team’s chat at 01278696383 so you can introduce yourself in Arabic or English.',
+                      style: TextStyle(color: c.textMuted, fontSize: 11.5.sp, height: 1.7),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(14.r),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14.r),
+            color: const Color(0x14D4AF37),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(top: 2.h),
+                child: Icon(Icons.auto_awesome_rounded, color: const Color(0xFFD4AF37), size: 17.sp),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  isAr
+                      ? 'في 30–60 ثانية: قول اسمك، خبرتك في UGC، وإيه اللي بيخلّي طريقتك في تقديم المحتوى مميزة. اتكلم بطبيعتك 🎙️✨'
+                      : 'In 30–60 seconds, share your name, your UGC experience, and what makes your content unique. Be yourself 🎙️✨',
+                  style: TextStyle(color: c.textMuted, fontSize: 11.5.sp, height: 1.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 14.h),
+        _WhatsAppContinueButton(
+          label: isAr ? 'كمّل على واتساب وابعت الفويس' : 'Continue on WhatsApp and send your voice note',
+          busyLabel: isAr ? 'جاري الإرسال...' : 'Sending...',
+          busy: _ugcBusy,
+          onTap: _submitUgc,
+        ),
+        if (_ugcError.isNotEmpty) ...[
+          SizedBox(height: 10.h),
+          _ErrorNote(_ugcError),
+        ],
+        if (_ugcWhatsAppUrl.isNotEmpty) ...[
+          SizedBox(height: 12.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(14.r),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: green.withValues(alpha: 0.35)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.check_circle_rounded, color: green, size: 24.sp),
+                SizedBox(height: 8.h),
+                Text(
+                  isAr
+                      ? 'تم تسجيل طلب الفويس لوظيفتك المختارة. ابعت التسجيل في شات الإدارة، وتقدر تكمل فورم التوظيف هنا.'
+                      : "Your voice introduction request for the selected role is saved. Send your recording in our team's chat. You can still complete your application here.",
+                  style: TextStyle(color: c.textMain, fontSize: 12.sp, height: 1.7),
+                ),
+                SizedBox(height: 10.h),
+                GestureDetector(
+                  onTap: () => _openUgcChat(_ugcWhatsAppUrl),
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FaIcon(FontAwesomeIcons.whatsapp, color: c.textMain, size: 16.sp),
+                      SizedBox(width: 8.w),
+                      Text(
+                        isAr ? 'فتح شات الإدارة' : 'Open the team’s WhatsApp chat',
+                        style: TextStyle(
+                          color: c.textMain,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w900,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1335,10 +1622,7 @@ class _CareersScreenState extends State<CareersScreen> {
                                 Expanded(child: Text(j.title, overflow: TextOverflow.ellipsis)),
                               ])))
                           .toList(),
-                      onChanged: (j) => setState(() {
-                        _selectedJob = j;
-                        _jobError = false;
-                      }),
+                      onChanged: _ugcBusy || _submitting ? null : _selectJob,
                     ),
                   ),
                 ),
@@ -1391,9 +1675,11 @@ class _CareersScreenState extends State<CareersScreen> {
                       hint: isAr ? 'اكتب اسمك الكامل' : 'Enter your full name',
                       icon: Icons.person_outline_rounded,
                       hasError: _nameError,
-                      onChanged: (_) {
-                        if (_nameError) setState(() => _nameError = false);
-                      },
+                      enabled: !(_ugcBusy || _submitting),
+                      onChanged: (_) => setState(() {
+                        _nameError = false;
+                        _ugcWhatsAppUrl = '';
+                      }),
                     ),
                   ),
                 ),
@@ -1590,9 +1876,11 @@ class _CareersScreenState extends State<CareersScreen> {
                       keyboardType: TextInputType.phone,
                       inputFormatters: const [_DigitsFormatter(11)],
                       hasError: _waError,
+                      enabled: !(_ugcBusy || _submitting),
                       onChanged: (v) => setState(() {
                         final digits = _latinDigits(v);
                         _waError = digits.isNotEmpty && !_validMobile(digits);
+                        _ugcWhatsAppUrl = '';
                       }),
                     ),
                   ),
@@ -1684,11 +1972,20 @@ class _CareersScreenState extends State<CareersScreen> {
                 ),
                 SizedBox(height: 10.h),
                 _TwoCol(
-                  left: _skillDropdown(
-                    isAr: isAr,
-                    label: 'UGC',
-                    value: _ugc,
-                    onChanged: (v) => _ugc = v,
+                  left: _keyed(
+                    'ugc',
+                    _skillDropdown(
+                      isAr: isAr,
+                      label: 'UGC',
+                      value: _ugc,
+                      blockedText: _ugcBlocked ? (isAr ? _ugcRequiredAr : _ugcRequiredEn) : null,
+                      onChanged: (v) {
+                        _ugc = v;
+                        _submitError = '';
+                        _ugcError = '';
+                        _ugcWhatsAppUrl = '';
+                      },
+                    ),
                   ),
                   right: _Label(
                     text: 'Work under pressure',
@@ -1704,6 +2001,11 @@ class _CareersScreenState extends State<CareersScreen> {
                     ),
                   ),
                 ),
+                if (_showUgcVoice) ...[
+                  SizedBox(height: 14.h),
+                  _buildUgcVoiceSection(isAr),
+                  SizedBox(height: 4.h),
+                ],
                 SizedBox(height: 10.h),
                 _Label(
                   text: isAr ? 'متاح للعمل' : 'Available for',
@@ -1832,6 +2134,48 @@ class _CareersScreenState extends State<CareersScreen> {
                 ),
                 SizedBox(height: 12.h),
                 _keyed(
+                  'guardian',
+                  _Label(
+                    text: isAr ? 'ولي أمرك (الأب أو الأم) بيشتغل إيه؟ 👨‍👩‍👧' : 'What does your parent (father or mother) do? 👨‍👩‍👧',
+                    required: true,
+                    hasError: _guardianError,
+                    errorText: isAr ? 'اكتب وظيفة الأب أو الأم (حرفين على الأقل)' : "Enter a parent's occupation (at least 2 characters)",
+                    child: _Field(
+                      controller: _guardianCtrl,
+                      hint: isAr ? 'اكتب الوظيفة، أو متقاعد / لا يعمل' : 'Enter their occupation, or retired / not working',
+                      icon: Icons.family_restroom_rounded,
+                      maxLength: 200,
+                      hasError: _guardianError,
+                      onChanged: (_) {
+                        if (_guardianError) setState(() => _guardianError = false);
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                _keyed(
+                  'teamValue',
+                  _Label(
+                    text: isAr ? 'لو انضمّيت للفريق، إيه الإضافة الجامدة اللي هتيجي معاك؟ 🚀😎' : 'If you join our team, what superpower are you bringing? 🚀😎',
+                    required: true,
+                    hasError: _teamValueError,
+                    errorText: isAr ? 'احكيلنا عن الإضافة اللي هتقدمها للفريق (20 حرفًا على الأقل)' : 'Tell us what you would add to the team (at least 20 characters)',
+                    child: _Field(
+                      controller: _teamValueCtrl,
+                      hint: isAr
+                          ? 'ورّينا ميزتك: مهارة، فكرة أو طريقة شغل هتفرق مع الفريق… مش هنحسب القهوة موهبة ☕😉'
+                          : "A skill, idea or way of working that will make a difference… coffee drinking doesn't count as a superpower ☕😉",
+                      maxLines: 4,
+                      maxLength: 2000,
+                      hasError: _teamValueError,
+                      onChanged: (_) {
+                        if (_teamValueError) setState(() => _teamValueError = false);
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                _keyed(
                   'cover',
                   _Label(
                     text: isAr ? 'رسالة التعريف' : 'Cover letter',
@@ -1866,6 +2210,7 @@ class _CareersScreenState extends State<CareersScreen> {
                 _GoldButton(
                   label: isAr ? 'إرسال الطلب' : 'Send application',
                   submitting: _submitting,
+                  dimmed: _ugcBlocked || _ugcBusy,
                   submittingLabel: switch (_phase) {
                     _SubmitPhase.verifying => isAr ? 'جاري تأكيد وصول طلبك...' : 'Confirming that your application arrived...',
                     _SubmitPhase.retrying => isAr ? 'جاري استكمال الإرسال بأمان...' : 'Completing the submission securely...',
@@ -2822,16 +3167,22 @@ class _GoldButton extends StatelessWidget {
     required this.submittingLabel,
     required this.isArabic,
     required this.onTap,
+    this.dimmed = false,
   });
   final String label;
   final bool submitting;
+
+  /// Looks disabled but still answers a tap, so the reason can be explained.
+  final bool dimmed;
   final String submittingLabel;
   final bool isArabic;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Opacity(
+      opacity: dimmed ? 0.5 : 1,
+      child: GestureDetector(
       onTap: submitting ? null : onTap,
       child: Container(
         width: double.infinity,
@@ -2882,6 +3233,62 @@ class _GoldButton extends StatelessWidget {
                     ),
                   ],
                 ),
+        ),
+      ),
+      ),
+    );
+  }
+}
+
+/// Primary action of the voice step: saves the request, then opens the team's chat.
+class _WhatsAppContinueButton extends StatelessWidget {
+  const _WhatsAppContinueButton({
+    required this.label,
+    required this.busyLabel,
+    required this.busy,
+    required this.onTap,
+  });
+  final String label;
+  final String busyLabel;
+  final bool busy;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const green = Color(0xFF15803D);
+    return GestureDetector(
+      onTap: busy ? null : onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: double.infinity,
+        constraints: BoxConstraints(minHeight: 54.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: busy ? green.withValues(alpha: 0.6) : green,
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow: busy ? null : [BoxShadow(color: const Color(0x4015803D), blurRadius: 16.r, offset: Offset(0, 6.h))],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (busy)
+              SizedBox(
+                width: 18.w,
+                height: 18.w,
+                child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            else
+              FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white, size: 22.sp),
+            SizedBox(width: 10.w),
+            Flexible(
+              child: Text(
+                busy ? busyLabel : label,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 13.5.sp, fontWeight: FontWeight.w900, height: 1.3),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -3035,6 +3442,8 @@ class _Field extends StatelessWidget {
     this.keyboardType,
     this.inputFormatters,
     this.maxLines = 1,
+    this.maxLength,
+    this.enabled = true,
     this.onChanged,
   });
   final TextEditingController controller;
@@ -3044,6 +3453,8 @@ class _Field extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
+  final int? maxLength;
+  final bool enabled;
   final ValueChanged<String>? onChanged;
 
   @override
@@ -3055,6 +3466,9 @@ class _Field extends StatelessWidget {
       inputFormatters: inputFormatters,
       maxLines: maxLines,
       minLines: maxLines > 1 ? maxLines : 1,
+      maxLength: maxLength,
+      buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
+      enabled: enabled,
       onChanged: onChanged,
       style: TextStyle(color: c.textMain, fontSize: 13.sp),
       decoration: InputDecoration(
@@ -3087,7 +3501,7 @@ class _Dropdown<T> extends StatelessWidget {
   const _Dropdown({required this.value, required this.items, required this.onChanged, this.hint, this.hasError = false});
   final T? value;
   final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?> onChanged;
+  final ValueChanged<T?>? onChanged;
   final String? hint;
   final bool hasError;
 
