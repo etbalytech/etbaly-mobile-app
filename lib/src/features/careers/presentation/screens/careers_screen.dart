@@ -1,26 +1,20 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/image_format.dart';
 import '../widgets/birthday_field.dart';
+import '../widgets/voice_intro_recorder.dart';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const _submitUrl = 'https://etba3ly-dm.com/api-careers/submit-application.php';
-const _ugcUrl = 'https://etba3ly-dm.com/api-careers/ugc-application.php';
-
-/// An applicant with a UGC skill can send a short voice note to the team on
-/// WhatsApp; the server saves the request and returns this chat link.
-const _ugcWhatsAppPrefix = 'https://wa.me/201278696383?';
-const _ugcLevelsWithVoice = {'pass', 'good', 'excellent'};
 const _companyMapUrl = 'https://maps.app.goo.gl/kHdWiv47KVqSdRgd8';
 const _submissionTimeout = Duration(seconds: 180);
 const _statusTimeout = Duration(seconds: 12);
@@ -370,10 +364,15 @@ const _yesNoOptions = <_Opt>[
   _Opt('no', 'لا', 'No'),
 ];
 
-const _availabilityOptions = <_Opt>[
-  _Opt('full_time', 'دوام كامل', 'Full time'),
-  _Opt('part_time', 'دوام جزئي', 'Part time'),
-];
+/// Customer-facing roles are also asked about paid overtime from home
+/// (`careerRequiresHomeOvertime()` in the careers API).
+const _homeOvertimeRoles = {
+  'Account Manager',
+  'Assistant Account Manager',
+  'Sales',
+  'Moderator',
+  'Sales & Moderator',
+};
 
 class _Area {
   const _Area(this.value, this.ar, this.en);
@@ -661,7 +660,8 @@ class _CareersScreenState extends State<CareersScreen> {
   String _videoEditing = '';
   String _ugc = '';
   String _workUnderPressure = '';
-  String _availability = '';
+  String _scheduleConsent = '';
+  String _overtimeConsent = '';
 
   late List<_InterviewDay> _interviewDays;
   String _interviewDate = '';
@@ -699,18 +699,16 @@ class _CareersScreenState extends State<CareersScreen> {
   bool _teamValueError = false;
   bool _coverError = false;
 
-  // UGC voice introduction
-  bool _ugcBusy = false;
-  String _ugcToken = '';
-  String _ugcKey = '';
-  String _ugcError = '';
-  String _ugcWhatsAppUrl = '';
+  // Voice introduction (required for every application)
+  VoiceIntroRecording? _voice;
+  bool _voiceRecording = false;
+  bool _voiceError = false;
+  Uint8List? _voiceBytes;
 
   bool get _isAr => context.locale.languageCode == 'ar';
   bool get _submitting => _phase != _SubmitPhase.idle;
 
-  /// The voice step is offered for any role once a UGC skill level is chosen.
-  bool get _showUgcVoice => _selectedJob != null && _ugcLevelsWithVoice.contains(_ugc);
+  bool get _requiresOvertime => _homeOvertimeRoles.contains(_selectedJob?.title);
 
   /// The application needs a UGC skill, so "No" blocks it.
   bool get _ugcBlocked => _ugc == 'no';
@@ -883,7 +881,8 @@ class _CareersScreenState extends State<CareersScreen> {
       _videoEditing,
       _ugc,
       _workUnderPressure,
-      _availability,
+      _scheduleConsent,
+      if (_requiresOvertime) _overtimeConsent,
     ];
 
     setState(() {
@@ -901,6 +900,7 @@ class _CareersScreenState extends State<CareersScreen> {
       _portfolioError = !_validHttpUrl(_portfolioCtrl.text);
       _linkedinError = !_validLinkedIn(_linkedinCtrl.text);
       _skillsError = skills.any((v) => v.isEmpty);
+      _voiceError = _voice == null || _voiceRecording;
       _employmentError = _employmentStatus.isEmpty;
       _interviewError = !_validInterview;
       _idFrontError = _idFront == null;
@@ -926,6 +926,7 @@ class _CareersScreenState extends State<CareersScreen> {
       'portfolio': _portfolioError,
       'linkedin': _linkedinError,
       'skills': _skillsError,
+      'voice': _voiceError,
       'employment': _employmentError,
       'interview': _interviewError,
       'idFront': _idFrontError,
@@ -987,7 +988,11 @@ class _CareersScreenState extends State<CareersScreen> {
       'achievements': _achievementsCtrl.text.trim(),
       'guardian_occupation': _guardianCtrl.text.trim(),
       'team_value': _teamValueCtrl.text.trim(),
-      'availability': _availability,
+      // The schedule questions replaced the availability choice.
+      'availability': 'full_time',
+      'schedule_consent': _scheduleConsent,
+      'overtime_consent': _requiresOvertime ? _overtimeConsent : '',
+      'voice_recorded_at': _voice == null ? '' : voiceRecordedAtIso(_voice!.recordedAt),
       'interview_date': _interviewDate,
       'interview_time_slot': _interviewTime,
       'cover': _coverCtrl.text.trim(),
@@ -1001,11 +1006,12 @@ class _CareersScreenState extends State<CareersScreen> {
       'id_card_front': _UploadFile(_idFront!.name, _idFront!.bytes),
       'id_card_back': _UploadFile(_idBack!.name, _idBack!.bytes),
       if (cv != null && cv.bytes != null) 'cv': _UploadFile(cv.name, cv.bytes!),
+      if (_voice != null && _voiceBytes != null) 'voice': _UploadFile(_voice!.fileName, _voiceBytes!),
     };
   }
 
   Future<void> _submit() async {
-    if (_submitting || _ugcBusy) return;
+    if (_submitting || _voiceRecording) return;
     FocusScope.of(context).unfocus();
     if (_ugcBlocked) {
       setState(() => _submitError = _isAr ? _ugcRequiredAr : _ugcRequiredEn);
@@ -1013,6 +1019,24 @@ class _CareersScreenState extends State<CareersScreen> {
       return;
     }
     if (!_validate()) return;
+
+    // The recording is read once, so a retry sends exactly the same audio.
+    try {
+      _voiceBytes = await File(_voice!.path).readAsBytes();
+    } catch (_) {
+      _voiceBytes = null;
+    }
+    if (!mounted) return;
+    if (_voiceBytes == null || _voiceBytes!.isEmpty) {
+      setState(() {
+        _voiceError = true;
+        _submitError = _isAr
+            ? 'تعذر قراءة التسجيل الصوتي. سجّل تعريفك مرة تانية.'
+            : 'The voice recording could not be read. Please record it again.';
+      });
+      _scrollTo('voice');
+      return;
+    }
 
     // One token per application: the server uses it to ignore a duplicate send
     // and to tell us whether an interrupted upload actually arrived.
@@ -1022,89 +1046,6 @@ class _CareersScreenState extends State<CareersScreen> {
       _submitError = '';
     });
     await _sendApplication(attempt: 0, recovery: false);
-  }
-
-  /// Saves a voice-introduction request for the selected role and opens the
-  /// team's WhatsApp chat so the applicant can send the recording.
-  Future<void> _submitUgc() async {
-    final job = _selectedJob;
-    if (job == null || !_showUgcVoice || _ugcBusy || _submitting) return;
-    FocusScope.of(context).unfocus();
-    final name = _nameCtrl.text.trim();
-    final phone = _latinDigits(_whatsappCtrl.text);
-    final nameBad = name.length < 2 || name.length > 120;
-    final phoneBad = !_validMobile(phone);
-    setState(() {
-      _nameError = nameBad;
-      _waError = phoneBad;
-      _ugcError = '';
-    });
-    if (nameBad || phoneBad) {
-      _scrollTo(nameBad ? 'name' : 'whatsapp');
-      return;
-    }
-
-    // One token per person and role: it lets the server recognise a repeated tap.
-    final key = jsonEncode([job.title, phone]);
-    if (key != _ugcKey) _ugcToken = '';
-    _ugcKey = key;
-    if (_ugcToken.isEmpty) _ugcToken = _newSubmissionToken();
-    setState(() => _ugcBusy = true);
-
-    try {
-      final response = await _dio.post<dynamic>(
-        _ugcUrl,
-        data: {
-          'name': name,
-          'whatsapp': phone,
-          'submission_token': _ugcToken,
-          'job_id': 0,
-          'job_title': job.title,
-          'ugc': _ugc,
-        },
-        options: Options(
-          contentType: Headers.jsonContentType,
-          sendTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          validateStatus: (_) => true,
-        ),
-      );
-      if (!mounted) return;
-      final body = _asMap(response.data);
-      final url = '${body?['whatsapp_url'] ?? ''}';
-      if (body?['success'] == true && url.startsWith(_ugcWhatsAppPrefix)) {
-        setState(() {
-          _ugcBusy = false;
-          _ugcWhatsAppUrl = url;
-        });
-        await _openUgcChat(url);
-        return;
-      }
-      final error = '${body?['error'] ?? ''}';
-      setState(() {
-        _ugcBusy = false;
-        _ugcError = error.isNotEmpty ? error : _genericMessage;
-      });
-    } on DioException {
-      if (!mounted) return;
-      setState(() {
-        _ugcBusy = false;
-        _ugcError = _connectionMessage;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _ugcBusy = false;
-        _ugcError = _genericMessage;
-      });
-    }
-  }
-
-  Future<void> _openUgcChat(String url) async {
-    final uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      await launchUrl(uri, mode: LaunchMode.platformDefault);
-    }
   }
 
   Future<void> _sendApplication({required int attempt, required bool recovery}) async {
@@ -1277,7 +1218,8 @@ class _CareersScreenState extends State<CareersScreen> {
       _videoEditing = '';
       _ugc = '';
       _workUnderPressure = '';
-      _availability = '';
+      _scheduleConsent = '';
+      _overtimeConsent = '';
       _selectFirstInterviewSlot();
       _photo = null;
       _idFront = null;
@@ -1287,11 +1229,10 @@ class _CareersScreenState extends State<CareersScreen> {
       _phase = _SubmitPhase.idle;
       _sent = false;
       _submitError = '';
-      _ugcBusy = false;
-      _ugcToken = '';
-      _ugcKey = '';
-      _ugcError = '';
-      _ugcWhatsAppUrl = '';
+      _voice = null;
+      _voiceBytes = null;
+      _voiceRecording = false;
+      _voiceError = false;
       _guardianError = _teamValueError = false;
       _jobError = _expError = _photoError = _nameError = _ageError = _educationError = false;
       _genderError = _maritalError = _addressError = _emailError = _waError = false;
@@ -1395,8 +1336,8 @@ class _CareersScreenState extends State<CareersScreen> {
         _selectedJob = job;
         _jobError = false;
         _submitError = '';
-        _ugcError = '';
-        _ugcWhatsAppUrl = '';
+        // Only some roles are asked about overtime; drop a stale answer.
+        if (!_requiresOvertime) _overtimeConsent = '';
       });
 
   List<DropdownMenuItem<String>> _optItems(List<_Opt> options, bool isAr) => [
@@ -1422,158 +1363,12 @@ class _CareersScreenState extends State<CareersScreen> {
         hint: isAr ? 'اختر المستوى' : 'Select a level',
         hasError: error,
         items: _optItems(_skillLevels, isAr),
-        onChanged: _ugcBusy || _submitting
+        onChanged: _submitting
             ? null
             : (v) {
                 if (v != null) setState(() => onChanged(v));
               },
       ),
-    );
-  }
-
-  Widget _buildUgcVoiceSection(bool isAr) {
-    final c = context.etbalyColors;
-    const green = Color(0xFF22C55E);
-    final job = _selectedJob!;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(16.r),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: green.withValues(alpha: 0.25)),
-            gradient: LinearGradient(
-              begin: AlignmentDirectional.topStart,
-              end: AlignmentDirectional.bottomEnd,
-              colors: [green.withValues(alpha: 0.10), Colors.transparent],
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 46.w,
-                height: 46.w,
-                decoration: BoxDecoration(
-                  color: green.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Center(child: Icon(Icons.mic_rounded, color: green, size: 24.sp)),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${isAr ? 'تقديم بالفويس' : 'Voice introduction'} · ${job.title}',
-                      style: TextStyle(color: c.textMuted, fontSize: 10.5.sp, fontWeight: FontWeight.w800),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      isAr ? 'خلّينا نتعرّف عليك' : 'Let’s get to know you',
-                      style: TextStyle(color: c.textMain, fontSize: 16.sp, fontWeight: FontWeight.w900),
-                    ),
-                    SizedBox(height: 6.h),
-                    Text(
-                      isAr
-                          ? 'اكتب اسمك ورقم واتساب، وبعدها هنفتح شات الإدارة على 01278696383 علشان تبعت فويس تعريفي بالعربي أو الإنجليزي.'
-                          : 'Enter your name and WhatsApp number. We’ll then open our team’s chat at 01278696383 so you can introduce yourself in Arabic or English.',
-                      style: TextStyle(color: c.textMuted, fontSize: 11.5.sp, height: 1.7),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(14.r),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14.r),
-            color: const Color(0x14D4AF37),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: 2.h),
-                child: Icon(Icons.auto_awesome_rounded, color: const Color(0xFFD4AF37), size: 17.sp),
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  isAr
-                      ? 'في 30–60 ثانية: قول اسمك، خبرتك في UGC، وإيه اللي بيخلّي طريقتك في تقديم المحتوى مميزة. اتكلم بطبيعتك 🎙️✨'
-                      : 'In 30–60 seconds, share your name, your UGC experience, and what makes your content unique. Be yourself 🎙️✨',
-                  style: TextStyle(color: c.textMuted, fontSize: 11.5.sp, height: 1.7),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 14.h),
-        _WhatsAppContinueButton(
-          label: isAr ? 'كمّل على واتساب وابعت الفويس' : 'Continue on WhatsApp and send your voice note',
-          busyLabel: isAr ? 'جاري الإرسال...' : 'Sending...',
-          busy: _ugcBusy,
-          onTap: _submitUgc,
-        ),
-        if (_ugcError.isNotEmpty) ...[
-          SizedBox(height: 10.h),
-          _ErrorNote(_ugcError),
-        ],
-        if (_ugcWhatsAppUrl.isNotEmpty) ...[
-          SizedBox(height: 12.h),
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(14.r),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: green.withValues(alpha: 0.35)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.check_circle_rounded, color: green, size: 24.sp),
-                SizedBox(height: 8.h),
-                Text(
-                  isAr
-                      ? 'تم تسجيل طلب الفويس لوظيفتك المختارة. ابعت التسجيل في شات الإدارة، وتقدر تكمل فورم التوظيف هنا.'
-                      : "Your voice introduction request for the selected role is saved. Send your recording in our team's chat. You can still complete your application here.",
-                  style: TextStyle(color: c.textMain, fontSize: 12.sp, height: 1.7),
-                ),
-                SizedBox(height: 10.h),
-                GestureDetector(
-                  onTap: () => _openUgcChat(_ugcWhatsAppUrl),
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FaIcon(FontAwesomeIcons.whatsapp, color: c.textMain, size: 16.sp),
-                      SizedBox(width: 8.w),
-                      Text(
-                        isAr ? 'فتح شات الإدارة' : 'Open the team’s WhatsApp chat',
-                        style: TextStyle(
-                          color: c.textMain,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w900,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -1622,7 +1417,7 @@ class _CareersScreenState extends State<CareersScreen> {
                                 Expanded(child: Text(j.title, overflow: TextOverflow.ellipsis)),
                               ])))
                           .toList(),
-                      onChanged: _ugcBusy || _submitting ? null : _selectJob,
+                      onChanged: _submitting ? null : _selectJob,
                     ),
                   ),
                 ),
@@ -1675,11 +1470,10 @@ class _CareersScreenState extends State<CareersScreen> {
                       hint: isAr ? 'اكتب اسمك الكامل' : 'Enter your full name',
                       icon: Icons.person_outline_rounded,
                       hasError: _nameError,
-                      enabled: !(_ugcBusy || _submitting),
-                      onChanged: (_) => setState(() {
-                        _nameError = false;
-                        _ugcWhatsAppUrl = '';
-                      }),
+                      enabled: !_submitting,
+                      onChanged: (_) {
+                        if (_nameError) setState(() => _nameError = false);
+                      },
                     ),
                   ),
                 ),
@@ -1876,11 +1670,10 @@ class _CareersScreenState extends State<CareersScreen> {
                       keyboardType: TextInputType.phone,
                       inputFormatters: const [_DigitsFormatter(11)],
                       hasError: _waError,
-                      enabled: !(_ugcBusy || _submitting),
+                      enabled: !_submitting,
                       onChanged: (v) => setState(() {
                         final digits = _latinDigits(v);
                         _waError = digits.isNotEmpty && !_validMobile(digits);
-                        _ugcWhatsAppUrl = '';
                       }),
                     ),
                   ),
@@ -1982,8 +1775,6 @@ class _CareersScreenState extends State<CareersScreen> {
                       onChanged: (v) {
                         _ugc = v;
                         _submitError = '';
-                        _ugcError = '';
-                        _ugcWhatsAppUrl = '';
                       },
                     ),
                   ),
@@ -2001,25 +1792,62 @@ class _CareersScreenState extends State<CareersScreen> {
                     ),
                   ),
                 ),
-                if (_showUgcVoice) ...[
-                  SizedBox(height: 14.h),
-                  _buildUgcVoiceSection(isAr),
-                  SizedBox(height: 4.h),
-                ],
-                SizedBox(height: 10.h),
-                _Label(
-                  text: isAr ? 'متاح للعمل' : 'Available for',
-                  required: true,
-                  hasError: _skillsError && _availability.isEmpty,
-                  errorText: isAr ? 'يرجى اختيار نوع التوفر للعمل' : 'Select your work availability',
-                  child: _Dropdown<String>(
-                    value: _availability.isEmpty ? null : _availability,
-                    hint: isAr ? 'اختر نوع التوفر للعمل' : 'Select your work availability',
-                    hasError: _skillsError && _availability.isEmpty,
-                    items: _optItems(_availabilityOptions, isAr),
-                    onChanged: (v) => setState(() => _availability = v ?? ''),
+                SizedBox(height: 16.h),
+                // Voice introduction (required)
+                _keyed(
+                  'voice',
+                  VoiceIntroRecorder(
+                    isArabic: isAr,
+                    enabled: !_submitting,
+                    showRequiredError: _voiceError,
+                    onRecordingChanged: (recording) => setState(() => _voiceRecording = recording),
+                    onChanged: (recording) => setState(() {
+                      _voice = recording;
+                      _voiceBytes = null;
+                      if (recording != null) _voiceError = false;
+                    }),
                   ),
                 ),
+                SizedBox(height: 16.h),
+                _keyed(
+                  'schedule',
+                  _Label(
+                    text: isAr
+                        ? 'دوام الشركة كامل من 12 ظهرًا إلى 9 مساءً ما عدا الجمعة. هل توافق على المواعيد؟'
+                        : 'The schedule is full time, 12 PM to 9 PM except Friday. Do you agree?',
+                    required: true,
+                    hasError: _skillsError && _scheduleConsent.isEmpty,
+                    errorText: isAr ? 'يرجى اختيار الإجابة' : 'Select an answer',
+                    child: _Dropdown<String>(
+                      value: _scheduleConsent.isEmpty ? null : _scheduleConsent,
+                      hint: isAr ? 'اختر الإجابة' : 'Select an answer',
+                      hasError: _skillsError && _scheduleConsent.isEmpty,
+                      items: _optItems(_yesNoOptions, isAr),
+                      onChanged: (v) => setState(() => _scheduleConsent = v ?? ''),
+                    ),
+                  ),
+                ),
+                if (_requiresOvertime) ...[
+                  SizedBox(height: 10.h),
+                  _keyed(
+                    'overtime',
+                    _Label(
+                      text: isAr
+                          ? 'هل توافق على العمل من المنزل أوفر تايم بعد مواعيد العمل بمقابل منفصل عن المرتب الأساسي؟'
+                          : 'Do you agree to overtime from home after working hours for pay separate from your base salary?',
+                      required: true,
+                      hasError: _skillsError && _overtimeConsent.isEmpty,
+                      errorText: isAr ? 'يرجى اختيار الإجابة' : 'Select an answer',
+                      child: _Dropdown<String>(
+                        value: _overtimeConsent.isEmpty ? null : _overtimeConsent,
+                        hint: isAr ? 'اختر الإجابة' : 'Select an answer',
+                        hasError: _skillsError && _overtimeConsent.isEmpty,
+                        items: _optItems(_yesNoOptions, isAr),
+                        onChanged: (v) => setState(() => _overtimeConsent = v ?? ''),
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 10.h),
                 _keyed(
                   'employment',
@@ -2210,7 +2038,7 @@ class _CareersScreenState extends State<CareersScreen> {
                 _GoldButton(
                   label: isAr ? 'إرسال الطلب' : 'Send application',
                   submitting: _submitting,
-                  dimmed: _ugcBlocked || _ugcBusy,
+                  dimmed: _ugcBlocked || _voiceRecording,
                   submittingLabel: switch (_phase) {
                     _SubmitPhase.verifying => isAr ? 'جاري تأكيد وصول طلبك...' : 'Confirming that your application arrived...',
                     _SubmitPhase.retrying => isAr ? 'جاري استكمال الإرسال بأمان...' : 'Completing the submission securely...',
@@ -3235,61 +3063,6 @@ class _GoldButton extends StatelessWidget {
                 ),
         ),
       ),
-      ),
-    );
-  }
-}
-
-/// Primary action of the voice step: saves the request, then opens the team's chat.
-class _WhatsAppContinueButton extends StatelessWidget {
-  const _WhatsAppContinueButton({
-    required this.label,
-    required this.busyLabel,
-    required this.busy,
-    required this.onTap,
-  });
-  final String label;
-  final String busyLabel;
-  final bool busy;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const green = Color(0xFF15803D);
-    return GestureDetector(
-      onTap: busy ? null : onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: double.infinity,
-        constraints: BoxConstraints(minHeight: 54.h),
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-        decoration: BoxDecoration(
-          color: busy ? green.withValues(alpha: 0.6) : green,
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: busy ? null : [BoxShadow(color: const Color(0x4015803D), blurRadius: 16.r, offset: Offset(0, 6.h))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (busy)
-              SizedBox(
-                width: 18.w,
-                height: 18.w,
-                child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              )
-            else
-              FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white, size: 22.sp),
-            SizedBox(width: 10.w),
-            Flexible(
-              child: Text(
-                busy ? busyLabel : label,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 13.5.sp, fontWeight: FontWeight.w900, height: 1.3),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

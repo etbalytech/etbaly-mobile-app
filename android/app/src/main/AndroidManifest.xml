@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The careers form records a short voice introduction (asked at runtime). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- open_filex declares these, but the app only picks files through the
          system pickers and opens files it wrote itself, so it never needs

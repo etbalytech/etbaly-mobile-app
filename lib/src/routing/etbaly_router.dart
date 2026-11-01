@@ -14,7 +14,13 @@ import '../shared/etbaly_web_tokens.dart';
 // Import screens (will create these in Phase 4)
 import '../features/home/presentation/screens/home_page.dart';
 import '../features/services/presentation/screens/services_screen.dart';
-import '../features/portfolio/presentation/screens/portfolio_screen.dart';
+import '../features/expertises/data/expertise_catalogue.dart'
+    show SocialPlatform;
+import '../features/expertises/presentation/screens/campaign_samples_screen.dart';
+import '../features/expertises/presentation/screens/expertises_screen.dart';
+import '../features/expertises/presentation/screens/mobile_samples_screen.dart';
+import '../features/expertises/presentation/screens/social_samples_screen.dart';
+import '../features/expertises/presentation/screens/web_samples_screen.dart';
 import '../features/about/presentation/screens/about_screen.dart';
 import '../features/payments/presentation/screens/payments_screen.dart';
 import '../features/contact/presentation/screens/contact_screen.dart';
@@ -133,10 +139,11 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
               ),
               _buildNavItem(
                 context,
-                icon: Icons.photo_library,
-                label: 'navigation.portfolio'.tr(),
-                route: AppRoutes.portfolio,
-                isActive: location == AppRoutes.portfolio,
+                icon: Icons.workspace_premium_rounded,
+                label: 'navigation.expertises'.tr(),
+                route: AppRoutes.expertises,
+                // Also active on the expertise sample pages.
+                isActive: location.startsWith(AppRoutes.expertises),
               ),
               _buildNavItem(
                 context,
@@ -193,17 +200,22 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
                       isActive ? etbalyColors.primary : etbalyColors.textLight,
                 ),
                 SizedBox(height: 4.h),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.labelSmall?.copyWith(
-                    color: isActive
-                        ? etbalyColors.primary
-                        : etbalyColors.textLight,
-                    fontSize: 10.sp,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                // Longer labels ("مجالات خبرتنا") shrink a little instead of
+                // being cut off.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: isActive
+                          ? etbalyColors.primary
+                          : etbalyColors.textLight,
+                      fontSize: 10.sp,
+                      fontWeight:
+                          isActive ? FontWeight.w600 : FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -742,9 +754,52 @@ final GoRouter etbalyRouter = GoRouter(
           builder: (context, state) => const ServicesScreen(),
         ),
         GoRoute(
-          path: AppRoutes.portfolio,
-          name: 'portfolio',
-          builder: (context, state) => const PortfolioScreen(),
+          path: AppRoutes.expertises,
+          name: 'expertises',
+          builder: (context, state) => const ExpertisesScreen(),
+          // Sample pages open on top of the hub, so back returns to it.
+          routes: [
+            GoRoute(
+              path: 'designs',
+              name: 'expertiseDesigns',
+              builder: (context, state) =>
+                  const ExpertisesScreen(kind: ExpertiseGalleryKind.photos),
+            ),
+            GoRoute(
+              path: 'reels',
+              name: 'expertiseReels',
+              builder: (context, state) =>
+                  const ExpertisesScreen(kind: ExpertiseGalleryKind.reels),
+            ),
+            GoRoute(
+              path: 'websites',
+              name: 'expertiseWebsites',
+              builder: (context, state) => const WebSamplesScreen(),
+            ),
+            GoRoute(
+              path: 'mobile-apps',
+              name: 'expertiseMobileApps',
+              builder: (context, state) => const MobileSamplesScreen(),
+            ),
+            GoRoute(
+              path: 'advertising-campaigns',
+              name: 'expertiseCampaigns',
+              builder: (context, state) => const CampaignSamplesScreen(),
+            ),
+            GoRoute(
+              path: 'facebook-pages',
+              name: 'expertiseFacebook',
+              builder: (context, state) =>
+                  const SocialSamplesScreen(platform: SocialPlatform.facebook),
+            ),
+            GoRoute(
+              path: 'instagram-accounts',
+              name: 'expertiseInstagram',
+              builder: (context, state) => const SocialSamplesScreen(
+                platform: SocialPlatform.instagram,
+              ),
+            ),
+          ],
         ),
         GoRoute(
           path: AppRoutes.about,

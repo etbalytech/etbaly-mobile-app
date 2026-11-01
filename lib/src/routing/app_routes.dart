@@ -15,12 +15,22 @@ abstract final class AppRoutes {
   // Main Navigation (Bottom Tabs)
   static const String home = '/';
   static const String services = '/services';
-  static const String portfolio = '/portfolio';
+  static const String expertises = '/expertises';
   static const String about = '/about';
   static const String payments = '/pricing';
   static const String contact = '/contact';
   static const String startNow = '/start-now';
   static const String careers = '/careers';
+
+  // "Our Expertise" sample pages (opened from the expertise hub)
+  static const String expertiseDesigns = '/expertises/designs';
+  static const String expertiseReels = '/expertises/reels';
+  static const String expertiseWebsites = '/expertises/websites';
+  static const String expertiseMobileApps = '/expertises/mobile-apps';
+  static const String expertiseCampaigns =
+      '/expertises/advertising-campaigns';
+  static const String expertiseFacebook = '/expertises/facebook-pages';
+  static const String expertiseInstagram = '/expertises/instagram-accounts';
 
   // Sub-routes (push navigation)
   static const String serviceDetail = '/services/:slug';

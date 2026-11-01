@@ -1717,13 +1717,14 @@ class _ContactTextField extends StatelessWidget {
       children: [
         Row(
           children: [
-            icon is FaIconData
-                ? FaIcon(icon as FaIconData,
-                    size: 15.sp,
-                    color: iconColor ?? context.etbalyColors.textMuted)
-                : Icon(icon as IconData,
-                    size: 15.sp,
-                    color: iconColor ?? context.etbalyColors.textMuted),
+            if (icon case final FaIconData faIcon)
+              FaIcon(faIcon,
+                  size: 15.sp,
+                  color: iconColor ?? context.etbalyColors.textMuted)
+            else
+              Icon(icon as IconData,
+                  size: 15.sp,
+                  color: iconColor ?? context.etbalyColors.textMuted),
             SizedBox(width: 6.w),
             Expanded(
               child: Text(
@@ -2245,9 +2246,10 @@ class _OutlinedAction extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              icon is FaIconData
-                  ? FaIcon(icon as FaIconData, color: color, size: 17.sp)
-                  : Icon(icon as IconData, color: color, size: 17.sp),
+              if (icon case final FaIconData faIcon)
+                FaIcon(faIcon, color: color, size: 17.sp)
+              else
+                Icon(icon as IconData, color: color, size: 17.sp),
               SizedBox(width: 8.w),
               Text(
                 label,

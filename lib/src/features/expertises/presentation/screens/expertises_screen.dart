@@ -14,6 +14,11 @@ import 'package:video_player/video_player.dart';
 
 import '../../data/portfolio_data.dart';
 import '../../data/portfolio_repository.dart';
+import '../expertise_cards.dart';
+import '../expertise_icons.dart';
+import '../widgets/expertise_artwork_tile.dart';
+import '../widgets/expertise_sample_kit.dart';
+import '../widgets/google_reviews_section.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 extension _PortfolioIndustryLocale on PortfolioIndustry {
@@ -31,21 +36,39 @@ extension _PortfolioMediaLocale on PortfolioMedia {
       context.locale.languageCode == 'en' ? tagEn : tagAr;
 }
 
-class PortfolioScreen extends StatefulWidget {
-  const PortfolioScreen({super.key});
+/// Which samples an expertise gallery shows (the website's `sampleKind`).
+enum ExpertiseGalleryKind { photos, reels }
+
+/// "مجالات خبرتنا". Without a [kind] this is the expertise hub (hero, company
+/// portfolio, platform cards, reviews); with one it is the design or video
+/// gallery: industries → specialties → samples of that kind only.
+class ExpertisesScreen extends StatefulWidget {
+  const ExpertisesScreen({super.key, this.kind});
+
+  final ExpertiseGalleryKind? kind;
 
   @override
-  State<PortfolioScreen> createState() => _PortfolioScreenState();
+  State<ExpertisesScreen> createState() => _ExpertisesScreenState();
 }
 
-class _PortfolioScreenState extends State<PortfolioScreen>
+class _ExpertisesScreenState extends State<ExpertisesScreen>
     with SingleTickerProviderStateMixin {
+  static const _classPreviews = {
+    'classA':
+        'https://drive.google.com/file/d/1BoFiWtw01CJ_U6zGpxmhHhCDWmHCf79V/view?usp=drive_link',
+    'classB':
+        'https://drive.google.com/file/d/1OMlt-uM8cu2LuuDmE-E5_kxv1H4Bsr7q/view?usp=drive_link',
+  };
+
   static const _assetBase = 'https://etba3ly-dm.com/';
   static const _reviewKey = 'portfolio_review_last_submit';
   static const _reviewCooldown = Duration(minutes: 5);
 
   late final AnimationController _bgController;
   final _scrollController = ScrollController();
+
+  /// Marks where a gallery's industries / specialties / samples start.
+  final _galleryContentKey = GlobalKey();
   final _commentController = TextEditingController();
   final _customIndustryController = TextEditingController();
   final _customPhoneController = TextEditingController();
@@ -61,7 +84,6 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
   PortfolioIndustry? _industry;
   PortfolioSpecialty? _specialty;
-  String _tab = 'photos';
   int _photosVisible = 6;
   int _reelsVisible = 6;
   int _rating = 0;
@@ -72,6 +94,9 @@ class _PortfolioScreenState extends State<PortfolioScreen>
   bool _customIndustrySubmitted = false;
   String _customIndustryError = '';
 
+  /// Bumped by pull-to-refresh on the hub to reload the Google reviews.
+  int _reviewsGeneration = 0;
+
   @override
   void initState() {
     super.initState();
@@ -79,8 +104,11 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       vsync: this,
       duration: const Duration(seconds: 10),
     )..repeat();
-    _loadReviewCooldown();
-    _loadIndustries();
+    if (_isGallery) {
+      _loadIndustries();
+    } else {
+      _loadReviewCooldown();
+    }
   }
 
   Future<void> _loadIndustries({bool forceRefresh = false}) async {
@@ -118,6 +146,29 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
   bool get _isDirectMode => _industry != null && _industry!.specialties.isEmpty;
 
+  bool get _isGallery => widget.kind != null;
+
+  bool get _isReels => widget.kind == ExpertiseGalleryKind.reels;
+
+  bool _hasKind(List<PortfolioMedia> photos, List<PortfolioMedia> reels) =>
+      (_isReels ? reels : photos).isNotEmpty;
+
+  /// Industries with at least one sample of this gallery's kind.
+  List<PortfolioIndustry> get _sampleIndustries => [
+        for (final industry in _industries)
+          if (_hasKind(industry.photos, industry.reels) ||
+              industry.specialties.any(
+                (specialty) => _hasKind(specialty.photos, specialty.reels),
+              ))
+            industry,
+      ];
+
+  List<PortfolioSpecialty> get _sampleSpecialties => [
+        for (final specialty
+            in _industry?.specialties ?? const <PortfolioSpecialty>[])
+          if (_hasKind(specialty.photos, specialty.reels)) specialty,
+      ];
+
   List<PortfolioMedia> get _photos {
     if (_specialty != null) return _specialty!.photos;
     if (_isDirectMode) return _industry!.photos;
@@ -149,13 +200,10 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     setState(() {
       _industry = industry;
       _specialty = null;
-      _tab = 'photos';
       _photosVisible = 6;
       _reelsVisible = 6;
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) _scrollController.jumpTo(0);
-    });
+    _scrollToGalleryContent();
   }
 
   void _selectSpecialty(PortfolioSpecialty specialty) {
@@ -163,12 +211,24 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         _scrollController.hasClients ? _scrollController.offset : 0;
     setState(() {
       _specialty = specialty;
-      _tab = 'photos';
       _photosVisible = 6;
       _reelsVisible = 6;
     });
+    _scrollToGalleryContent();
+  }
+
+  /// Like the website, bring the chosen industry / specialty into view just
+  /// below the gallery header.
+  void _scrollToGalleryContent() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+      if (!_scrollController.hasClients) return;
+      final target = _galleryContentKey.currentContext;
+      if (target == null || !target.mounted) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
     });
   }
 
@@ -180,7 +240,6 @@ class _PortfolioScreenState extends State<PortfolioScreen>
       } else {
         _industry = null;
       }
-      _tab = 'photos';
       _photosVisible = 6;
       _reelsVisible = 6;
     });
@@ -193,30 +252,38 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     });
   }
 
-  Future<void> _viewClassPdf(BuildContext context, String key) async {
-    final fileNames = {
-      'classA': 'Class_A.pdf',
-      'classB': 'Class_B.pdf',
-    };
-    final fileName = fileNames[key]!;
-    final bytes = await rootBundle.load('assets/files/portfolio/$fileName');
-    final dir = await getTemporaryDirectory();
-    final outFile = File('${dir.path}/$fileName');
-    await outFile.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
-    await OpenFilex.open(outFile.path, type: 'application/pdf');
-  }
+  /// Like the website, the preview opens the portfolio on Google Drive.
+  Future<void> _viewClassPdf(BuildContext context, String key) =>
+      openExpertiseLink(context, _classPreviews[key]!);
 
+  /// Saves the bundled portfolio PDF (Downloads on Android, the app's
+  /// documents on iOS) and offers to open it.
   Future<void> _downloadClassPdf(BuildContext context, String file) async {
-    final bytes = await rootBundle.load('assets/files/portfolio/$file');
-    final downloadsDir = await getDownloadsDirectory() ??
-        await getApplicationDocumentsDirectory();
-    final outFile = File('${downloadsDir.path}/$file');
-    await outFile.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
-
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('auto.t_b6fed30510'.tr(args: [outFile.path]))),
-    );
+    final messenger = ScaffoldMessenger.of(context);
+    final openLabel = context.locale.languageCode == 'ar' ? 'فتح' : 'Open';
+    try {
+      final bytes = await rootBundle.load('assets/files/portfolio/$file');
+      final dir = Platform.isAndroid
+          ? await getDownloadsDirectory() ??
+              await getApplicationDocumentsDirectory()
+          : await getApplicationDocumentsDirectory();
+      final outFile = File('${dir.path}/$file');
+      await outFile.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('expertises.pdf_saved'.tr(args: [outFile.path])),
+          action: SnackBarAction(
+            label: openLabel,
+            onPressed: () =>
+                OpenFilex.open(outFile.path, type: 'application/pdf'),
+          ),
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('expertises.pdf_failed'.tr())),
+      );
+    }
   }
 
   Future<void> _loadReviewCooldown() async {
@@ -336,84 +403,31 @@ class _PortfolioScreenState extends State<PortfolioScreen>
     final images = media.galleryImages.isEmpty
         ? <String>[media.thumbnail]
         : media.galleryImages;
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        var index = 0;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            void next() =>
-                setDialogState(() => index = (index + 1) % images.length);
-            void prev() => setDialogState(
-                  () => index = (index - 1 + images.length) % images.length,
-                );
-
-            return Dialog(
-              insetPadding: EdgeInsets.all(14.r),
-              backgroundColor: context.etbalyColors.bgMain,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18.r),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18.r),
-                child: Stack(
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 0.78,
-                      child: CachedNetworkImage(
-                        imageUrl: _url(images[index]),
-                        fit: BoxFit.contain,
-                        errorWidget: (context, url, error) => const Center(
-                          child: Icon(Icons.broken_image_rounded),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 10.h,
-                      right: 10.w,
-                      child: _CircleButton(
-                        icon: Icons.close_rounded,
-                        onTap: () => Navigator.of(context).pop(),
-                      ),
-                    ),
-                    if (images.length > 1) ...[
-                      Positioned(
-                        top: 0.h,
-                        bottom: 0.h,
-                        left: 8.w,
-                        child: Center(
-                          child: _CircleButton(
-                            icon: Icons.chevron_left_rounded,
-                            onTap: prev,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 0.h,
-                        bottom: 0.h,
-                        right: 8.w,
-                        child: Center(
-                          child: _CircleButton(
-                            icon: Icons.chevron_right_rounded,
-                            onTap: next,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+    final title =
+        context.locale.languageCode == 'ar' ? media.titleAr : media.titleEn;
+    showEtbalyImageViewer(
+      context,
+      images: [
+        for (final image in images)
+          EtbalyViewerImage(
+            provider: CachedNetworkImageProvider(_url(image)),
+            title: title,
+          ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
+    final kind = widget.kind;
+    final children =
+        kind == null ? _hubChildren(context) : _galleryChildren(context, kind);
+    return PopScope(
+      // In a gallery, back leaves the specialty / industry first.
+      canPop: _industry == null,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _industry != null) _back();
+      },
       child: Scaffold(
         backgroundColor: context.etbalyColors.bgMain,
         body: SafeArea(
@@ -422,7 +436,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
             animation: _bgController,
             builder: (context, child) {
               return CustomPaint(
-                painter: _PortfolioBackgroundPainter(
+                painter: _ExpertiseBackgroundPainter(
                   _bgController.value,
                   bgTop: context.etbalyColors.bgMain,
                   bgMid: context.etbalyColors.bgSecondary,
@@ -431,211 +445,467 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               );
             },
             child: RefreshIndicator(
-              onRefresh: () => _loadIndustries(forceRefresh: true),
+              onRefresh: kind == null
+                  ? () async => setState(() => _reviewsGeneration++)
+                  : () => _loadIndustries(forceRefresh: true),
               color: context.etbalyColors.primary,
               child: CustomScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(18.w, 24.h, 18.w, 34.h),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      if (_industry == null) ...[
-                        const _HeroSection(),
-                        SizedBox(height: 26.h),
-                        _ClassPdfSection(
-                          onPreview: (key) => _viewClassPdf(context, key),
-                          onDownload: (file) => _downloadClassPdf(
-                            context,
-                            file,
-                          ),
-                        ),
-                        SizedBox(height: 26.h),
-                        if (_industriesLoading)
-                          const _IndustriesLoadingShimmer()
-                        else if (_industriesError.isNotEmpty)
-                          _IndustriesErrorState(onRetry: () => _loadIndustries())
-                        else
-                          _IndustriesSection(
-                            industries: _industries,
-                            onSelect: _selectIndustry,
-                            colorOf: _color,
-                          ),
-                        SizedBox(height: 26.h),
-                        _CustomIndustrySection(
-                          industryController: _customIndustryController,
-                          phoneController: _customPhoneController,
-                          submitting: _customIndustrySubmitting,
-                          submitted: _customIndustrySubmitted,
-                          error: _customIndustryError,
-                          onChanged: () {
-                            if (_customIndustryError.isNotEmpty) {
-                              setState(() => _customIndustryError = '');
-                            }
-                          },
-                          onSubmit: _submitCustomIndustry,
-                        ),
-                        SizedBox(height: 26.h),
-                        _ReviewSection(
-                          rating: _rating,
-                          controller: _commentController,
-                          submitting: _reviewSubmitting,
-                          submitted: _reviewSubmitted,
-                          error: _reviewError,
-                          onRating: (value) => setState(() => _rating = value),
-                          onSubmit: _submitReview,
-                        ),
-                        SizedBox(height: 26.h),
-                        const _PortfolioCtaSection(),
-                      ] else if (!_isDirectMode && _specialty == null) ...[
-                        _Breadcrumb(
-                          title: _industry!.localizedName(context),
-                          subtitle: 'auto.t_0bcee321a1'.tr(),
-                          onBack: _back,
-                        ),
-                        SizedBox(height: 18.h),
-                        _SpecialtiesSection(
-                          industry: _industry!,
-                          onSelect: _selectSpecialty,
-                          colorOf: _color,
-                        ),
-                      ] else ...[
-                        _Breadcrumb(
-                          title: _specialty?.localizedName(context) ??
-                              _industry!.localizedName(context),
-                          subtitle: _industry!.localizedName(context),
-                          onBack: _back,
-                        ),
-                        SizedBox(height: 18.h),
-                        _MediaSection(
-                          tab: _tab,
-                          photos: _photos,
-                          reels: _reels,
-                          photosVisible: _photosVisible,
-                          reelsVisible: _reelsVisible,
-                          categoryNameAr: _specialty?.nameAr ?? _industry!.nameAr,
-                          categoryNameEn: _specialty?.nameEn ?? _industry!.nameEn,
-                          onTab: (tab) => setState(() => _tab = tab),
-                          onMorePhotos: () => setState(
-                            () => _photosVisible =
-                                math.min(_photosVisible + 6, _photos.length),
-                          ),
-                          onMoreReels: () => setState(
-                            () => _reelsVisible =
-                                math.min(_reelsVisible + 6, _reels.length),
-                          ),
-                          onImage: _openImage,
-                          onReel: _openReel,
-                          colorOf: _color,
-                          assetOf: _url,
-                        ),
-                      ],
-                    ]),
-                  ),
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
-              ],
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(18.w, 24.h, 18.w, 34.h),
+                    // Keep the gallery anchor mounted when an industry changes
+                    // while the header is off screen. The hub remains lazy.
+                    sliver: kind == null
+                        ? SliverList(
+                            delegate: SliverChildListDelegate(children),
+                          )
+                        : SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: children,
+                            ),
+                          ),
+                  ),
+                ],
+              ),
             ),
-          ),
           ),
         ),
       ),
     );
   }
+
+  List<Widget> _hubChildren(BuildContext context) {
+    return [
+      const _ExpertiseHero(),
+      SizedBox(height: 34.h),
+      _ClassPdfSection(
+        onPreview: (key) => _viewClassPdf(context, key),
+        onDownload: (file) => _downloadClassPdf(context, file),
+      ),
+      SizedBox(height: 40.h),
+      const _PlatformsHeading(),
+      SizedBox(height: 24.h),
+      for (var i = 0; i < expertiseCards.length; i++) ...[
+        if (i > 0) SizedBox(height: 18.h),
+        _PlatformCard(card: expertiseCards[i], index: i),
+      ],
+      SizedBox(height: 40.h),
+      _ReviewSection(
+        rating: _rating,
+        controller: _commentController,
+        submitting: _reviewSubmitting,
+        submitted: _reviewSubmitted,
+        error: _reviewError,
+        onRating: (value) => setState(() => _rating = value),
+        onSubmit: _submitReview,
+      ),
+      SizedBox(height: 16.h),
+      GoogleReviewsSection(key: ValueKey(_reviewsGeneration)),
+      SizedBox(height: 16.h),
+      const _ExpertiseCtaSection(),
+    ];
+  }
+
+  List<Widget> _galleryChildren(
+    BuildContext context,
+    ExpertiseGalleryKind kind,
+  ) {
+    final reels = kind == ExpertiseGalleryKind.reels;
+    final industry = _industry;
+    return [
+      _GalleryHeader(isReels: reels),
+      SizedBox(height: 18.h),
+      _KindNav(isReels: reels),
+      SizedBox(key: _galleryContentKey, height: 24.h),
+      if (industry == null) ...[
+        if (_industriesLoading)
+          const _IndustriesLoadingShimmer()
+        else if (_industriesError.isNotEmpty)
+          _IndustriesErrorState(onRetry: () => _loadIndustries())
+        else
+          _IndustriesSection(
+            industries: _sampleIndustries,
+            imageIndexOf: _industries.indexOf,
+            description: (reels
+                    ? 'expertises.video_industries_desc'
+                    : 'expertises.design_industries_desc')
+                .tr(),
+            onSelect: _selectIndustry,
+            colorOf: _color,
+          ),
+        SizedBox(height: 26.h),
+        _CustomIndustrySection(
+          industryController: _customIndustryController,
+          phoneController: _customPhoneController,
+          submitting: _customIndustrySubmitting,
+          submitted: _customIndustrySubmitted,
+          error: _customIndustryError,
+          onChanged: () {
+            if (_customIndustryError.isNotEmpty) {
+              setState(() => _customIndustryError = '');
+            }
+          },
+          onSubmit: _submitCustomIndustry,
+        ),
+      ] else if (!_isDirectMode && _specialty == null) ...[
+        _Breadcrumb(
+          title: industry.localizedName(context),
+          subtitle: (reels
+                  ? 'expertises.video_specialty_desc'
+                  : 'expertises.design_specialty_desc')
+              .tr(),
+          onBack: _back,
+        ),
+        SizedBox(height: 18.h),
+        _SpecialtiesSection(
+          industry: industry,
+          specialties: _sampleSpecialties,
+          isReels: reels,
+          onSelect: _selectSpecialty,
+          colorOf: _color,
+        ),
+      ] else ...[
+        _Breadcrumb(
+          title: _specialty?.localizedName(context) ??
+              industry.localizedName(context),
+          subtitle: industry.localizedName(context),
+          onBack: _back,
+        ),
+        SizedBox(height: 18.h),
+        _MediaSection(
+          isReels: reels,
+          items: reels ? _reels : _photos,
+          visible: reels ? _reelsVisible : _photosVisible,
+          categoryNameAr: _specialty?.nameAr ?? industry.nameAr,
+          categoryNameEn: _specialty?.nameEn ?? industry.nameEn,
+          onMore: () => setState(() {
+            if (reels) {
+              _reelsVisible = math.min(_reelsVisible + 6, _reels.length);
+            } else {
+              _photosVisible = math.min(_photosVisible + 6, _photos.length);
+            }
+          }),
+          onLess: () => setState(() {
+            _photosVisible = 6;
+            _reelsVisible = 6;
+          }),
+          onImage: _openImage,
+          onReel: _openReel,
+          colorOf: _color,
+          assetOf: _url,
+        ),
+      ],
+      SizedBox(height: 26.h),
+      const _ExpertiseCtaSection(),
+    ];
+  }
 }
 
-class _HeroSection extends StatelessWidget {
-  const _HeroSection();
+// ─── Expertise hub ───────────────────────────────────────────────────────────
+
+/// Badge, two-line title, intro and the four statistic artworks.
+class _ExpertiseHero extends StatelessWidget {
+  const _ExpertiseHero();
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
+    final titleStyle = context.textTheme.headlineMedium?.copyWith(
+      color: colors.textMain,
+      fontWeight: FontWeight.w900,
+      height: 1.45,
+    );
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(14.w, 34.h, 14.w, 24.h),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22.r),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [colors.bgCard, colors.bgSecondary],
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          top: -140.h,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+            child: Center(
+              child: Container(
+                width: 460.r,
+                height: 460.r,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      colors.gold.withValues(alpha: 0.12),
+                      colors.gold.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        border: Border.all(color: colors.primaryLight.withValues(alpha: 0.22)),
-      ),
-      child: Column(
-        children: [
-          _SectionBadge(
-            icon: Icons.photo_library_rounded,
-            label: 'auto.t_103315edfb'.tr(),
-          ),
-          SizedBox(height: 18.h),
-          Text.rich(
-            TextSpan(
-              text: 'auto.t_e3b7664e6e'.tr(),
-              children: [
-                TextSpan(
-                  text: 'auto.t_e97958863f'.tr(),
-                  style: TextStyle(color: colors.gold),
-                ),
-              ],
+        Column(
+          children: [
+            SizedBox(height: 10.h),
+            _SectionBadge(
+              icon: FontAwesomeIcons.images,
+              label: 'expertises.hero_badge'.tr(),
             ),
-            textAlign: TextAlign.center,
-            style: context.textTheme.headlineMedium?.copyWith(
-              color: colors.textMain,
-              fontWeight: FontWeight.w900,
-              height: 1.08,
+            SizedBox(height: 18.h),
+            Text(
+              'expertises.hero_title'.tr(),
+              textAlign: TextAlign.center,
+              style: titleStyle,
             ),
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            'auto.t_5d859f21d3'.tr(),
-            textAlign: TextAlign.center,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: colors.textMuted,
-              height: 1.6,
+            ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [colors.goldLight, colors.gold, colors.goldDark],
+              ).createShader(bounds),
+              child: Text(
+                'expertises.hero_title_highlight'.tr(),
+                textAlign: TextAlign.center,
+                style: titleStyle,
+              ),
             ),
-          ),
-          SizedBox(height: 22.h),
-          Row(
-            children: [
-              Expanded(
-                child: _HeroStat(
-                  icon: Icons.work_rounded,
-                  value: '+400K',
-                  label: 'auto.t_707c299a84'.tr(),
-                ),
+            SizedBox(height: 14.h),
+            Text(
+              'expertises.hero_desc'.tr(),
+              textAlign: TextAlign.center,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: colors.textMuted,
+                height: 2,
               ),
-              Expanded(
-                child: _HeroStat(
-                  icon: Icons.favorite_rounded,
-                  value: '5000+',
-                  label: 'auto.t_8898da70bb'.tr(),
-                ),
+            ),
+            SizedBox(height: 28.h),
+            Semantics(
+              container: true,
+              label: 'expertises.stats_label'.tr(),
+              child: Column(
+                children: [
+                  for (var row = 0; row < 2; row++) ...[
+                    if (row > 0) SizedBox(height: 12.r),
+                    Row(
+                      children: [
+                        for (var col = 0; col < 2; col++) ...[
+                          if (col > 0) SizedBox(width: 12.r),
+                          Expanded(
+                            child: _StatTile(
+                              stat: expertiseStats[row * 2 + col],
+                              index: row * 2 + col,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ],
               ),
-              Expanded(
-                child: _HeroStat(
-                  icon: Icons.calendar_month_rounded,
-                  value: '+12',
-                  label: 'auto.t_f91a7c9817'.tr(),
-                ),
-              ),
-              Expanded(
-                child: _HeroStat(
-                  icon: Icons.star_rounded,
-                  value: '93%',
-                  label: 'auto.t_e111542812'.tr(),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     )
         .animate()
         .fadeIn(duration: const Duration(milliseconds: 500))
         .slideY(begin: 0.06);
+  }
+}
+
+/// One hero number. The value and its label are drawn into the artwork.
+class _StatTile extends StatelessWidget {
+  const _StatTile({required this.stat, required this.index});
+
+  final ExpertiseStat stat;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final arabic = context.locale.languageCode == 'ar';
+    final width = (MediaQuery.sizeOf(context).width - 36.w - 12.r) / 2;
+    final pixels = width * MediaQuery.devicePixelRatioOf(context);
+    return ExpertiseArtworkTile(
+      imageUrl: stat.artworkUrl(
+        arabic: arabic,
+        dark: context.isDarkMode,
+        pixelWidth: pixels,
+      ),
+      decodeWidth: pixels.round(),
+      aspectRatio: 1,
+      radius: 18.r,
+      accent: const Color(0xFFEDCB78),
+      secondary: const Color(0xFFB79AEA),
+      motion: ExpertiseTileMotion.stat,
+      phase: index * 0.23,
+      semanticLabel: '${stat.value} ${arabic ? stat.labelAr : stat.labelEn}',
+    );
+  }
+}
+
+/// "كل منصة ليها طريقتها. وإحنا فاهمينها."
+class _PlatformsHeading extends StatelessWidget {
+  const _PlatformsHeading();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionBadge(
+          icon: FontAwesomeIcons.shapes,
+          label: 'expertises.platforms_badge'.tr(),
+        ),
+        SizedBox(height: 12.h),
+        Text(
+          'expertises.platforms_title'.tr(),
+          style: context.textTheme.headlineSmall?.copyWith(
+            color: colors.textMain,
+            fontWeight: FontWeight.w900,
+            height: 1.6,
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Text(
+          'expertises.platforms_desc'.tr(),
+          style: context.textTheme.bodyMedium?.copyWith(
+            color: colors.textMuted,
+            height: 2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A platform artwork card; cards with samples open their samples page.
+class _PlatformCard extends StatelessWidget {
+  const _PlatformCard({required this.card, required this.index});
+
+  final ExpertiseCard card;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final arabic = context.locale.languageCode == 'ar';
+    final width = MediaQuery.sizeOf(context).width - 36.w;
+    final pixels = width * MediaQuery.devicePixelRatioOf(context);
+    final route = card.route;
+    final title = arabic ? card.titleAr : card.titleEn;
+    final description = arabic ? card.descriptionAr : card.descriptionEn;
+    return ExpertiseArtworkTile(
+      imageUrl: card.artworkUrl(
+        arabic: arabic,
+        dark: context.isDarkMode,
+        pixelWidth: pixels,
+      ),
+      decodeWidth: pixels.round(),
+      aspectRatio: 3 / 2,
+      radius: 21.r,
+      padding: 2,
+      borderOpacity: 0.78,
+      accent: card.accent,
+      secondary: card.secondary,
+      motion: ExpertiseTileMotion.card,
+      phase: (index * 0.137) % 1,
+      semanticLabel: route == null
+          ? '$title\n$description'
+          : '${'expertises.open_samples'.tr()}: $title\n$description',
+      onTap: route == null ? null : () => context.go(route),
+    );
+  }
+}
+
+// ─── Design / video galleries ────────────────────────────────────────────────
+
+/// Back link, gallery title and what the gallery contains.
+class _GalleryHeader extends StatelessWidget {
+  const _GalleryHeader({required this.isReels});
+
+  final bool isReels;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
+    return Column(
+      children: [
+        const ExpertiseBackLink(),
+        SizedBox(height: 22.h),
+        Text(
+          (isReels ? 'expertises.video_samples' : 'expertises.design_samples')
+              .tr(),
+          textAlign: TextAlign.center,
+          style: context.textTheme.headlineSmall?.copyWith(
+            color: colors.textMain,
+            fontWeight: FontWeight.w900,
+            height: 1.4,
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Text(
+          (isReels
+                  ? 'expertises.video_industries_desc'
+                  : 'expertises.design_industries_desc')
+              .tr(),
+          textAlign: TextAlign.center,
+          style: context.textTheme.bodyMedium?.copyWith(
+            color: colors.textMuted,
+            height: 1.8,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Switch between the design and the video gallery.
+class _KindNav extends StatelessWidget {
+  const _KindNav({required this.isReels});
+
+  final bool isReels;
+
+  @override
+  Widget build(BuildContext context) {
+    final gold = context.etbalyColors.gold;
+    return Semantics(
+      container: true,
+      label: 'expertises.samples_label'.tr(),
+      child: Row(
+        children: [
+          Expanded(
+            child: ExpertiseChoiceButton(
+              label: 'expertises.design_samples'.tr(),
+              icon: FontAwesomeIcons.penNib,
+              active: !isReels,
+              fill: true,
+              maxLines: 2,
+              accent: gold,
+              onTap: () {
+                if (isReels) context.go(AppRoutes.expertiseDesigns);
+              },
+            ),
+          ),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: ExpertiseChoiceButton(
+              label: 'expertises.video_samples'.tr(),
+              icon: FontAwesomeIcons.clapperboard,
+              active: isReels,
+              fill: true,
+              maxLines: 2,
+              accent: gold,
+              onTap: () {
+                if (!isReels) context.go(AppRoutes.expertiseReels);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -653,10 +923,8 @@ class _ClassPdfSection extends StatelessWidget {
     return Column(
       children: [
         _SectionHeader(
-          eyebrow: 'auto.t_5e2ed1586d'.tr(),
-          title: 'auto.t_a2187d02b6'.tr(),
-          desc: 'auto.t_e4c7e33092'.tr(),
-          icon: Icons.picture_as_pdf_rounded,
+          title: 'expertises.company_portfolio'.tr(),
+          desc: 'expertises.design_collections_desc'.tr(),
         ),
         SizedBox(height: 18.h),
         LayoutBuilder(
@@ -672,8 +940,8 @@ class _ClassPdfSection extends StatelessWidget {
                 SizedBox(
                   width: cardWidth,
                   child: _ClassCard(
-                    title: 'auto.t_9b3c3218ef'.tr(),
-                    desc: 'auto.t_e03a824ef7'.tr(),
+                    title: 'Class A',
+                    desc: 'expertises.design_collection_desc'.tr(),
                     icon: FontAwesomeIcons.crown,
                     color: const Color(0xFFD4AF37),
                     pillColor: const Color(0xFFFF3D3D),
@@ -685,8 +953,8 @@ class _ClassPdfSection extends StatelessWidget {
                 SizedBox(
                   width: cardWidth,
                   child: _ClassCard(
-                    title: 'auto.t_7c0d3dfc88'.tr(),
-                    desc: 'auto.t_44df6a0bc7'.tr(),
+                    title: 'Class B',
+                    desc: 'expertises.design_collection_desc'.tr(),
                     icon: FontAwesomeIcons.gem,
                     color: const Color(0xFF63B3ED),
                     pillColor: const Color(0xFF3D70FF),
@@ -802,14 +1070,14 @@ class _ClassCard extends StatelessWidget {
                 Divider(color: colors.primaryLight.withValues(alpha: 0.16)),
                 SizedBox(height: 8.h),
                 _TextLinkButton(
-                  label: 'auto.t_fd3141c19a'.tr(),
+                  label: 'expertises.preview_pdf'.tr(),
                   icon: Icons.visibility_rounded,
                   color: color,
                   onTap: onTap,
                 ),
                 SizedBox(height: 14.h),
                 _ActionButton(
-                  label: 'auto.t_0d8c9f7308'.tr(),
+                  label: 'expertises.download_pdf'.tr(),
                   icon: Icons.download_rounded,
                   color: color,
                   onTap: onDownload,
@@ -887,8 +1155,8 @@ class _IndustriesErrorState extends StatelessWidget {
           SizedBox(height: 12.h),
           Text(
             isAr
-                ? 'تعذّر تحميل الأعمال'
-                : 'Could not load portfolio',
+                ? 'تعذّر تحميل النماذج'
+                : 'Could not load the samples',
             style: TextStyle(
               color: c.textMain,
               fontSize: 16.sp,
@@ -925,11 +1193,17 @@ class _IndustriesErrorState extends StatelessWidget {
 class _IndustriesSection extends StatelessWidget {
   const _IndustriesSection({
     required this.industries,
+    required this.imageIndexOf,
+    required this.description,
     required this.onSelect,
     required this.colorOf,
   });
 
   final List<PortfolioIndustry> industries;
+
+  /// Position in the full industry list, which numbers the industry images.
+  final int Function(PortfolioIndustry industry) imageIndexOf;
+  final String description;
   final ValueChanged<PortfolioIndustry> onSelect;
   final Color Function(String hex) colorOf;
 
@@ -939,9 +1213,9 @@ class _IndustriesSection extends StatelessWidget {
       child: Column(
         children: [
           _SectionHeader(
-            eyebrow: 'auto.t_f6736b6f48'.tr(),
-            title: 'auto.t_be72c00083'.tr(),
-            desc: 'auto.t_1e75bd77db'.tr(),
+            eyebrow: 'expertises.choose_industry'.tr(),
+            title: 'expertises.industries_title'.tr(),
+            desc: description,
             icon: Icons.grid_view_rounded,
           ),
           SizedBox(height: 16.h),
@@ -959,7 +1233,7 @@ class _IndustriesSection extends StatelessWidget {
               final industry = industries[index];
               return _IndustryCard(
                 industry: industry,
-                index: index,
+                index: imageIndexOf(industry),
                 color: colorOf(industry.accentColor),
                 onTap: () => onSelect(industry),
               )
@@ -977,11 +1251,15 @@ class _IndustriesSection extends StatelessWidget {
 class _SpecialtiesSection extends StatelessWidget {
   const _SpecialtiesSection({
     required this.industry,
+    required this.specialties,
+    required this.isReels,
     required this.onSelect,
     required this.colorOf,
   });
 
   final PortfolioIndustry industry;
+  final List<PortfolioSpecialty> specialties;
+  final bool isReels;
   final ValueChanged<PortfolioSpecialty> onSelect;
   final Color Function(String hex) colorOf;
 
@@ -992,15 +1270,18 @@ class _SpecialtiesSection extends StatelessWidget {
         children: [
           _SectionHeader(
             eyebrow: industry.localizedName(context),
-            title: 'auto.t_94f68e30c1'.tr(),
-            desc: 'auto.t_9932767326'.tr(),
-            icon: _iconFor(industry.icon),
+            title: 'expertises.choose_specialty'.tr(),
+            desc: (isReels
+                    ? 'expertises.video_specialty_desc'
+                    : 'expertises.design_specialty_desc')
+                .tr(),
+            icon: expertiseIcon(industry.icon),
           ),
           SizedBox(height: 16.h),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: industry.specialties.length,
+            itemCount: specialties.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 10.r,
@@ -1008,9 +1289,10 @@ class _SpecialtiesSection extends StatelessWidget {
               childAspectRatio: 0.88,
             ),
             itemBuilder: (context, index) {
-              final specialty = industry.specialties[index];
+              final specialty = specialties[index];
               return _SpecialtyCard(
                 specialty: specialty,
+                isReels: isReels,
                 color: colorOf(specialty.accentColor),
                 onTap: () => onSelect(specialty),
               );
@@ -1407,32 +1689,26 @@ class _CustomIndustrySent extends StatelessWidget {
 
 class _MediaSection extends StatelessWidget {
   const _MediaSection({
-    required this.tab,
-    required this.photos,
-    required this.reels,
-    required this.photosVisible,
-    required this.reelsVisible,
+    required this.isReels,
+    required this.items,
+    required this.visible,
     required this.categoryNameAr,
     required this.categoryNameEn,
-    required this.onTab,
-    required this.onMorePhotos,
-    required this.onMoreReels,
+    required this.onMore,
+    required this.onLess,
     required this.onImage,
     required this.onReel,
     required this.colorOf,
     required this.assetOf,
   });
 
-  final String tab;
-  final List<PortfolioMedia> photos;
-  final List<PortfolioMedia> reels;
-  final int photosVisible;
-  final int reelsVisible;
+  final bool isReels;
+  final List<PortfolioMedia> items;
+  final int visible;
   final String categoryNameAr;
   final String categoryNameEn;
-  final ValueChanged<String> onTab;
-  final VoidCallback onMorePhotos;
-  final VoidCallback onMoreReels;
+  final VoidCallback onMore;
+  final VoidCallback onLess;
   final ValueChanged<PortfolioMedia> onImage;
   final ValueChanged<PortfolioMedia> onReel;
   final Color Function(String hex) colorOf;
@@ -1440,12 +1716,8 @@ class _MediaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = tab == 'photos'
-        ? photos.take(photosVisible).toList()
-        : reels.take(reelsVisible).toList();
-    final hasMore = tab == 'photos'
-        ? photosVisible < photos.length
-        : reelsVisible < reels.length;
+    final colors = context.etbalyColors;
+    final shown = items.take(visible).toList();
 
     return _Panel(
       child: Column(
@@ -1453,34 +1725,38 @@ class _MediaSection extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _TabButton(
-                  active: tab == 'photos',
-                  icon: Icons.image_rounded,
-                  label:
-                      'auto.t_bc7a21d8bb'.tr(args: [photos.length.toString()]),
-                  onTap: () => onTab('photos'),
+                child: Text(
+                  (isReels
+                          ? 'expertises.video_samples'
+                          : 'expertises.design_samples')
+                      .tr(),
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: colors.textMain,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: _TabButton(
-                  active: tab == 'reels',
-                  icon: Icons.movie_rounded,
-                  label:
-                      'auto.t_d1c0e0b7e7'.tr(args: [reels.length.toString()]),
-                  onTap: () => onTab('reels'),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(color: colors.borderColor),
+                ),
+                child: Text(
+                  '${items.length}',
+                  style: TextStyle(color: colors.textMuted, fontSize: 12.sp),
                 ),
               ),
             ],
           ),
           SizedBox(height: 16.h),
           if (items.isEmpty)
-            const _EmptyState()
+            _EmptyState(isReels: isReels)
           else
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: items.length,
+              itemCount: shown.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 mainAxisSpacing: 10.r,
@@ -1488,28 +1764,41 @@ class _MediaSection extends StatelessWidget {
                 childAspectRatio: 0.74,
               ),
               itemBuilder: (context, index) {
-                final item = items[index];
+                final item = shown[index];
                 return _MediaCard(
                   media: item,
                   index: index,
-                  isReel: tab == 'reels',
+                  isReel: isReels,
                   color: colorOf(item.accentColor),
                   imagePath: assetOf(item.thumbnail),
                   categoryNameAr: categoryNameAr,
                   categoryNameEn: categoryNameEn,
-                  onTap: () => tab == 'reels' ? onReel(item) : onImage(item),
+                  onTap: () => isReels ? onReel(item) : onImage(item),
                 );
               },
             ),
-          if (hasMore) ...[
+          if (visible < items.length || visible > 6) ...[
             SizedBox(height: 16.h),
-            _ActionButton(
-              label: tab == 'photos'
-                  ? 'auto.t_09a1c4795b'.tr()
-                  : 'auto.t_466674eace'.tr(),
-              icon: Icons.add_rounded,
-              color: context.etbalyColors.gold,
-              onTap: tab == 'photos' ? onMorePhotos : onMoreReels,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10.w,
+              runSpacing: 10.h,
+              children: [
+                if (visible < items.length)
+                  _ActionButton(
+                    label: 'expertises.show_more'.tr(),
+                    icon: Icons.add_circle_outline_rounded,
+                    color: colors.gold,
+                    onTap: onMore,
+                  ),
+                if (visible > 6)
+                  _ActionButton(
+                    label: 'expertises.show_less'.tr(),
+                    icon: Icons.remove_circle_outline_rounded,
+                    color: colors.textMuted,
+                    onTap: onLess,
+                  ),
+              ],
             ),
           ],
         ],
@@ -1623,8 +1912,8 @@ class _ReviewSection extends StatelessWidget {
   }
 }
 
-class _PortfolioCtaSection extends StatelessWidget {
-  const _PortfolioCtaSection();
+class _ExpertiseCtaSection extends StatelessWidget {
+  const _ExpertiseCtaSection();
 
   @override
   Widget build(BuildContext context) {
@@ -1649,7 +1938,7 @@ class _PortfolioCtaSection extends StatelessWidget {
         children: [
           _SectionBadge(
             icon: Icons.rocket_launch_rounded,
-            label: 'auto.t_103315edfb'.tr(),
+            label: 'expertises.hero_badge'.tr(),
           ),
           SizedBox(height: 18.h),
           Text(
@@ -1685,7 +1974,7 @@ class _PortfolioCtaSection extends StatelessWidget {
             child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => context.go(AppRoutes.startNow),
+              onTap: () => context.go(AppRoutes.contact),
               borderRadius: BorderRadius.circular(999.r),
               child: Ink(
                 padding: const EdgeInsets.symmetric(
@@ -1754,24 +2043,26 @@ class _Panel extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
-    required this.eyebrow,
     required this.title,
     required this.desc,
-    required this.icon,
+    this.eyebrow,
+    this.icon,
   });
 
-  final String eyebrow;
+  final String? eyebrow;
   final String title;
   final String desc;
-  final Object icon;
+  final Object? icon;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
     return Column(
       children: [
-        _SectionBadge(icon: icon, label: eyebrow),
-        SizedBox(height: 12.h),
+        if (eyebrow != null && icon != null) ...[
+          _SectionBadge(icon: icon!, label: eyebrow!),
+          SizedBox(height: 12.h),
+        ],
         Text(
           title,
           textAlign: TextAlign.center,
@@ -1813,9 +2104,10 @@ class _SectionBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          icon is FaIconData
-              ? FaIcon(icon as FaIconData, color: colors.gold, size: 15.sp)
-              : Icon(icon as IconData, color: colors.gold, size: 15.sp),
+          if (icon case final FaIconData faIcon)
+            FaIcon(faIcon, color: colors.gold, size: 15.sp)
+          else
+            Icon(icon as IconData, color: colors.gold, size: 15.sp),
           SizedBox(width: 7.w),
           Text(
             label,
@@ -1989,11 +2281,13 @@ class _IndustryImageFallback extends StatelessWidget {
 class _SpecialtyCard extends StatelessWidget {
   const _SpecialtyCard({
     required this.specialty,
+    required this.isReels,
     required this.color,
     required this.onTap,
   });
 
   final PortfolioSpecialty specialty;
+  final bool isReels;
   final Color color;
   final VoidCallback onTap;
 
@@ -2025,7 +2319,7 @@ class _SpecialtyCard extends StatelessWidget {
                   border: Border.all(color: color.withValues(alpha: 0.28)),
                 ),
                 child: Center(
-                  child: FaIcon(_iconFor(specialty.icon),
+                  child: FaIcon(expertiseIcon(specialty.icon),
                       color: color, size: 19.sp),
                 ),
               ),
@@ -2043,23 +2337,19 @@ class _SpecialtyCard extends StatelessWidget {
               ),
               SizedBox(height: 6.h),
               // Badges row
-              Wrap(
-                spacing: 5.r,
-                runSpacing: 4.r,
-                children: [
-                  _SpecBadge(
-                    icon: Icons.image_rounded,
-                    label: 'auto.t_0051eae24b'
-                        .tr(args: [specialty.photos.length.toString()]),
-                    color: color,
-                  ),
-                  _SpecBadge(
-                    icon: Icons.movie_rounded,
-                    label: 'auto.t_c95473ea98'
-                        .tr(args: [specialty.reels.length.toString()]),
-                    color: colors.textMuted,
-                  ),
-                ],
+              _SpecBadge(
+                icon: isReels ? Icons.movie_rounded : Icons.image_rounded,
+                label: (isReels
+                        ? 'expertises.reels_count'
+                        : 'expertises.photos_count')
+                    .tr(
+                  args: [
+                    (isReels ? specialty.reels : specialty.photos)
+                        .length
+                        .toString(),
+                  ],
+                ),
+                color: color,
               ),
             ],
           ),
@@ -2328,55 +2618,6 @@ class _Breadcrumb extends StatelessWidget {
   }
 }
 
-class _TabButton extends StatelessWidget {
-  const _TabButton({
-    required this.active,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final bool active;
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.etbalyColors;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12.h),
-          decoration: BoxDecoration(
-            color: active ? colors.gold : colors.bgSubtle,
-            borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(color: colors.gold.withValues(alpha: 0.28)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                  color: active ? Colors.black : colors.gold, size: 18.sp),
-              SizedBox(width: 8.w),
-              Text(
-                label,
-                style: context.textTheme.labelMedium?.copyWith(
-                  color: active ? Colors.black : colors.textMain,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.label,
@@ -2505,52 +2746,6 @@ class _IconAction extends StatelessWidget {
   }
 }
 
-class _HeroStat extends StatelessWidget {
-  const _HeroStat({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.etbalyColors;
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
-      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 8.w),
-      decoration: BoxDecoration(
-        color: colors.bgSubtle,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: colors.primaryLight.withValues(alpha: 0.18)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: colors.gold, size: 20.sp),
-          SizedBox(height: 8.h),
-          Text(
-            value,
-            style: context.textTheme.titleMedium?.copyWith(
-              color: colors.textMain,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          Text(
-            label,
-            style: context.textTheme.labelSmall?.copyWith(
-              color: colors.textMuted,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SmallPill extends StatelessWidget {
   const _SmallPill({
     required this.icon,
@@ -2619,23 +2814,47 @@ class _StatusBox extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({required this.isReels});
+
+  final bool isReels;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.etbalyColors;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(24.r),
       decoration: BoxDecoration(
-        color: context.etbalyColors.bgCard,
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Text(
-        'auto.t_f1f374ed5d'.tr(),
-        textAlign: TextAlign.center,
-        style: context.textTheme.bodyMedium?.copyWith(
-          color: context.etbalyColors.textMuted,
-        ),
+      child: Column(
+        children: [
+          Icon(
+            isReels ? Icons.movie_rounded : Icons.photo_library_rounded,
+            color: colors.gold,
+            size: 30.sp,
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            (isReels ? 'expertises.no_reels_title' : 'expertises.no_photos_title')
+                .tr(),
+            textAlign: TextAlign.center,
+            style: context.textTheme.titleSmall?.copyWith(
+              color: colors.textMain,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            (isReels ? 'expertises.no_reels_desc' : 'expertises.no_photos_desc')
+                .tr(),
+            textAlign: TextAlign.center,
+            style: context.textTheme.bodySmall?.copyWith(
+              color: colors.textMuted,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3062,8 +3281,8 @@ class _AnimatedPdfPreviewState extends State<_AnimatedPdfPreview>
   }
 }
 
-class _PortfolioBackgroundPainter extends CustomPainter {
-  _PortfolioBackgroundPainter(this.progress, {required this.bgTop, required this.bgMid});
+class _ExpertiseBackgroundPainter extends CustomPainter {
+  _ExpertiseBackgroundPainter(this.progress, {required this.bgTop, required this.bgMid});
 
   final double progress;
   final Color bgTop;
@@ -3107,100 +3326,8 @@ class _PortfolioBackgroundPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PortfolioBackgroundPainter old) =>
+  bool shouldRepaint(covariant _ExpertiseBackgroundPainter old) =>
       old.progress != progress || old.bgTop != bgTop;
-}
-
-FaIconData _iconFor(String icon) {
-  return switch (icon) {
-    // Industries
-    'fa-balance-scale' => FontAwesomeIcons.scaleBalanced,
-    'fa-heartbeat' => FontAwesomeIcons.heartPulse,
-    'fa-couch' => FontAwesomeIcons.couch,
-    'fa-shopping-bag' => FontAwesomeIcons.bagShopping,
-    'fa-graduation-cap' => FontAwesomeIcons.graduationCap,
-    'fa-swimming-pool' => FontAwesomeIcons.personSwimming,
-    'fa-building' => FontAwesomeIcons.building,
-    'fa-dumbbell' => FontAwesomeIcons.dumbbell,
-    'fa-utensils' => FontAwesomeIcons.utensils,
-    'fa-truck' => FontAwesomeIcons.truck,
-    'fa-car' || 'fa-car-alt' => FontAwesomeIcons.car,
-    'fa-magic' => FontAwesomeIcons.wandMagicSparkles,
-    'fa-plane' => FontAwesomeIcons.plane,
-    'fa-video' => FontAwesomeIcons.video,
-    'fa-code' => FontAwesomeIcons.code,
-    'fa-paint-brush' => FontAwesomeIcons.paintbrush,
-    'fa-paint-roller' => FontAwesomeIcons.paintRoller,
-    'fa-bullhorn' => FontAwesomeIcons.bullhorn,
-    'fa-industry' => FontAwesomeIcons.industry,
-    'fa-hotel' => FontAwesomeIcons.hotel,
-    'fa-hammer' => FontAwesomeIcons.hammer,
-    'fa-shield-alt' => FontAwesomeIcons.shieldHalved,
-    'fa-home' || 'fa-house-user' => FontAwesomeIcons.house,
-    'fa-calendar-alt' => FontAwesomeIcons.calendarDays,
-    'fa-shopping-cart' => FontAwesomeIcons.cartShopping,
-    'fa-hard-hat' => FontAwesomeIcons.helmetSafety,
-    // Medical specialties
-    'fa-tooth' => FontAwesomeIcons.tooth,
-    'fa-spa' => FontAwesomeIcons.spa,
-    'fa-eye' => FontAwesomeIcons.eye,
-    'fa-brain' => FontAwesomeIcons.brain,
-    'fa-bone' => FontAwesomeIcons.bone,
-    'fa-baby' => FontAwesomeIcons.baby,
-    'fa-heart' => FontAwesomeIcons.heart,
-    'fa-hands' => FontAwesomeIcons.hands,
-    'fa-user-md' => FontAwesomeIcons.userDoctor,
-    'fa-child' => FontAwesomeIcons.child,
-    'fa-apple-alt' => FontAwesomeIcons.appleWhole,
-    'fa-paw' => FontAwesomeIcons.paw,
-    'fa-pills' => FontAwesomeIcons.pills,
-    'fa-tint' => FontAwesomeIcons.droplet,
-    // Fitness & Sports
-    'fa-trophy' => FontAwesomeIcons.trophy,
-    'fa-star' => FontAwesomeIcons.star,
-    // Commercial & Services
-    'fa-box' => FontAwesomeIcons.box,
-    'fa-gift' => FontAwesomeIcons.gift,
-    'fa-tshirt' => FontAwesomeIcons.shirt,
-    'fa-seedling' => FontAwesomeIcons.seedling,
-    'fa-flask' => FontAwesomeIcons.flask,
-    'fa-cut' => FontAwesomeIcons.scissors,
-    // Food & Hospitality
-    'fa-hamburger' => FontAwesomeIcons.burger,
-    'fa-coffee' => FontAwesomeIcons.mugHot,
-    'fa-birthday-cake' => FontAwesomeIcons.cakeCandles,
-    'fa-concierge-bell' => FontAwesomeIcons.bellConcierge,
-    // Engineering & Design
-    'fa-drafting-compass' => FontAwesomeIcons.compassDrafting,
-    'fa-city' => FontAwesomeIcons.city,
-    'fa-bolt' => FontAwesomeIcons.bolt,
-    'fa-wrench' => FontAwesomeIcons.wrench,
-    'fa-broom' => FontAwesomeIcons.broom,
-    // Technology
-    'fa-laptop' => FontAwesomeIcons.laptop,
-    'fa-laptop-code' => FontAwesomeIcons.laptopCode,
-    'fa-mobile-alt' => FontAwesomeIcons.mobileScreenButton,
-    'fa-user-shield' => FontAwesomeIcons.userShield,
-    'fa-layer-group' => FontAwesomeIcons.layerGroup,
-    'fa-bezier-curve' => FontAwesomeIcons.bezierCurve,
-    // Marketing & Media
-    'fa-chart-line' => FontAwesomeIcons.chartLine,
-    'fa-pencil-alt' => FontAwesomeIcons.penToSquare,
-    'fa-microphone' => FontAwesomeIcons.microphone,
-    'fa-share-alt' => FontAwesomeIcons.shareNodes,
-    'fa-user-tie' => FontAwesomeIcons.userTie,
-    // Logistics & Travel
-    'fa-truck-loading' => FontAwesomeIcons.truckRampBox,
-    'fa-shipping-fast' => FontAwesomeIcons.truckFast,
-    'fa-route' => FontAwesomeIcons.route,
-    'fa-suitcase' => FontAwesomeIcons.suitcase,
-    'fa-map-marked-alt' => FontAwesomeIcons.mapLocationDot,
-    'fa-globe' => FontAwesomeIcons.globe,
-    'fa-kaaba' => FontAwesomeIcons.kaaba,
-    // Education
-    'fa-chalkboard-teacher' => FontAwesomeIcons.chalkboardUser,
-    _ => FontAwesomeIcons.tag,
-  };
 }
 
 // ── Reel Dialog ────────────────────────────────────────────────────────────

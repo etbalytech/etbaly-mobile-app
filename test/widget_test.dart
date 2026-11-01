@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 
 import 'package:etbaly/src/app.dart';
+import 'package:etbaly/src/services/storage_service.dart';
+import 'package:etbaly/src/services/theme_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,6 +12,8 @@ void main() {
     // Build our app and trigger a frame.
     SharedPreferences.setMockInitialValues({});
     await EasyLocalization.ensureInitialized();
+    await StorageService.instance.init();
+    await ThemeService.instance.init();
 
     await tester.pumpWidget(
       EasyLocalization(
@@ -22,5 +26,7 @@ void main() {
 
     // Verify that our base app builds successfully.
     expect(find.byType(App), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

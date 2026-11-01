@@ -165,7 +165,7 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
                 ),
                 _IdeasActionButton(
                   label: 'auto.t_2ae93663e5'.tr(),
-                  onTap: () => context.go(AppRoutes.portfolio),
+                  onTap: () => context.go(AppRoutes.expertises),
                 ),
               ],
             )
