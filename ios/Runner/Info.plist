@@ -22,6 +22,8 @@
 	<string>Photos you choose are attached to your job application or project request (personal photo, ID card, logo or work samples).</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The camera can be used to take a photo to attach to your job application.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Etba3ly Digital Marketing does not use your location. Apple requires this text because a library included in the app supports location access; the app never asks for it.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>CFBundlePackageType</key>
