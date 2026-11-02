@@ -31,6 +31,22 @@ workflows:
           flutter build ipa --release \
             --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
+      - name: Check Apple's requirements before uploading
+        # Stops the build (nothing is uploaded) if the app would get the
+        # ITMS-90068 / ITMS-90683 warnings again.
+        script: |
+          APP=build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
+          echo "Commit: $(git log -1 --format='%h %s')"
+          MIN_OS=$(/usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "$APP/Info.plist")
+          echo "Minimum iOS version: $MIN_OS"
+          if [ "${MIN_OS%%.*}" -lt 15 ]; then
+            echo "ERROR: the app targets iOS $MIN_OS; Apple requires 15.0 or later."
+            exit 1
+          fi
+          if ! /usr/libexec/PlistBuddy -c "Print :NSLocationWhenInUseUsageDescription" "$APP/Info.plist"; then
+            echo "ERROR: NSLocationWhenInUseUsageDescription is missing from Info.plist."
+            exit 1
+          fi
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
