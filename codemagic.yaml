@@ -1,0 +1,41 @@
+# Codemagic CI: builds the iPhone app and uploads it to App Store Connect
+# (TestFlight). Start it manually from Codemagic → "Start new build".
+#
+# One-time setup in Codemagic:
+#   Team settings → Integrations → Developer Portal → connect an App Store
+#   Connect API key (Issuer ID, Key ID, .p8 file) and name it exactly
+#   "Etba3ly App Store Connect" (or change the name below).
+workflows:
+  ios-app-store:
+    name: iOS – App Store (Etba3ly Digital Marketing)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Etba3ly App Store Connect
+    environment:
+      flutter: 3.44.2
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.etba3lydm.app
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Use the App Store signing files
+        script: xcode-project use-profiles
+      - name: Build the iPhone app (.ipa)
+        # Version name comes from pubspec.yaml (e.g. 1.0.4); the build number
+        # is Codemagic's own counter, so every upload gets a new one.
+        script: |
+          flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
