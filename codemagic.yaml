@@ -47,6 +47,13 @@ workflows:
             echo "ERROR: NSLocationWhenInUseUsageDescription is missing from Info.plist."
             exit 1
           fi
+          # Home-screen name: "Etba3ly", and "اطبعلي" on Arabic iPhones.
+          echo "App name: $(/usr/libexec/PlistBuddy -c "Print :CFBundleDisplayName" "$APP/Info.plist")"
+          if [ ! -f "$APP/ar.lproj/InfoPlist.strings" ]; then
+            echo "ERROR: the Arabic app name (ar.lproj/InfoPlist.strings) is missing."
+            exit 1
+          fi
+          plutil -p "$APP/ar.lproj/InfoPlist.strings" | grep CFBundleDisplayName
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
