@@ -1,0 +1,6 @@
+<ar>
+• تحديث أيقونة تطبيق اطبعلي بخلفية بيضاء موحدة على أندرويد وآيفون.
+</ar>
+<en-US>
+• Updated the Etba3ly app icon with a consistent white background on Android and iPhone.
+</en-US>
