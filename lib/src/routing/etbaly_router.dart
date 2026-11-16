@@ -1,3 +1,6 @@
+import 'dart:ui' show ImageFilter;
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -44,6 +47,27 @@ class EtbalyNavBar extends StatefulWidget {
 
 class _EtbalyNavBarState extends State<EtbalyNavBar> {
   static const _waNumber = '201010285020';
+  static const _mainRoutes = [
+    AppRoutes.home,
+    AppRoutes.services,
+    AppRoutes.expertises,
+    AppRoutes.about,
+    AppRoutes.payments,
+    AppRoutes.careers,
+  ];
+
+  void _onNavigationSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < 200) return;
+    final location = GoRouterState.of(context).uri.path;
+    // Only switch between the main pages; never abandon a nested form or gallery.
+    final index = _mainRoutes.indexOf(location);
+    if (index < 0) return;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final forward = isRtl ? velocity > 0 : velocity < 0;
+    final next = index + (forward ? 1 : -1);
+    if (next >= 0 && next < _mainRoutes.length) context.go(_mainRoutes[next]);
+  }
 
   Future<void> _openWhatsApp() async {
     final uri = Uri.parse('https://wa.me/$_waNumber');
@@ -78,6 +102,7 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: const _EtbalyBrandAppBar(),
       body: LayoutBuilder(
         builder: (ctx, constraints) => Stack(
@@ -86,6 +111,7 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
             _WhatsAppFab(
               bodyW: constraints.maxWidth,
               bodyH: constraints.maxHeight,
+              bottomInset: MediaQuery.paddingOf(ctx).bottom,
               onTap: _showContactSheet,
             ),
           ],
@@ -99,74 +125,84 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
     final etbalyColors = context.etbalyColors;
     final location = GoRouterState.of(context).uri.toString();
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: etbalyColors.bgCard,
-        border: Border(
-          top: BorderSide(
-            color: etbalyColors.borderColor.withValues(alpha: 0.3),
-            width: 1.w,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: etbalyColors.cardShadow,
-            blurRadius: 20.r,
-            offset: Offset(0.w, -4.h),
-            spreadRadius: 0.r,
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                context,
-                icon: Icons.home,
-                label: 'navigation.home'.tr(),
-                route: AppRoutes.home,
-                isActive: location == AppRoutes.home,
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: etbalyColors.bgCard.withValues(alpha: 0.88),
+            border: Border(
+              top: BorderSide(
+                color: etbalyColors.borderColor.withValues(alpha: 0.3),
+                width: 1.w,
               ),
-              _buildNavItem(
-                context,
-                icon: Icons.grid_view,
-                label: 'navigation.services'.tr(),
-                route: AppRoutes.services,
-                isActive: location == AppRoutes.services,
-              ),
-              _buildNavItem(
-                context,
-                icon: Icons.workspace_premium_rounded,
-                label: 'navigation.expertises'.tr(),
-                route: AppRoutes.expertises,
-                // Also active on the expertise sample pages.
-                isActive: location.startsWith(AppRoutes.expertises),
-              ),
-              _buildNavItem(
-                context,
-                icon: Icons.people,
-                label: 'navigation.about'.tr(),
-                route: AppRoutes.about,
-                isActive: location == AppRoutes.about,
-              ),
-              _buildNavItem(
-                context,
-                icon: Icons.account_balance_wallet,
-                label: 'navigation.payments'.tr(),
-                route: AppRoutes.payments,
-                isActive: location == AppRoutes.payments,
-              ),
-              _buildNavItem(
-                context,
-                icon: Icons.work_outline_rounded,
-                label: 'navigation.careers'.tr(),
-                route: AppRoutes.careers,
-                isActive: location == AppRoutes.careers,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: etbalyColors.cardShadow,
+                blurRadius: 20.r,
+                offset: Offset(0.w, -4.h),
+                spreadRadius: 0.r,
               ),
             ],
+          ),
+          child: GestureDetector(
+            onHorizontalDragEnd: _onNavigationSwipe,
+            behavior: HitTestBehavior.translucent,
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 6.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(
+                      context,
+                      icon: Icons.home,
+                      label: 'navigation.home'.tr(),
+                      route: AppRoutes.home,
+                      isActive: location == AppRoutes.home,
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.grid_view,
+                      label: 'navigation.services'.tr(),
+                      route: AppRoutes.services,
+                      isActive: location == AppRoutes.services,
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.workspace_premium_rounded,
+                      label: 'navigation.expertises'.tr(),
+                      route: AppRoutes.expertises,
+                      // Also active on the expertise sample pages.
+                      isActive: location.startsWith(AppRoutes.expertises),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.people,
+                      label: 'navigation.about'.tr(),
+                      route: AppRoutes.about,
+                      isActive: location == AppRoutes.about,
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.account_balance_wallet,
+                      label: 'navigation.payments'.tr(),
+                      route: AppRoutes.payments,
+                      isActive: location == AppRoutes.payments,
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.work_outline_rounded,
+                      label: 'navigation.careers'.tr(),
+                      route: AppRoutes.careers,
+                      isActive: location == AppRoutes.careers,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -182,43 +218,64 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
   }) {
     final etbalyColors = context.etbalyColors;
 
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.go(route),
-          borderRadius: BorderRadius.circular(12.r),
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 20.sp,
-                  color:
-                      isActive ? etbalyColors.primary : etbalyColors.textLight,
-                ),
-                SizedBox(height: 4.h),
-                // Longer labels ("مجالات خبرتنا") shrink a little instead of
-                // being cut off.
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: isActive
-                          ? etbalyColors.primary
-                          : etbalyColors.textLight,
-                      fontSize: 10.sp,
-                      fontWeight:
-                          isActive ? FontWeight.w600 : FontWeight.w500,
+      child: Semantics(
+        button: true,
+        selected: isActive,
+        label: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isActive ? null : () => context.go(route),
+            borderRadius: BorderRadius.circular(12.r),
+            child: AnimatedContainer(
+              duration: reducedMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.symmetric(vertical: 7.h, horizontal: 3.w),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? etbalyColors.primary.withValues(alpha: 0.10)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedScale(
+                    scale: isActive ? 1.08 : 1,
+                    duration: reducedMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 220),
+                    child: Icon(icon,
+                        size: 20.sp,
+                        color: isActive
+                            ? etbalyColors.primary
+                            : etbalyColors.textLight),
+                  ),
+                  SizedBox(height: 4.h),
+                  // Longer labels ("مجالات خبرتنا") shrink a little instead of
+                  // being cut off.
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: isActive
+                            ? etbalyColors.primary
+                            : etbalyColors.textLight,
+                        fontSize: 10.sp,
+                        fontWeight:
+                            isActive ? FontWeight.w600 : FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -233,9 +290,11 @@ class _WhatsAppFab extends StatefulWidget {
   const _WhatsAppFab({
     required this.bodyW,
     required this.bodyH,
+    required this.bottomInset,
     required this.onTap,
   });
   final double bodyW, bodyH;
+  final double bottomInset;
   final VoidCallback onTap;
 
   @override
@@ -245,7 +304,7 @@ class _WhatsAppFab extends StatefulWidget {
 class _WhatsAppFabState extends State<_WhatsAppFab>
     with SingleTickerProviderStateMixin {
   static const _fabW = 66.0;
-  static const _fabH = 86.0;
+  static const _fabH = 66.0;
 
   late final AnimationController _pulse;
   late final Animation<double> _scale;
@@ -276,14 +335,18 @@ class _WhatsAppFabState extends State<_WhatsAppFab>
   void didUpdateWidget(_WhatsAppFab old) {
     super.didUpdateWidget(old);
     if (_y.isFinite) {
-      _x = _x.clamp(0, widget.bodyW - _fabW);
-      _y = _y.clamp(0, widget.bodyH - _fabH);
+      _x = _x.clamp(0.0, math.max(0, widget.bodyW - _fabW));
+      _y =
+          _y.clamp(0.0, math.max(0, widget.bodyH - _fabH - widget.bottomInset));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_y.isInfinite) _y = widget.bodyH - _fabH - 16;
+    if (_y.isInfinite) {
+      _y = math.max(0, widget.bodyH - widget.bottomInset - _fabH - 12);
+    }
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
 
     return Positioned(
       left: _x,
@@ -291,15 +354,16 @@ class _WhatsAppFabState extends State<_WhatsAppFab>
       child: GestureDetector(
         onPanStart: (_) => setState(() => _dragging = true),
         onPanUpdate: (d) => setState(() {
-          _x = (_x + d.delta.dx).clamp(0, widget.bodyW - _fabW);
-          _y = (_y + d.delta.dy).clamp(0, widget.bodyH - _fabH);
+          _x = (_x + d.delta.dx).clamp(0.0, math.max(0, widget.bodyW - _fabW));
+          _y = (_y + d.delta.dy).clamp(
+              0.0, math.max(0, widget.bodyH - _fabH - widget.bottomInset));
         }),
         onPanEnd: (_) => setState(() => _dragging = false),
         onTap: widget.onTap,
         child: AnimatedBuilder(
           animation: _scale,
           builder: (_, child) => Transform.scale(
-            scale: _dragging ? 1.0 : _scale.value,
+            scale: _dragging || reducedMotion ? 1.0 : _scale.value,
             child: child,
           ),
           child: SizedBox(
@@ -313,16 +377,19 @@ class _WhatsAppFabState extends State<_WhatsAppFab>
                 AnimatedBuilder(
                   animation: _pulse,
                   builder: (_, __) => Container(
-                    width: 60.w,
-                    height: 60.h,
+                    width: 58,
+                    height: 58,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF25D366)
-                              .withValues(alpha: 0.2 + 0.25 * _pulse.value),
-                          blurRadius: 14.r + 14 * _pulse.value,
-                          spreadRadius: 2.r + 3 * _pulse.value,
+                          color: const Color(0xFF25D366).withValues(
+                              alpha: 0.2 +
+                                  0.25 * (reducedMotion ? 0.0 : _pulse.value)),
+                          blurRadius:
+                              14.r + 14 * (reducedMotion ? 0.0 : _pulse.value),
+                          spreadRadius:
+                              2.r + 3 * (reducedMotion ? 0.0 : _pulse.value),
                         ),
                       ],
                     ),
@@ -330,8 +397,8 @@ class _WhatsAppFabState extends State<_WhatsAppFab>
                 ),
                 // Green circle with WhatsApp icon
                 Container(
-                  width: 60.w,
-                  height: 60.h,
+                  width: 58,
+                  height: 58,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
@@ -343,39 +410,28 @@ class _WhatsAppFabState extends State<_WhatsAppFab>
                       radius: 0.85,
                     ),
                   ),
-                  child: Center(
-                    child: FaIcon(
-                      FontAwesomeIcons.whatsapp,
-                      color: Colors.white,
-                      size: 30.sp,
-                    ),
-                  ),
-                ),
-                // 'auto.t_3e0489cbf4'.tr() gold badge on top
-                Positioned(
-                  top: 0.h,
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD4AF37),
-                      borderRadius: BorderRadius.circular(999.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              const Color(0xFFD4AF37).withValues(alpha: 0.55),
-                          blurRadius: 10.r,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const FaIcon(FontAwesomeIcons.whatsapp,
+                          color: Colors.white, size: 25),
+                      const SizedBox(height: 1),
+                      SizedBox(
+                        width: 49,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'auto.t_3e0489cbf4'.tr(),
+                            maxLines: 1,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                height: 1.1,
+                                fontWeight: FontWeight.w900),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      'auto.t_3e0489cbf4'.tr(),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w900,
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ],
@@ -588,7 +644,20 @@ class _EtbalyBrandAppBar extends StatelessWidget
           padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 10.h),
           child: Row(
             children: [
-              const _AppBarBrand(),
+              Semantics(
+                button: true,
+                label: context.locale.languageCode == 'ar'
+                    ? 'العودة إلى الرئيسية'
+                    : 'Go to home',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16.r),
+                    onTap: () => context.go(AppRoutes.home),
+                    child: const _AppBarBrand(),
+                  ),
+                ),
+              ),
               const Spacer(),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -706,24 +775,38 @@ class _ThemeToggleButton extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeService.instance.themeMode,
       builder: (context, themeMode, _) {
-        final isDark = themeMode == ThemeMode.dark;
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: ThemeService.instance.toggle,
-            borderRadius: BorderRadius.circular(999.r),
-            child: Container(
-              width: 44.w,
-              height: 44.h,
-              decoration: BoxDecoration(
-                color: context.etbalyColors.badgeBg,
-                shape: BoxShape.circle,
-                border: Border.all(color: context.etbalyColors.borderColor),
-              ),
-              child: Icon(
-                isDark ? Icons.lightbulb_outline : Icons.lightbulb,
-                color: isDark ? EtbalyWebColors.body : EtbalyWebColors.gold,
-                size: 22.sp,
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final isAr = context.locale.languageCode == 'ar';
+        return Tooltip(
+          message: isDark
+              ? (isAr ? 'تفعيل الوضع النهاري' : 'Switch to light mode')
+              : (isAr ? 'تفعيل الوضع الليلي' : 'Switch to dark mode'),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: ThemeService.instance.toggle,
+              borderRadius: BorderRadius.circular(999.r),
+              child: Container(
+                width: 44.w,
+                height: 44.h,
+                decoration: BoxDecoration(
+                  color: context.etbalyColors.badgeBg,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: context.etbalyColors.borderColor),
+                ),
+                child: AnimatedSwitcher(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 200),
+                  child: Icon(
+                    isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round,
+                    key: ValueKey(isDark),
+                    color: isDark
+                        ? EtbalyWebColors.gold
+                        : context.etbalyColors.primary,
+                    size: 22.sp,
+                  ),
+                ),
               ),
             ),
           ),

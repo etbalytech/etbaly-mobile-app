@@ -1,0 +1,7 @@
+• A shorter app name that fits under the icon: “Etba3ly”.
+• Updated the app icon with a white background.
+• Performance and stability improvements.
+• Clearer connection and application errors, with a status check before retrying.
+• An improved home page with services, project samples, newsletter and contact options.
+• Refined navigation with swipe support, updated branding and WhatsApp button, and full contract previews.
+• Simplified position selection in job applications.

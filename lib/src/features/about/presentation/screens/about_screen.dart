@@ -1337,14 +1337,14 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
 
-    return Stack(
-      alignment: Alignment.center,
-      clipBehavior: Clip.none,
-      children: [
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 360.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
         Container(
           width: double.infinity,
-          constraints: BoxConstraints(maxWidth: 360.w),
-          height: 506.h,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12.r),
             boxShadow: [
@@ -1356,6 +1356,9 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
             ],
           ),
           clipBehavior: Clip.antiAlias,
+          child: AspectRatio(
+          // Both document images are 2482 × 3511; preserve their full page.
+          aspectRatio: 2482 / 3511,
           child: PageView.builder(
             controller: _pageController,
             itemCount: _pages.length,
@@ -1363,32 +1366,22 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
             itemBuilder: (context, index) {
               return Image.asset(
                 _pages[index],
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
+                fit: BoxFit.contain,
               );
             },
           ),
+          ),
         ),
-        Positioned(
-          left: -18.w,
-          top: 234.h,
-          child: _SlideArrow(
+        SizedBox(height: 12.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+          _SlideArrow(
             icon: Icons.chevron_right_rounded,
             onTap: _previous,
           ),
-        ),
-        Positioned(
-          right: -18.w,
-          top: 234.h,
-          child: _SlideArrow(
-            icon: Icons.chevron_left_rounded,
-            onTap: _next,
-          ),
-        ),
-        Positioned(
-          top: 10.h,
-          left: 10.w,
-          child: Container(
+          SizedBox(width: 16.w),
+          Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
             decoration: BoxDecoration(
               color: context.etbalyColors.bgCard,
@@ -1397,14 +1390,23 @@ class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
             ),
             child: Text(
               '${_pageIndex + 1} / ${_pages.length}',
+              textDirection: TextDirection.ltr,
               style: context.textTheme.labelSmall?.copyWith(
                 color: colors.gold,
                 fontWeight: FontWeight.w900,
               ),
             ),
           ),
+          SizedBox(width: 16.w),
+          _SlideArrow(
+            icon: Icons.chevron_left_rounded,
+            onTap: _next,
+          ),
+          ],
         ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 }

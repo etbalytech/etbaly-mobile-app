@@ -105,9 +105,23 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                   children: [
                     Align(
                       alignment: Alignment.topRight,
-                      child: _HeroBrandBadge(
-                        key: _badgeKey,
-                        onTap: _onBadgeTap,
+                      child: AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) {
+                          final reducedMotion =
+                              MediaQuery.disableAnimationsOf(context);
+                          final motion = reducedMotion
+                              ? 0.0
+                              : math.sin(_controller.value * math.pi * 4);
+                          return Transform.translate(
+                            offset: Offset(0, motion * 2),
+                            child: child,
+                          );
+                        },
+                        child: _HeroBrandBadge(
+                          key: _badgeKey,
+                          onTap: _onBadgeTap,
+                        ),
                       ),
                     )
                         .animate()
@@ -124,24 +138,34 @@ class _HomeWebHeroState extends State<_HomeWebHero>
                         .animate()
                         .fadeIn(delay: const Duration(milliseconds: 80))
                         .slideY(begin: 0.18),
+                    SizedBox(height: 12.h),
                     ShaderMask(
                       shaderCallback: (bounds) => LinearGradient(
                         begin: Alignment.centerRight,
                         end: Alignment.centerLeft,
-                        colors: [
-                          colors.goldLight,
-                          colors.gold,
-                          colors.goldDark,
-                        ],
+                        colors: isDark
+                            ? const [
+                                Color(0xFFFFE399),
+                                Color(0xFFF5C95D),
+                                Color(0xFFDBAB3B)
+                              ]
+                            : const [
+                                Color(0xFF604209),
+                                Color(0xFF8B5E0A),
+                                Color(0xFF67420A)
+                              ],
                       ).createShader(bounds),
-                      child: Text(
-                        'auto.t_1df71b9933'.tr(),
-                        textAlign: TextAlign.right,
-                        style: _heroTitleStyle(context, width).copyWith(
-                          color: Colors.white,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 5.h),
+                        child: Text(
+                          'auto.t_1df71b9933'.tr(),
+                          textAlign: TextAlign.right,
+                          style: _heroTitleStyle(context, width).copyWith(
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.visible,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.visible,
                       ),
                     )
                         .animate()
@@ -203,7 +227,7 @@ class _HomeWebHeroState extends State<_HomeWebHero>
               ? 30.sp
               : 34.sp,
       fontWeight: FontWeight.w900,
-      height: 1.12,
+      height: 1.4,
       letterSpacing: 0,
     );
   }

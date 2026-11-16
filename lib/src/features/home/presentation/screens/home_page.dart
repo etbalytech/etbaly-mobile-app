@@ -7,6 +7,7 @@ import 'package:etbaly/src/theme/etbaly_colors.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 part '../widgets/home_web_hero.dart';
@@ -55,6 +56,7 @@ part '../widgets/wave_connector_painter.dart';
 part '../widgets/work_wave_data.dart';
 part '../widgets/work_step_data.dart';
 part '../widgets/how_we_work_painter.dart';
+part '../widgets/home_discovery_sections.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -73,7 +75,11 @@ class HomePage extends StatelessWidget {
         _StatsImageStripSection(),
         _IdeasSuccessSection(),
         _CareersBannerSection(),
+        _HomeServicesSection(),
         _HowWeWorkSection(),
+        _HomePortfolioSection(),
+        _HomeNewsletterSection(),
+        _HomeContactSection(),
       ],
     );
   }

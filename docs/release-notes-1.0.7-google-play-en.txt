@@ -1,0 +1,4 @@
+• Clearer application errors and status checks before retrying.
+• An improved home page with services, project samples and newsletter.
+• Swipe navigation, refreshed branding and WhatsApp button, and full contract previews.
+• Simplified position selection in job applications.

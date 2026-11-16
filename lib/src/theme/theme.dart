@@ -116,6 +116,11 @@ ThemeData _buildTheme(
 
   return ThemeData(
     useMaterial3: true,
+    // Keep the same native iOS-style route transition on both mobile platforms.
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+    }),
     primaryColor: etbalyColors.primary,
     colorScheme: colorScheme.copyWith(
       primary: etbalyColors.primary,

@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../data/image_format.dart';
+import '../../logic/submission_errors.dart';
 import '../widgets/birthday_field.dart';
 import '../widgets/voice_intro_recorder.dart';
 
@@ -1106,9 +1107,11 @@ class _CareersScreenState extends State<CareersScreen> {
         return;
       }
       _failSubmission(_apiMessage(body, status, false));
-    } on DioException {
+    } on DioException catch (error) {
       if (!mounted) return;
-      await _verifyThenRetry(attempt, false, _connectionMessage);
+      await _verifyThenRetry(attempt, false, CareerSubmissionErrors.message(
+        isArabic: _isAr, timedOut: CareerSubmissionErrors.isTimeout(error.type),
+      ));
     } catch (_) {
       if (!mounted) return;
       _failSubmission(_genericMessage);
@@ -1165,38 +1168,15 @@ class _CareersScreenState extends State<CareersScreen> {
   String get _genericMessage =>
       _isAr ? 'حدث خطأ، حاول مجدداً' : 'Something went wrong. Please try again.';
 
-  String get _connectionMessage => _isAr
-      ? 'تعذر الوصول إلى خادم التوظيف بعد التحقق التلقائي. بياناتك ما زالت محفوظة؛ انتظر لحظات ثم اضغط إرسال مرة أخرى.'
-      : 'The careers server could not be reached after automatic verification. Your details are still saved; wait a moment, then press Send again.';
-
   /// Prefers the API's own validation message, then falls back by status code.
-  String _apiMessage(Map<String, dynamic>? body, int status, bool partialUpload) {
-    final reference = '${body?['reference'] ?? ''}'.trim();
-    final referenceSuffix =
-        reference.isEmpty ? '' : ' (${_isAr ? 'رقم المتابعة' : 'Reference'}: $reference)';
-
-    if (partialUpload) {
-      return (_isAr
-              ? 'لم نتمكن من تأكيد استلام الطلب كاملًا بعد إعادة المحاولة. احتفظ بالصفحة مفتوحة ثم اضغط إرسال مرة أخرى؛ لن يتكرر الطلب إذا كان قد وصل.'
-              : 'We could not confirm receipt of the complete application after retrying. Keep this page open and press Send again. An application already received will not be duplicated.') +
-          referenceSuffix;
-    }
-    final apiError = '${body?['error'] ?? ''}'.trim();
-    if (apiError.isNotEmpty) return apiError + referenceSuffix;
-    if (status == 413) {
-      return _isAr
-          ? 'حجم الملفات المرفوعة أكبر من المسموح على السيرفر. صغّر الصور أو ملف PDF ثم أعد الإرسال.'
-          : 'The attached files exceed the server upload limit. Reduce the image or PDF sizes and try again.';
-    }
-    if (status == 0 || status == 408 || status == 429 || status == 504 || (status >= 200 && status < 300)) {
-      return _connectionMessage;
-    }
-    if (status >= 500) {
-      return _isAr
-          ? 'تعذر حفظ الطلب على السيرفر حاليًا. حاول مرة أخرى بعد قليل.'
-          : 'The server could not save the application right now. Please try again shortly.';
-    }
-    return _genericMessage;
+  String _apiMessage(
+      Map<String, dynamic>? body, int status, bool partialUpload) {
+    return CareerSubmissionErrors.message(
+      isArabic: _isAr,
+      body: body,
+      status: status,
+      partialUpload: partialUpload,
+    );
   }
 
   void _reset() {
@@ -1269,18 +1249,6 @@ class _CareersScreenState extends State<CareersScreen> {
                   child: _CareersIntroBanner(isArabic: isAr, onTap: _scrollToForm),
                 ),
               ),
-              // Job selector
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 0),
-                  child: _JobSelector(
-                    jobs: _jobs,
-                    selected: job,
-                    isArabic: isAr,
-                    onSelect: _selectJob,
-                  ),
-                ),
-              ),
               // Body: job detail + form
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 40.h),
@@ -1304,21 +1272,21 @@ class _CareersScreenState extends State<CareersScreen> {
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  Expanded(child: form),
+                                  SizedBox(width: 16.w),
                                   SizedBox(
                                     width: constraints.maxWidth * 0.42,
                                     child: _JobDetailCard(job: job, isArabic: isAr),
                                   ),
-                                  SizedBox(width: 16.w),
-                                  Expanded(child: form),
                                 ],
                               );
                             }
                             // Single column on phone
                             return Column(
                               children: [
-                                _JobDetailCard(job: job, isArabic: isAr),
-                                SizedBox(height: 16.h),
                                 form,
+                                SizedBox(height: 16.h),
+                                _JobDetailCard(job: job, isArabic: isAr),
                               ],
                             );
                           },
@@ -2049,7 +2017,7 @@ class _CareersScreenState extends State<CareersScreen> {
                 ),
                 if (_submitError.isNotEmpty) ...[
                   SizedBox(height: 10.h),
-                  _ErrorNote(_submitError),
+                  _SubmissionAlert(message: _submitError, isArabic: isAr),
                 ],
                 SizedBox(height: 6.h),
                 const EtbalyPrivacyLink(),
@@ -2279,12 +2247,12 @@ class _CareersHero extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.work_outline_rounded, color: const Color(0xFFD4AF37), size: 15.sp),
+                      Icon(Icons.work_outline_rounded, color: isDark ? const Color(0xFFFFD979) : const Color(0xFF79520A), size: 15.sp),
                       SizedBox(width: 6.w),
                       Text(
                         isArabic ? 'انضم لفريقنا' : 'Join our team',
                         style: TextStyle(
-                          color: const Color(0xFFD4AF37),
+                          color: isDark ? const Color(0xFFFFD979) : const Color(0xFF79520A),
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w900,
                         ),
@@ -2295,18 +2263,23 @@ class _CareersHero extends StatelessWidget {
                 SizedBox(height: 20.h),
                 // Gold gradient title
                 ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFFD4AF37), Color(0xFFFBBF24), Color(0xFFD4AF37)],
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: isDark
+                        ? const [Color(0xFFFFE399), Color(0xFFF5C95D), Color(0xFFDBAB3B)]
+                        : const [Color(0xFF604209), Color(0xFF8B5E0A), Color(0xFF67420A)],
                   ).createShader(bounds),
-                  child: Text(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5.h),
+                    child: Text(
                     isArabic ? 'الوظائف المتاحة' : 'Open Roles',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 32.sp,
                       fontWeight: FontWeight.w900,
-                      fontStyle: FontStyle.italic,
-                      height: 1.1,
+                      fontStyle: FontStyle.normal,
+                      height: 1.4,
+                    ),
                     ),
                   ),
                 ),
@@ -2435,76 +2408,6 @@ class _CareersIntroBanner extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ─── Job Selector ─────────────────────────────────────────────────────────────
-
-class _JobSelector extends StatelessWidget {
-  const _JobSelector({required this.jobs, required this.selected, required this.isArabic, required this.onSelect});
-  final List<_Job> jobs;
-  final _Job? selected;
-  final bool isArabic;
-  final ValueChanged<_Job> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.etbalyColors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          isArabic ? 'اختر الوظيفة' : 'Select position',
-          style: TextStyle(color: c.textMain, fontSize: 14.sp, fontWeight: FontWeight.w900),
-        ),
-        SizedBox(height: 10.h),
-        SizedBox(
-          height: 44.h,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: jobs.length,
-            separatorBuilder: (_, __) => SizedBox(width: 8.w),
-            itemBuilder: (context, i) {
-              final job = jobs[i];
-              final active = job == selected;
-              return GestureDetector(
-                onTap: () => onSelect(job),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-                  decoration: BoxDecoration(
-                    color: active ? job.color.withValues(alpha: 0.15) : c.bgCard,
-                    border: Border.all(
-                      color: active ? job.color.withValues(alpha: 0.7) : c.borderColor,
-                      width: active ? 1.5 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(10.r),
-                    boxShadow: active
-                        ? [BoxShadow(color: job.color.withValues(alpha: 0.18), blurRadius: 10.r)]
-                        : null,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(job.icon, color: active ? job.color : c.textLight, size: 15.sp),
-                      SizedBox(width: 6.w),
-                      Text(
-                        job.title,
-                        style: TextStyle(
-                          color: active ? job.color : c.textMuted,
-                          fontSize: 12.sp,
-                          fontWeight: active ? FontWeight.w900 : FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
     );
   }
 }
@@ -3554,6 +3457,70 @@ class _SectionHeader extends StatelessWidget {
         SizedBox(width: 7.w),
         Text(text, style: TextStyle(color: c.textMain, fontSize: 14.sp, fontWeight: FontWeight.w900)),
       ],
+    );
+  }
+}
+
+class _SubmissionAlert extends StatelessWidget {
+  const _SubmissionAlert({required this.message, required this.isArabic});
+  final String message;
+  final bool isArabic;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final accent = dark ? const Color(0xFFFF939B) : const Color(0xFFB52F45);
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(14.r),
+        decoration: BoxDecoration(
+          color: dark ? const Color(0xFF342331) : const Color(0xFFFFF3F4),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: accent.withValues(alpha: 0.45)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(9.r),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(11.r),
+              ),
+              child:
+                  Icon(Icons.error_outline_rounded, color: accent, size: 22.sp),
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      isArabic
+                          ? 'تنبيه بخصوص طلبك'
+                          : 'Notice about your application',
+                      style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w800,
+                          color: dark
+                              ? const Color(0xFFFFE9EA)
+                              : const Color(0xFF72202F))),
+                  SizedBox(height: 4.h),
+                  Text(message,
+                      style: TextStyle(
+                          fontSize: 12.sp,
+                          height: 1.65,
+                          color: dark
+                              ? const Color(0xFFFFD1D5)
+                              : const Color(0xFF762B38))),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
