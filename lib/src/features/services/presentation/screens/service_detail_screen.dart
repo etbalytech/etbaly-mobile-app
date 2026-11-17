@@ -2368,7 +2368,7 @@ class _BrandFinalCta extends StatelessWidget {
             _serviceLocaleText(
               context,
               'انضم إلى أكثر من 5000 شركة وثقت في اطبعلي لبناء حضورها الرقمي',
-              'Join 5,000+ businesses that trusted Etbaaly to build their digital presence',
+              'Join 5,000+ businesses that trusted Etba3ly to build their digital presence',
             ),
             textAlign: TextAlign.right,
             style: TextStyle(

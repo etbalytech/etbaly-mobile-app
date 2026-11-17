@@ -1066,7 +1066,7 @@ class _InvoiceCard extends StatelessWidget {
                         color: colors.textMain,
                         fontWeight: FontWeight.bold,
                         fontSize: 14.sp)),
-                Text('Etbaly Services',
+                Text('Etba3ly Services',
                     style:
                         TextStyle(color: colors.textMuted, fontSize: 11.sp)),
               ],
@@ -1437,7 +1437,7 @@ class _InvoiceCard extends StatelessWidget {
             child: Text(
               ar
                   ? 'شكراً لثقتك — اضبعلي للتسويق الرقمي'
-                  : 'Thank you for your trust — Etbaly Digital Marketing',
+                  : 'Thank you for your trust — Etba3ly Digital Marketing',
               style: TextStyle(color: colors.textMuted, fontSize: 10.sp),
             ),
           ),

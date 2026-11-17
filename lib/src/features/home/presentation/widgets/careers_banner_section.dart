@@ -10,7 +10,7 @@ class _CareersBannerSection extends StatelessWidget {
     final isDark = context.isDarkMode;
     final label = isAr
         ? 'عرض الوظائف المتاحة والتقديم للانضمام إلى فريق اطبعلي'
-        : 'View available jobs and apply to join the Etbaly team';
+        : 'View available jobs and apply to join the Etba3ly team';
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 18.h),
@@ -43,7 +43,7 @@ class _CareersBannerSection extends StatelessWidget {
                     fit: BoxFit.cover,
                     semanticLabel: isAr
                         ? 'انضم إلى فريق اطبعلي والوظائف المتاحة'
-                        : 'Join the Etbaly team and explore available jobs',
+                        : 'Join the Etba3ly team and explore available jobs',
                     frameBuilder: (context, child, frame, wasSync) {
                       if (wasSync) return child;
                       return AnimatedOpacity(

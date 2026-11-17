@@ -1,0 +1,3 @@
+• Corrected the Etba3ly name on the About page and across the app.
+• Improved the home page, navigation, and careers experience.
+• Clearer error messages when submitting a job application.

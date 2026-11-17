@@ -2359,7 +2359,7 @@ class _CareersIntroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.etbalyColors;
-    final label = isArabic ? 'انضم إلى فريق اطبعلي والوظائف المتاحة' : 'Join the Etbaly team and explore available jobs';
+    final label = isArabic ? 'انضم إلى فريق اطبعلي والوظائف المتاحة' : 'Join the Etba3ly team and explore available jobs';
 
     return Semantics(
       button: true,

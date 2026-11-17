@@ -2834,7 +2834,7 @@ const _services = [
         label: _LangText('اسم الشركة / البراند', 'Company / brand name'),
         placeholder: _LangText(
           'مثال: اطبعلي ديجيتال ماركتنج',
-          'Example: Etbaly Digital Marketing',
+          'Example: Etba3ly Digital Marketing',
         ),
       ),
       _StartQuestion(
