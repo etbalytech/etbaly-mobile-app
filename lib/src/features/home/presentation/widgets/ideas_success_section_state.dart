@@ -47,15 +47,6 @@ class _IdeasSuccessSectionState extends State<_IdeasSuccessSection>
             ),
           ),
           Positioned(
-            top: isNarrow ? 0 : 8.h,
-            right: isNarrow ? 10.w : 28.w,
-            child: _IdeasFloatingCard(
-              value: '150.4K',
-              label: 'auto.t_d3bed41332'.tr(),
-              icon: Icons.favorite,
-            ),
-          ),
-          Positioned(
             top: isNarrow ? 324.h : 346.h,
             left: isNarrow ? 8.w : 16.w,
             right: isNarrow ? 8.w : 16.w,

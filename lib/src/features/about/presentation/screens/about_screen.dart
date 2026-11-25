@@ -1163,20 +1163,6 @@ class _TeamSection extends StatelessWidget {
 class _ContractSection extends StatelessWidget {
   const _ContractSection();
 
-  static final Uri _contractDownloadUri = Uri.parse(
-    'https://etba3ly-dm.com/Company%20Contract/Etbaly_Company_Marketing_Agreement.pdf',
-  );
-
-  Future<void> _downloadContract(BuildContext context) async {
-    final ok = await launchUrl(
-      _contractDownloadUri,
-      mode: LaunchMode.externalApplication,
-    );
-    if (!ok && context.mounted) {
-      context.showErrorSnackBar('auto.t_50d30ecfb1'.tr());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.etbalyColors;
@@ -1197,8 +1183,6 @@ class _ContractSection extends StatelessWidget {
             'auto.t_873e38d33a'.tr(),
             centered: true,
           ),
-          SizedBox(height: 22.h),
-          _ContractDocumentPreview(),
           SizedBox(height: 22.h),
           _GlowPanel(
             child: Column(
@@ -1224,225 +1208,12 @@ class _ContractSection extends StatelessWidget {
                 _Checklist(items: [
                   _CheckItem('auto.t_40682890ce'.tr(), Color(0xFFD4AF37)),
                   _CheckItem('auto.t_b8b9558fc1'.tr(), Color(0xFF68D391)),
-                  _CheckItem('auto.t_da15c08d6b'.tr(), Color(0xFF63B3ED)),
                   _CheckItem('auto.t_dfbe69d96d'.tr(), Color(0xFFF6AD55)),
                 ]),
-                SizedBox(height: 14.h),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _downloadContract(context),
-                    borderRadius: BorderRadius.circular(16.r),
-                    child: Container(
-                      padding: EdgeInsets.all(13.r),
-                      decoration: BoxDecoration(
-                        color: colors.gold.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(
-                            color: colors.gold.withValues(alpha: 0.36)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.download_rounded,
-                              color: colors.gold, size: 18.sp),
-                          SizedBox(width: 10.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'auto.t_b11d86790f'.tr(),
-                                style: context.textTheme.labelLarge?.copyWith(
-                                  color: colors.textMain,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              Text(
-                                'auto.t_f98b05b709'.tr(),
-                                style: context.textTheme.labelSmall?.copyWith(
-                                  color: colors.textMuted,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(width: 10.w),
-                          Container(
-                            width: 38.w,
-                            height: 38.h,
-                            decoration: BoxDecoration(
-                              color: colors.gold,
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: Icon(Icons.picture_as_pdf_rounded,
-                                color: Colors.black, size: 19.sp),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ContractDocumentPreview extends StatefulWidget {
-  const _ContractDocumentPreview();
-
-  @override
-  State<_ContractDocumentPreview> createState() =>
-      _ContractDocumentPreviewState();
-}
-
-class _ContractDocumentPreviewState extends State<_ContractDocumentPreview> {
-  late final PageController _pageController;
-  int _pageIndex = 0;
-
-  static const _pages = [
-    AppAssets.contractPage1,
-    AppAssets.contractPage2,
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _goTo(int index) {
-    final next = index.clamp(0, _pages.length - 1);
-    _pageController.animateToPage(
-      next,
-      duration: Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  void _next() => _goTo((_pageIndex + 1) % _pages.length);
-
-  void _previous() => _goTo((_pageIndex - 1 + _pages.length) % _pages.length);
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.etbalyColors;
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 360.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x99000000),
-                blurRadius: 32.r,
-                offset: Offset(0.w, 18.h),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: AspectRatio(
-          // Both document images are 2482 × 3511; preserve their full page.
-          aspectRatio: 2482 / 3511,
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: _pages.length,
-            onPageChanged: (index) => setState(() => _pageIndex = index),
-            itemBuilder: (context, index) {
-              return Image.asset(
-                _pages[index],
-                fit: BoxFit.contain,
-              );
-            },
-          ),
-          ),
-        ),
-        SizedBox(height: 12.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-          _SlideArrow(
-            icon: Icons.chevron_right_rounded,
-            onTap: _previous,
-          ),
-          SizedBox(width: 16.w),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: context.etbalyColors.bgCard,
-              borderRadius: BorderRadius.circular(999.r),
-              border: Border.all(color: colors.gold.withValues(alpha: 0.45)),
-            ),
-            child: Text(
-              '${_pageIndex + 1} / ${_pages.length}',
-              textDirection: TextDirection.ltr,
-              style: context.textTheme.labelSmall?.copyWith(
-                color: colors.gold,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          SizedBox(width: 16.w),
-          _SlideArrow(
-            icon: Icons.chevron_left_rounded,
-            onTap: _next,
-          ),
-          ],
-        ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SlideArrow extends StatelessWidget {
-  const _SlideArrow({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.etbalyColors;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: CircleBorder(),
-        child: Container(
-          width: 42.w,
-          height: 42.h,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: context.etbalyColors.bgCard,
-            border: Border.all(color: colors.gold.withValues(alpha: 0.48)),
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x66000000),
-                blurRadius: 12.r,
-                offset: Offset(0.w, 5.h),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: colors.gold, size: 24.sp),
-        ),
       ),
     );
   }

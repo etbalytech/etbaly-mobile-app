@@ -17,8 +17,6 @@ class AppAssets {
   static const String airplaneRight = '$_imagesPath/airplane-right.svg';
   static const String aboutCeo = '$_imagesPath/about/team/ceo.webp';
   static const String aboutVideoPoster = '$_imagesPath/about/about_img.webp';
-  static const String contractPage1 = '$_imagesPath/about/contract/1.webp';
-  static const String contractPage2 = '$_imagesPath/about/contract/2.webp';
   static const String aboutVideo = 'assets/videos/about/about_video.mp4';
 
   static String partnerLogo(int index) => '$_imagesPath/partners/$index.webp';

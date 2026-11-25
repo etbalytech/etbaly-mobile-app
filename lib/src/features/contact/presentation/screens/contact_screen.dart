@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:etbaly/src/imports/core_imports.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -145,7 +144,6 @@ class _ContactScreenState extends State<ContactScreen> {
           phoneError: _phoneError,
           whatsappError: _whatsappError,
           emailDomainBlocked: _emailDomainBlocked,
-          package: _package,
           showSuccess: _showSuccess,
           showValidationBanner: _showValidationBanner,
           submitFailed: _submitFailed,
@@ -154,8 +152,6 @@ class _ContactScreenState extends State<ContactScreen> {
           onSubmit: _submitForm,
           onChanged: _onFieldChanged,
           onBlur: _onFieldBlur,
-          onChangePackage: _changePackage,
-          onRemovePackage: _removePackage,
         );
         const channels = _ContactInfoColumn();
 
@@ -239,16 +235,6 @@ class _ContactScreenState extends State<ContactScreen> {
         }
       });
     });
-  }
-
-  void _changePackage() {
-    _saveDraft();
-    context.go(AppRoutes.services);
-  }
-
-  void _removePackage() {
-    setState(() => _package = null);
-    _saveDraft();
   }
 
   // ── Field events ─────────────────────────────────────────────────────────
@@ -712,7 +698,6 @@ class _ContactFormCard extends StatelessWidget {
     required this.phoneError,
     required this.whatsappError,
     required this.emailDomainBlocked,
-    required this.package,
     required this.showSuccess,
     required this.showValidationBanner,
     required this.submitFailed,
@@ -721,8 +706,6 @@ class _ContactFormCard extends StatelessWidget {
     required this.onSubmit,
     required this.onChanged,
     required this.onBlur,
-    required this.onChangePackage,
-    required this.onRemovePackage,
   });
 
   final Map<_ContactField, GlobalKey> fieldKeys;
@@ -738,7 +721,6 @@ class _ContactFormCard extends StatelessWidget {
   final String? phoneError;
   final String? whatsappError;
   final bool emailDomainBlocked;
-  final SelectedPackage? package;
   final bool showSuccess;
   final bool showValidationBanner;
   final bool submitFailed;
@@ -747,8 +729,6 @@ class _ContactFormCard extends StatelessWidget {
   final VoidCallback onSubmit;
   final ValueChanged<_ContactField> onChanged;
   final ValueChanged<_ContactField> onBlur;
-  final VoidCallback onChangePackage;
-  final VoidCallback onRemovePackage;
 
   @override
   Widget build(BuildContext context) {
@@ -891,17 +871,6 @@ class _ContactFormCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 20.h),
-          const _PackageDivider(),
-          SizedBox(height: 14.h),
-          if (package != null)
-            _PackageSelectedBox(
-              package: package!,
-              onChange: onChangePackage,
-              onRemove: onRemovePackage,
-            )
-          else
-            _PackageEmptyBox(onPick: onChangePackage),
-          SizedBox(height: 18.h),
           field(
             _ContactField.message,
             label: 'auto.t_1752e5546d'.tr(),
@@ -1807,254 +1776,6 @@ class _ContactTextField extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-/// "Selected Package" label with hairlines, as on the website's form.
-class _PackageDivider extends StatelessWidget {
-  const _PackageDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    final line = Expanded(
-      child: Divider(color: context.etbalyColors.borderColor, height: 1),
-    );
-    return Row(
-      children: [
-        line,
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
-          child: Text(
-            'auto.t_contact_pkg_title'.tr(),
-            style: context.textTheme.labelMedium?.copyWith(
-              color: context.etbalyColors.textMuted,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        line,
-      ],
-    );
-  }
-}
-
-class _PackageEmptyBox extends StatelessWidget {
-  const _PackageEmptyBox({required this.onPick});
-
-  final VoidCallback onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: context.etbalyColors.bgSubtle,
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(
-          color: EtbalyWebColors.gold.withValues(alpha: 0.36),
-          style: BorderStyle.solid,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42.w,
-            height: 42.h,
-            decoration: BoxDecoration(
-              color: EtbalyWebColors.gold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(
-              Icons.card_giftcard_rounded,
-              color: EtbalyWebColors.gold,
-              size: 21.sp,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'auto.t_80a0344904'.tr(),
-                  style: context.textTheme.titleSmall?.copyWith(
-                    color: context.etbalyColors.textMain,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                SizedBox(height: 3.h),
-                Text(
-                  'auto.t_9b84bd8cbe'.tr(),
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.etbalyColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextButton.icon(
-            onPressed: onPick,
-            icon: Icon(Icons.arrow_back_rounded, size: 17.sp),
-            label: Text('auto.t_ac442fdb57'.tr()),
-            style: TextButton.styleFrom(
-              foregroundColor: EtbalyWebColors.gold,
-              textStyle: context.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The package picked on the services tab, with "Change" and "Remove".
-class _PackageSelectedBox extends StatelessWidget {
-  const _PackageSelectedBox({
-    required this.package,
-    required this.onChange,
-    required this.onRemove,
-  });
-
-  final SelectedPackage package;
-  final VoidCallback onChange;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.etbalyColors;
-
-    Widget action({
-      required IconData icon,
-      required String label,
-      required Color color,
-      required VoidCallback onTap,
-    }) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999.r),
-            border: Border.all(color: color.withValues(alpha: 0.5)),
-            color: color.withValues(alpha: 0.08),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 14.sp, color: color),
-              SizedBox(width: 6.w),
-              Text(
-                label,
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(14.r),
-      decoration: BoxDecoration(
-        color: EtbalyWebColors.gold.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: EtbalyWebColors.gold.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 42.w,
-                height: 42.h,
-                decoration: BoxDecoration(
-                  color: EtbalyWebColors.gold.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Icon(
-                  Icons.inventory_2_rounded,
-                  color: EtbalyWebColors.gold,
-                  size: 21.sp,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      package.category,
-                      style: context.textTheme.labelSmall?.copyWith(
-                        color: colors.textMuted,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      package.name,
-                      style: context.textTheme.titleSmall?.copyWith(
-                        color: colors.textMain,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    if (package.price != null) ...[
-                      SizedBox(height: 4.h),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.sell_rounded,
-                              size: 13.sp, color: EtbalyWebColors.gold),
-                          SizedBox(width: 5.w),
-                          Text(
-                            '${package.price} EGP',
-                            textDirection: TextDirection.ltr,
-                            style: context.textTheme.labelMedium?.copyWith(
-                              color: EtbalyWebColors.gold,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 8.r,
-            runSpacing: 8.r,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              const _MiniPill(text: '✓', green: true),
-              action(
-                icon: Icons.sync_rounded,
-                label: 'auto.t_contact_pkg_change'.tr(),
-                color: EtbalyWebColors.gold,
-                onTap: onChange,
-              ),
-              action(
-                icon: Icons.close_rounded,
-                label: 'auto.t_contact_pkg_remove'.tr(),
-                color: const Color(0xFFFF6B6B),
-                onTap: onRemove,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

@@ -4,11 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/services_catalog_data.dart';
-import '../../data/services_catalog_repository.dart';
-import '../widgets/service_package_card.dart';
 
-/// A service page driven by the dashboard packages catalogue — the same
-/// page the website shows for these services (its `CatalogCategoryPage`).
+/// Describes a service and links to the agency contact form.
 class CatalogServiceScreen extends StatefulWidget {
   const CatalogServiceScreen({super.key, required this.slug});
 
@@ -19,42 +16,7 @@ class CatalogServiceScreen extends StatefulWidget {
 }
 
 class _CatalogServiceScreenState extends State<CatalogServiceScreen> {
-  List<InternalPackage>? _packages;
-  bool _loading = true;
-  bool _failed = false;
-
   CatalogService? get _service => catalogServiceBySlug(widget.slug);
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final cached = await ServicesCatalogRepository.cached();
-    if (!mounted) return;
-    setState(() {
-      if (cached != null) _packages = cached;
-      _loading = cached == null;
-      _failed = false;
-    });
-    try {
-      final fresh = await ServicesCatalogRepository.fetch();
-      if (!mounted) return;
-      setState(() {
-        _packages = fresh;
-        _loading = false;
-        _failed = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _failed = _packages == null;
-      });
-    }
-  }
 
   void _back() {
     if (context.canPop()) {
@@ -81,11 +43,6 @@ class _CatalogServiceScreenState extends State<CatalogServiceScreen> {
         ),
       );
     }
-
-    final packages = _packages;
-    final groups = packages == null
-        ? const <PackageGroup>[]
-        : groupPackages(packages.where(service.matches).toList());
 
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
@@ -136,82 +93,6 @@ class _CatalogServiceScreenState extends State<CatalogServiceScreen> {
                       ),
                     ),
                   SizedBox(height: 18.h),
-                  if (packages == null && _loading)
-                    _StateBox(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(
-                              color: colors.gold, strokeWidth: 2.5),
-                          SizedBox(height: 12.h),
-                          Text(
-                            isAr ? 'جاري تحميل الباقات...' : 'Loading packages...',
-                            style: TextStyle(
-                                color: colors.textMuted, fontSize: 13.sp),
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (packages == null && _failed)
-                    _StateBox(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FaIcon(FontAwesomeIcons.triangleExclamation,
-                              color: colors.gold, size: 26.sp),
-                          SizedBox(height: 10.h),
-                          Text(
-                            isAr
-                                ? 'تعذر تحميل الباقات حاليًا.'
-                                : 'Packages could not be loaded right now.',
-                            style: TextStyle(
-                                color: colors.textMuted, fontSize: 13.sp),
-                          ),
-                          SizedBox(height: 12.h),
-                          OutlinedButton.icon(
-                            onPressed: _load,
-                            icon: Icon(Icons.refresh_rounded, size: 18.sp),
-                            label: Text(isAr ? 'إعادة المحاولة' : 'Try again'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: colors.gold,
-                              side: BorderSide(
-                                  color: colors.gold.withValues(alpha: 0.5)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (groups.isEmpty)
-                    _StateBox(
-                      child: Text(
-                        isAr
-                            ? 'لا توجد باقات في الوقت الحالي'
-                            : 'No packages are available right now',
-                        style:
-                            TextStyle(color: colors.textMuted, fontSize: 13.sp),
-                      ),
-                    )
-                  else
-                    for (final group in groups) ...[
-                      Text(
-                        group.label(isAr),
-                        style: TextStyle(
-                          color: colors.textMain,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      SizedBox(height: 10.h),
-                      for (final pkg in group.packages) ...[
-                        ServicePackageCard(
-                          pkg: pkg,
-                          categoryLabel: group.label(isAr),
-                        ),
-                        SizedBox(height: 12.h),
-                      ],
-                      SizedBox(height: 8.h),
-                    ],
-                  SizedBox(height: 12.h),
                   _ContactBanner(isArabic: isAr),
                 ],
               ),
@@ -343,18 +224,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _StateBox extends StatelessWidget {
-  const _StateBox({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.symmetric(vertical: 34.h),
-        child: Center(child: child),
-      );
-}
-
 class _ContactBanner extends StatelessWidget {
   const _ContactBanner({required this.isArabic});
 
@@ -375,7 +244,7 @@ class _ContactBanner extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            isArabic ? 'هل تحتاج باقة مخصصة؟' : 'Need a custom package?',
+            isArabic ? 'هل تحتاج خطة مخصصة لمشروعك؟' : 'Need a custom plan?',
             textAlign: TextAlign.center,
             style: context.textTheme.titleMedium?.copyWith(
               color: colors.textMain,
@@ -385,8 +254,8 @@ class _ContactBanner extends StatelessWidget {
           SizedBox(height: 6.h),
           Text(
             isArabic
-                ? 'تواصل مع فريقنا وسنجهز لك العرض المناسب لمشروعك'
-                : 'Talk to our team and we will prepare the right offer for your project',
+                ? 'تواصل مع فريقنا وهنجهز لك الخطة المناسبة لمشروعك'
+                : 'Talk to our team and we will prepare the right plan for your project',
             textAlign: TextAlign.center,
             style: TextStyle(color: colors.textMuted, fontSize: 12.sp, height: 1.6),
           ),

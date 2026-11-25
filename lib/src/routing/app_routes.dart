@@ -17,7 +17,6 @@ abstract final class AppRoutes {
   static const String services = '/services';
   static const String expertises = '/expertises';
   static const String about = '/about';
-  static const String payments = '/pricing';
   static const String contact = '/contact';
   static const String startNow = '/start-now';
   static const String careers = '/careers';

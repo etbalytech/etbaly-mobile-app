@@ -25,7 +25,6 @@ import '../features/expertises/presentation/screens/mobile_samples_screen.dart';
 import '../features/expertises/presentation/screens/social_samples_screen.dart';
 import '../features/expertises/presentation/screens/web_samples_screen.dart';
 import '../features/about/presentation/screens/about_screen.dart';
-import '../features/payments/presentation/screens/payments_screen.dart';
 import '../features/contact/presentation/screens/contact_screen.dart';
 import '../features/start_now/presentation/screens/start_now_page.dart';
 import '../features/careers/presentation/screens/careers_screen.dart';
@@ -52,7 +51,6 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
     AppRoutes.services,
     AppRoutes.expertises,
     AppRoutes.about,
-    AppRoutes.payments,
     AppRoutes.careers,
   ];
 
@@ -184,13 +182,6 @@ class _EtbalyNavBarState extends State<EtbalyNavBar> {
                       label: 'navigation.about'.tr(),
                       route: AppRoutes.about,
                       isActive: location == AppRoutes.about,
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.account_balance_wallet,
-                      label: 'navigation.payments'.tr(),
-                      route: AppRoutes.payments,
-                      isActive: location == AppRoutes.payments,
                     ),
                     _buildNavItem(
                       context,
@@ -890,11 +881,6 @@ final GoRouter etbalyRouter = GoRouter(
           builder: (context, state) => const AboutScreen(),
         ),
         GoRoute(
-          path: AppRoutes.payments,
-          name: 'payments',
-          builder: (context, state) => const PaymentsScreen(),
-        ),
-        GoRoute(
           path: AppRoutes.contact,
           name: 'contact',
           builder: (context, state) => const ContactScreen(),
@@ -919,6 +905,11 @@ final GoRouter etbalyRouter = GoRouter(
     GoRoute(
       path: AppRoutes.serviceDetail,
       name: 'serviceDetail',
+      redirect: (context, state) {
+        final slug = state.pathParameters['slug']!;
+        if (slug == 'moderator' || slug == 'brand-plan') return null;
+        return catalogServiceBySlug(slug) == null ? AppRoutes.services : null;
+      },
       builder: (context, state) {
         final slug = state.pathParameters['slug']!;
         // Services that have no dedicated screen use the catalogue-driven page.

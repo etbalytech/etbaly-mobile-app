@@ -7,8 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/services_catalog_data.dart';
 
-/// The services grid: the same 15 services and copy as the website's
-/// "Our services" page (icon, number, description, three highlights).
+/// Shows each service with its description and highlights.
 class EtbalyServicesShowcaseSection extends StatelessWidget {
   const EtbalyServicesShowcaseSection({super.key});
 
