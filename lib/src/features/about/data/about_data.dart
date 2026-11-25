@@ -48,6 +48,14 @@ class CeoProfile {
 
   /// The bundled portrait; also what the dashboard stores by default.
   static const defaultAvatar = 'about/team/ceo.webp';
+  // This version of the dashboard upload is also included in the app.
+  static const _bundledUpload =
+      'uploads/packages/team/eng--mohamed-elmasrawy-20261021-175142-cd37d1fd.png';
+
+  static final _founderName = RegExp(
+    r'\bMohamed (?:Al-Masrawi|Elmasrawy)\b',
+    caseSensitive: false,
+  );
 
   static const fallback = CeoProfile(
     nameAr: 'مهندس/ محمد المصراوي',
@@ -135,14 +143,19 @@ class CeoProfile {
       return value is String && value.trim().isNotEmpty ? value : fallback;
     }
 
+    // Older dashboard records and their cached copies use a different spelling.
+    String englishName(String key, String fallback) =>
+        text(key, fallback).replaceFirst(_founderName, 'Mohamed Elmasrawy');
+
+    final avatar = text('avatar', base.avatar);
     return CeoProfile(
       nameAr: text('name_ar', base.nameAr),
-      nameEn: text('name_en', base.nameEn),
+      nameEn: englishName('name_en', base.nameEn),
       titleAr: text('title_ar', base.titleAr),
       titleEn: text('title_en', base.titleEn),
       bioAr: text('bio_ar', base.bioAr),
       bioEn: text('bio_en', base.bioEn),
-      avatar: text('avatar', base.avatar),
+      avatar: avatar == _bundledUpload ? defaultAvatar : avatar,
       highlights: _highlights(json['highlights'], base.highlights),
       stats: _stats(json['stats'], base.stats),
       expNum: text('exp_num', base.expNum),
@@ -151,7 +164,7 @@ class CeoProfile {
       projectBadgeAr: text('project_badge_ar', base.projectBadgeAr),
       projectBadgeEn: text('project_badge_en', base.projectBadgeEn),
       signatureAr: text('signature_ar', base.signatureAr),
-      signatureEn: text('signature_en', base.signatureEn),
+      signatureEn: englishName('signature_en', base.signatureEn),
     );
   }
 
